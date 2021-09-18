@@ -20,7 +20,6 @@ class TorrentParser:
             if exists(self.filepath):
                 with open(self.filepath, "rb") as f:
                     encry = f.read()
-                print(encry)
                 self.data = decode(encry)
             else:
                 print("Error: File doesnt exist")
@@ -42,12 +41,19 @@ class TorrentParser:
 
     def getDebugInformation(self):
         print("Announce: ", self.data['announce'])
-        print("Announce-List: ", self.data["announce-list"])
-        print("Comment: ", self.data["comment"])
-        print("Created by:", self.data["created by"])
-        print("Creation date: ", datetime.fromtimestamp(self.data["creation date"]))
+        print("Info: ", self.data['info'])
+        if "announce-list" in self.data:
+            print("Announce-List: ", self.data["announce-list"][:3])
+        if "creation date" in self.data:
+            print("Creation date: ", datetime.fromtimestamp(self.data["creation date"]))
+        if "created by" in self.data:
+            print("Created by:", self.data["created by"])
+        if "comment" in self.data:
+            print("Comment: ", self.data["comment"])
+        
         info = self.data
         del info["info"]["pieces"]
+        del info["announce-list"][3:]
         print(json.dumps(info, indent=4, sort_keys=True))
 
     def has_multi_file(self):
