@@ -44,23 +44,29 @@ class HTTPTracker:
             params += "&compact={compact}"
 
         url = f"{self.adr_url}?{params}"
-        if "https" in self.adr_url:
-            payload = {
-                'info hash': info_hash, 
-                'peer_id': peer_id,
-                'port': port,
-                'uploaded': uploaded,
-                'downloaded' : downloaded,
-                'left' : left,
-            }
-            print("in")
-            recv = get(self.adr_url, data=payload)
-        else:
-            recv = get(url)
-        print(recv.text)
-        answer = decode(recv.text)
-        print(recv.text)
         
+        request_parameters = {
+            'info_hash' : info_hash,
+            'peer_id'   : peer_id,
+            'port'      : port,
+            'uploaded'  : uploaded,
+            'downloaded': downloaded,
+            'left'      : left
+        }
+        
+        try:
+            recv = get(url, request_parameters, timeout=10)
+        except Exception as e:
+            print(e)
+            return
+        
+        print(recv.text)
+        try:
+            answer = decode(recv.text)
+        except Exception as e:
+            print(e)
+            return None
+
         #debug
         print(json.dumps(answer, indent=4, sort_keys=True))
         print(recv.status_code)
