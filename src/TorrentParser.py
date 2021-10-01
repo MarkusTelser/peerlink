@@ -3,10 +3,6 @@ from bencode import decode
 from datetime import datetime
 from Torrent import TorrentData, TorrentFile
 
-# remove after
-import json
-import bencode
-
 class TorrentParser:
     def __init__(self, file=None, filepath=None):
         self.file = file
