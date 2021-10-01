@@ -2,6 +2,8 @@ from bencode import encode
 from hashlib import sha1
 from codecs import decode
 from urllib.parse import quote_plus 
+from random import choice
+from string import ascii_letters
 import libtorrent as lt
 
 class TorrentFile:
@@ -13,7 +15,7 @@ class TorrentFile:
 
 class TorrentData:
     def __init__(self):
-        self.announce = set()
+        self.announces = set()
         self.created_by = ""
         self.creation_date = ""
         self.comment = ""
@@ -28,7 +30,8 @@ class TorrentData:
         self.info = None
         self.private = False
 
-    def getHashInfo(self, quoted=True):
+    @property
+    def info_hash(self):
         """
         info = lt.torrent_info(open('../book.torrent','rb').read())
         info_hash = info.info_hash()
@@ -37,11 +40,29 @@ class TorrentData:
         encoded = encode(self.info)
         hex_enc = sha1(encoded).hexdigest()
         ascii_dec = decode(hex_enc, "hex")
-        if not quoted:
-            return ascii_dec 
-        else:
-            url_encode = quote_plus(ascii_dec)
-            return url_encode
-        
+        return ascii_dec 
+            
+    @property 
+    def info_hash_quoted(self):
+        return quote_plus(self.info_hash)
+
     def generate_pieces(self):
         pass
+
+    @staticmethod
+    def getAnnounceConnection(announce):
+        return announce.split("://")[0]
+
+    @staticmethod
+    def getLinkFromAnnounce(announce):
+        ann = TorrentData.getAnnounceConnection(announce)
+        if ann == "http":
+            return "http://" + announce.split("/")[2]
+        elif ann == "https":
+            return "https://" + announce.split("/")[2]
+        elif ann == "udp":
+            return announce.split("/")[2]
+    
+    @staticmethod
+    def gen_peer_id():
+        return ''.join(choice(ascii_letters) for _ in range(20))
