@@ -1,9 +1,11 @@
 from os.path import exists
 from bencode import decode
 from datetime import datetime
+from Torrent import TorrentData, TorrentFile
 
 # remove after
 import json
+import bencode
 
 class TorrentParser:
     def __init__(self, file=None, filepath=None):
@@ -12,10 +14,7 @@ class TorrentParser:
         self.data = None
 
     def main(self):
-        if self.evaluate():
-            self.getData()
-
-    def getData(self):
+        # get file and extract data
         if self.filepath != None:
             print(self.filepath)
             if exists(self.filepath):
@@ -30,79 +29,70 @@ class TorrentParser:
         else:
             print("Error: No File or Filepath provided")
 
-    def evaluate(self):
-        if self.data == None:
-            print("Error: No data loaded")
-        try:
-            keys = list(self.data.keys())
-            # some torrents dont follow standards and use announce-list only
-            if "announce" in self.data or "announce-list" in self.data:
-                if "announce" in self.data:
-                    keys.remove("announce")
-                if "announce-list" in self.data:
-                    keys.remove("announce-list")
-            else:
-                print("Error: Neither announce nor announce-list in torrent")
-            if "created by" in self.data:
-                keys.remove("created by")
-            if "creation date" in self.data:
-                keys.remove("creation date")
-            if "comment" in self.data:
-                keys.remove("comment")
-            if "encoding" in self.data:
-                keys.remove("encoding")
-            # peers for DHT
-            if "nodes" in self.data:
-                keys.remove("nodes")
-           
-            
-            if "info" in self.data:
-                del self.data.get("info")["pieces"]
-                print(self.data.get("info"))
-            else:
-                print("Error: Doesnt contain info in torrent")
-            
-            # print the remaining keys
-            for item in keys:
-                print(self.data[item])
-            print(keys)
-            
-        except KeyError:
-            print("Error: Key doesn't exist")
-
-    def getDebugInformation(self):
-        print(json.dumps(self.data, indent=4, sort_keys=True))
-        #print("Announce: ", self.data['announce'])
-        print("Info: ", self.data['info'])
-        if "announce-list" in self.data:
-            print("Announce-List: ", self.data["announce-list"][:3])
-        if "creation date" in self.data:
-            print("Creation date: ", datetime.fromtimestamp(self.data["creation date"]))
-        if "created by" in self.data:
-            print("Created by:", self.data["created by"])
-        if "comment" in self.data:
-            print("Comment: ", self.data["comment"])
+        # create torrent object to save torrent
+        torrent = TorrentData()    
         
-        info = self.data
-        del info["info"]["pieces"]
-        if "announce-list" in info:
-            del info["announce-list"][3:]
-        print(json.dumps(info, indent=4, sort_keys=True))
+        # check if contains tracker, in announce/announce-list otherwise error
+        if "announce" in self.data:
+            torrent.announce.add(self.data["announce"])
+        if "announce-list" in self.data:
+            for announce in self.data["announce-list"]:
+                torrent.announce.add(announce[0])
+        if not "announce" in self.data and not "announce-list" in self.data:
+            print("Error: Neither announce nor announce-list in torrent")
+            return
 
-    def has_multi_file(self):
-        if "files" in self.data["info"]:
-            return True
-        elif "length" in self.data["info"]:
-            return False
+        # optional fields
+        if "created by" in self.data:
+            torrent.created_by = self.data["created by"]
+        if "creation date" in self.data:
+            torrent.creation_date = self.data["creation date"]
+        if "comment" in self.data:
+            torrent.comment = self.data["comment"]
+        if "encoding" in self.data:
+            torrent.encoding = self.data["encoding"]
+        if "nodes" in self.data:
+            for ip, port in self.data["nodes"]:
+                torrent.nodes.add(tuple((ip, port)))
+        
+        if "info" in self.data:
+            info = self.data.get("info")
+
+            torrent.pieces = info["pieces"]
+            torrent.piece_length = info["piece length"]
+            del info["pieces"]
+            
+            # either single or multiple file mode, otherwise error
+            if "files" in info:
+                torrent.has_multi_file = True
+                first = TorrentFile(info["name"])
+                torrent.files[first] = []
+
+                for file in info["files"]:
+                    f = TorrentFile(file["path"][0])
+                    
+                    # optional fields
+                    if all(enc in file for enc in ["md5", "md5sum"]):
+                        f.encoding = "md5"
+                        f.checksum = file["md5"] if "md5" in file else file["md5sum"]
+                    if "crc32" in file:
+                        f.encoding = "crc32"
+                        f.checksum = file["crc32"]
+                    if "sha1" in file:
+                        f.encoding = "sha1"
+                        f.checksum = file["sha1"]
+                    torrent.files[first].append(f)
+            elif "length" in info:
+                torrent.has_multi_file = False
+                f = TorrentFile(info["name"], info["length"])
+                torrent.files = {f:None}
+            else:
+                raise Exception("Error: Neither single or multiple file mode")
+
+            # optional fields
+            if "private" in info:
+                torrent.private = True if info["private"] == 0 else False
         else:
-            print("Error: Incorrect Format")
+            raise Exception("Error: Doesnt contain info in torrent")
 
-    def get_files(self):
-        pass
-
-import os
-for file in os.listdir("../data/all"):
-    filepath = os.path.join("../data/all", file)
-    parse = TorrentParser(filepath=filepath)
-    parse.getData()
-    parse.evaluate()
+        return torrent
