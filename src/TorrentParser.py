@@ -42,7 +42,8 @@ class TorrentParser:
         if "created by" in self.data:
             torrent.created_by = self.data["created by"]
         if "creation date" in self.data:
-            torrent.creation_date = self.data["creation date"]
+            date = datetime.utcfromtimestamp(self.data["creation date"])
+            torrent.creation_date = date.strftime('%Y-%m-%d %H:%M:%S')
         if "comment" in self.data:
             torrent.comment = self.data["comment"]
         if "encoding" in self.data:
@@ -53,6 +54,7 @@ class TorrentParser:
         
         if "info" in self.data:
             info = self.data.get("info")
+            torrent.info = info
 
             torrent.pieces = info["pieces"]
             torrent.piece_length = info["piece length"]
