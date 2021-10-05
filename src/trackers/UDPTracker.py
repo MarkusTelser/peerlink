@@ -3,8 +3,7 @@ from string import ascii_letters
 from random import choice
 from random import randint
 from struct import pack, unpack
-from socket import socket, gethostbyname
-from socket import AF_INET, SOCK_DGRAM, timeout
+import socket
 from os import urandom
 
 class Actions(Enum):
@@ -13,19 +12,19 @@ class Actions(Enum):
     SCRAPE = 2
     ERROR = 3
 
-class Events(Enum):
-    NONE = 0
-    COMPLETED = 1
-    STARTED = 2
-    STOPPED = 3
+class UDPEvents(Enum):
+    NONE = 0x0
+    COMPLETED = 0x1
+    STARTED = 0x2
+    STOPPED = 0x3
 
 class UDPTracker:
     IDENTIFICATION = 0x41727101980
-    BUFFER_SIZE = 4096
+    BUFFER_SIZE = 2048
     TIMEOUT = 10
 
     def __init__(self, address, port):
-        self.ip = gethostbyname(address)
+        self.ip = address
         self.port = port
         self.sock = None
         
@@ -39,7 +38,7 @@ class UDPTracker:
         #self.scrape()
 
     def create_con(self):
-        sock = socket(AF_INET, SOCK_DGRAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(UDPTracker.TIMEOUT)
         self.sock = sock
     
@@ -62,25 +61,26 @@ class UDPTracker:
         try:
             send = self.sock.sendto(msg, (self.ip, self.port))
             recv = self.sock.recv(UDPTracker.BUFFER_SIZE) 
-        except timeout:
+        except socket.timeout:
             print("Error: Send/Response timed out")
             return
-        
-        
+                
         if len(recv) < 16:
             print("Error: Announce response smaller than 16 bytes")
             return
 
         action, tid, cid = unpack('!IIQ', recv)
-
+        # TODO print error message
+        if action == Actions.ERROR.value:
+            print("Error: Action of announce is error")
+            return
         if action != Actions.CONNECT.value:
-            print("Error: Action of announce response is not action(=0)")
+            print("Error: Action neither connect or error")
             return
         if tid != TID:
             print("Error: Transaction id aren't equal")
             return
-    
-        print("TID: ", tid, TID)
+
         return cid
 
     """
@@ -99,7 +99,7 @@ class UDPTracker:
     32-bit integer num_want
     16-bit integer port
     """
-    def announce(self, cid, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0, num_want=-1):
+    def announce(self, cid, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0x0, num_want=-1):
         if self.sock == None:
             print("Error: Socket not created")
             return
@@ -113,34 +113,52 @@ class UDPTracker:
         
         # send and receive announce packet
         try:
+            print("udp tracker: ", self.ip, self.port)
             send = self.sock.sendto(msg, (self.ip, self.port))
-            recv = self.sock.recv(UDPTracker.BUFFER_SIZE)
-        except timeout:
+            recv, conn = self.sock.recvfrom(UDPTracker.BUFFER_SIZE)
+        except socket.timeout:
             print("Error: Send/Response timed out")
             return None
 
         if len(recv) < 20:
             print("Error: Announce response smaller than 20 bytes")
-            return
+            return None
 
-        print(len(recv))
         action, tid, interval, leechers, seeders = unpack('!IIIII', recv[:20])
-        print("TID: ", tid, TID)
-        print(action, tid, interval, leechers, seeders)
-        count = int((len(recv) - 20) / 6)
-        print(count)
-        ip, tcp_port = unpack('!' + 'IH' * count, recv[20:len(recv)])
-        print(ip, tcp_port)
+        print("Interval: ", interval , leechers, seeders)
+        
+        # TODO print error message
+        if action == Actions.ERROR.value:
+            print("Error: Action is error")
+            return None
+        if action != Actions.ANNOUNCE.value:
+            print("Error: Action is neither connect or error")
+            return None
 
         if tid != TID:
+            print("Error: Not the same transaction ID")
+            return None
+
+        # unpack data
+        results = []
+        count_addr = int((len(recv) - 20) / 6)
+        print("this many peers", count_addr, " full size: ", len(recv))
+        for i in range(count_addr):
+            ip = socket.inet_ntoa(recv[20 + i * 6:24 + i * 6])
+            tcp_port = unpack('!H', recv[24 + i * 6:26 + i * 6])[0]
+            results.append((ip, tcp_port))
+        
+        if tid != TID:
             print("Error: Transaction id aren't equal")
-            return
+            return None
         if action != Actions.ANNOUNCE.value:
             print("Error: Action of announce response is not announce(=1)")
-            return
+            return None
 
-        print(interval, leechers, seeders, ip, tcp_port)
-        return leechers, seeders, tcp_port
+        print("Interval : ", interval) 
+        print(leechers, seeders) 
+        print(results)
+        return results
 
     def scrape(self, cid):
         pass
