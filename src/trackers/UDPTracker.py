@@ -44,11 +44,12 @@ class UDPTracker:
         self.sock.close()
         self.sock = None
 
+
     """
     Connect packet:
-	64-bit integer	connection_id
 	32-bit integer	action
 	32-bit integer	transaction_id
+    64-bit integer	connection_id
     """
     def connect(self):
         if self.sock == None:
@@ -69,19 +70,22 @@ class UDPTracker:
             print("Error: Announce response smaller than 16 bytes")
             return
 
-        action, tid, cid = unpack('!IIQ', recv)
         # TODO print error message
+        action = unpack('!I', recv[:4])
         if action == Actions.ERROR.value:
-            print("Error: Action of announce is error")
+            self.error(recv, TID)
             return
         if action != Actions.CONNECT.value:
             print("Error: Action neither connect or error")
             return
+
+        tid = unpack('!I', recv[4:8])
         if tid != TID:
             print("Error: Transaction id aren't equal")
             return
+        
+        return unpack('!Q', recv[8:16])
 
-        return cid
 
     """
     Announce Packet:
@@ -123,42 +127,36 @@ class UDPTracker:
         if len(recv) < 20:
             print("Error: Announce response smaller than 20 bytes")
             return None
-
-        action, tid, interval, leechers, seeders = unpack('!IIIII', recv[:20])
-        print("Interval: ", interval , leechers, seeders)
         
         # TODO print error message
+        action = unpack('!I', recv[:4])
         if action == Actions.ERROR.value:
-            print("Error: Action is error")
+            self.error(recv, TID)
             return None
         if action != Actions.ANNOUNCE.value:
             print("Error: Action is neither connect or error")
             return None
-
+        
+        tid = unpack('!I', recv[4:8])
         if tid != TID:
             print("Error: Not the same transaction ID")
             return None
 
+        interval, leechers, seeders = unpack('!III', recv[8:20])
+
         # unpack data
         results = []
         count_addr = int((len(recv) - 20) / 6)
-        print("this many peers", count_addr, " full size: ", len(recv))
         for i in range(count_addr):
             ip = socket.inet_ntoa(recv[20 + i * 6:24 + i * 6])
             tcp_port = unpack('!H', recv[24 + i * 6:26 + i * 6])[0]
             results.append((ip, tcp_port))
-        
-        if tid != TID:
-            print("Error: Transaction id aren't equal")
-            return None
-        if action != Actions.ANNOUNCE.value:
-            print("Error: Action of announce response is not announce(=1)")
-            return None
 
         print("Interval : ", interval) 
         print(leechers, seeders) 
         print(results)
         return results
+
 
     """
     Scrape packet:
@@ -167,9 +165,56 @@ class UDPTracker:
 	32-bit integer	transaction_id
 	20-byte string	info_hash
     """
-    def scrape(self, cid):
-        pass
-    
+    def scrape(self, cid, info_hashes: list):
+        if self.sock == None:
+            print("Error: Socket not created")
+            return
+        
+        # create message
+        TID = self.gen_tid()
+        msg = pack('!QII', cid, Actions.SCRAPE.value, TID)
+        for info_hash in info_hashes:
+            msg += pack('!I20s', info_hash)
+
+        # send and receive announce packet
+        try:
+            send = self.sock.sendto(msg, (self.ip, self.port))
+            recv, conn = self.sock.recvfrom(UDPTracker.BUFFER_SIZE)
+        except socket.timeout:
+            print("Error: Send/Response timed out")
+            return None
+        
+        if len(recv) < 8:
+            print("Error: Scrape response smaller than 8 bytes")
+            return None
+        
+        # TODO print error message
+        action = unpack('!I', recv[:4])
+        if action == Actions.ERROR.value:
+            self.error(recv, TID)
+            return None
+        if action != Actions.SCRAPE.value:
+            print("Error: Action is neither scrape or error")
+            return None
+        
+        tid = unpack("!I", recv[4:8])
+        if tid != TID:
+            print("Error: Not the same transaction ID")
+            return None
+
+        # unpack data
+        results = []
+        count_addr = int((len(recv) - 8) / 12)
+        for i in range(count_addr):
+            seeders = unpack('!I', recv[8 + i * 12:12 + i * 12])
+            completed = unpack('!I', recv[12 + i * 12:16 + i * 12])
+            leecher = unpack('!I', recv[16 + i * 12:20 + i * 12])
+            results.append((seeders, completed, leecher))
+        
+        print(results)
+        return results
+        
+
     """
     Authenticate packet:
     8-byte zero-padded string	username
@@ -180,9 +225,32 @@ class UDPTracker:
     def authenticate(self, username, password):
         pass
 
-    def error():
-        pass
+    """
+    Error packet:
+    32-bit integer	action
+	32-bit integer	transaction_id
+	string	message
+    """
+    def error(self, data, tid):
+        if len(data) < 8:
+            print("Error: Error response smaller than 8 bytes")
+            return None
+
+        action = unpack("!I", data[:4])
+        if action != Actions.ERROR.value:
+            print("Error: Action is not error")
+            return None
+        print("Error: Action is error")
+
+        TID = unpack("!I", data[4:8])
+        if TID != tid:
+            print("Error: Transaction IDs don't match")
+            return None
+
+        if len(data) > 8:
+            print("Error message:", data[8:len(data)])
     
+
     @staticmethod
     def gen_tid():
         return randint(0, 0xffffffff)
