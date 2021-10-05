@@ -1,6 +1,8 @@
 from os.path import exists
 from bencode import decode
 from datetime import datetime
+
+from bencode import bdecode, decode
 from Torrent import TorrentData, TorrentFile
 
 class TorrentParser:
@@ -9,31 +11,34 @@ class TorrentParser:
         self.filepath = filepath
         self.data = None
 
-    def main(self):
+    def parse(self):
         # get file and extract data
         if self.filepath != None:
             print(self.filepath)
             if exists(self.filepath):
                 with open(self.filepath, "rb") as f:
                     encry = f.read()
+                self.bdata = bdecode(encry)
                 self.data = decode(encry)
             else:
                 print("Error: File doesnt exist")
         elif self.file != None:
             encry = self.file.read()
+            self.bdata = bdecode(encry)
             self.data = decode(encry)
         else:
             print("Error: No File or Filepath provided")
+            return
 
         # create torrent object to save torrent
         torrent = TorrentData()    
         
         # check if contains tracker, in announce/announce-list otherwise error
         if "announce" in self.data:
-            torrent.announce.add(self.data["announce"])
+            torrent.announces.add(self.data["announce"])
         if "announce-list" in self.data:
             for announce in self.data["announce-list"]:
-                torrent.announce.add(announce[0])
+                torrent.announces.add(announce[0])
         if not "announce" in self.data and not "announce-list" in self.data:
             print("Error: Neither announce nor announce-list in torrent")
             return
@@ -54,7 +59,7 @@ class TorrentParser:
         
         if "info" in self.data:
             info = self.data.get("info")
-            torrent.info = info
+            torrent.info = self.bdata['info']
 
             torrent.pieces = info["pieces"]
             torrent.piece_length = info["piece length"]
