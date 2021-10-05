@@ -1,10 +1,8 @@
-from bencode import encode
+from bencode import bencode
 from hashlib import sha1
-from codecs import decode
 from urllib.parse import quote_plus 
 from random import choice
 from string import ascii_letters
-import libtorrent as lt
 
 class TorrentFile:
     def __init__(self, name, length=0, encoding=None, checksum=None):
@@ -32,15 +30,9 @@ class TorrentData:
 
     @property
     def info_hash(self):
-        """
-        info = lt.torrent_info(open('../book.torrent','rb').read())
-        info_hash = info.info_hash()
-        print(info_hash)
-        """
-        encoded = encode(self.info)
-        hex_enc = sha1(encoded).hexdigest()
-        ascii_dec = decode(hex_enc, "hex")
-        return ascii_dec 
+        encoded = bencode(self.info)
+        hash = sha1(encoded).digest()
+        return hash
             
     @property 
     def info_hash_quoted(self):
@@ -61,7 +53,16 @@ class TorrentData:
         elif ann == "https":
             return "https://" + announce.split("/")[2]
         elif ann == "udp":
-            return announce.split("/")[2]
+            return announce.split("/")[2].split(":")[0]
+    
+    @staticmethod
+    def getPortFromAnnounce(announce):
+        link = announce.split("/")[2]
+        if ":" in link:
+            return int(link.split(":")[1])
+        else:
+            pass
+        # TODO return ports range to try out
     
     @staticmethod
     def gen_peer_id():
