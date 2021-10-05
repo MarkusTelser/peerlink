@@ -1,16 +1,14 @@
 from enum import Enum
-from string import ascii_letters
-from random import choice
 from random import randint
 from struct import pack, unpack
 import socket
 from os import urandom
 
 class Actions(Enum):
-    CONNECT = 0
-    ANNOUNCE = 1
-    SCRAPE = 2
-    ERROR = 3
+    CONNECT = 0x0
+    ANNOUNCE = 0x1
+    SCRAPE = 0x2
+    ERROR = 0x3
 
 class UDPEvents(Enum):
     NONE = 0x0
@@ -21,7 +19,7 @@ class UDPEvents(Enum):
 class UDPTracker:
     IDENTIFICATION = 0x41727101980
     BUFFER_SIZE = 2048
-    TIMEOUT = 10
+    TIMEOUT = 5
 
     def __init__(self, address, port):
         self.ip = address
@@ -42,14 +40,16 @@ class UDPTracker:
         sock.settimeout(UDPTracker.TIMEOUT)
         self.sock = sock
     
-    @staticmethod
-    def gen_tid():
-        return randint(0, 0xffffffff)
-    
-    @staticmethod
-    def gen_pid():
-        return urandom(20)
+    def close_con(self):
+        self.sock.close()
+        self.sock = None
 
+    """
+    Connect packet:
+	64-bit integer	connection_id
+	32-bit integer	action
+	32-bit integer	transaction_id
+    """
     def connect(self):
         if self.sock == None:
             print("Error: Socket not created")
@@ -160,11 +160,33 @@ class UDPTracker:
         print(results)
         return results
 
+    """
+    Scrape packet:
+	64-bit integer	connection_id
+	32-bit integer	action	
+	32-bit integer	transaction_id
+	20-byte string	info_hash
+    """
     def scrape(self, cid):
         pass
     
-    def authenticate():
+    """
+    Authenticate packet:
+    8-byte zero-padded string	username
+	8-byte string	hash
+
+    hash = first 8 bytes of sha1(input + username + sha1(password))
+    """
+    def authenticate(self, username, password):
         pass
 
     def error():
         pass
+    
+    @staticmethod
+    def gen_tid():
+        return randint(0, 0xffffffff)
+    
+    @staticmethod
+    def gen_pid():
+        return urandom(20)
