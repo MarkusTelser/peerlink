@@ -71,7 +71,7 @@ class UDPTracker:
             return
 
         # TODO print error message
-        action = unpack('!I', recv[:4])
+        action = unpack('!I', recv[:4])[0]
         if action == Actions.ERROR.value:
             self.error(recv, TID)
             return
@@ -79,12 +79,12 @@ class UDPTracker:
             print("Error: Action neither connect or error")
             return
 
-        tid = unpack('!I', recv[4:8])
+        tid = unpack('!I', recv[4:8])[0]
         if tid != TID:
             print("Error: Transaction id aren't equal")
             return
         
-        return unpack('!Q', recv[8:16])
+        return unpack('!Q', recv[8:16])[0]
 
 
     """
@@ -129,15 +129,16 @@ class UDPTracker:
             return None
         
         # TODO print error message
-        action = unpack('!I', recv[:4])
+        action = unpack('!I', recv[:4])[0]
         if action == Actions.ERROR.value:
             self.error(recv, TID)
             return None
         if action != Actions.ANNOUNCE.value:
-            print("Error: Action is neither connect or error")
+            print(action)
+            print("Error: Action is neither announce or error")
             return None
         
-        tid = unpack('!I', recv[4:8])
+        tid = unpack('!I', recv[4:8])[0]
         if tid != TID:
             print("Error: Not the same transaction ID")
             return None
@@ -153,7 +154,7 @@ class UDPTracker:
             results.append((ip, tcp_port))
 
         print("Interval : ", interval) 
-        print(leechers, seeders) 
+        print("Leechers:", leechers," Seeders:", seeders) 
         print(results)
         return results
 
@@ -236,13 +237,13 @@ class UDPTracker:
             print("Error: Error response smaller than 8 bytes")
             return None
 
-        action = unpack("!I", data[:4])
+        action = unpack("!I", data[:4])[0]
         if action != Actions.ERROR.value:
             print("Error: Action is not error")
             return None
         print("Error: Action is error")
 
-        TID = unpack("!I", data[4:8])
+        TID = unpack("!I", data[4:8])[0]
         if TID != tid:
             print("Error: Transaction IDs don't match")
             return None
@@ -250,7 +251,7 @@ class UDPTracker:
         if len(data) > 8:
             print("Error message:", data[8:len(data)])
     
-
+    
     @staticmethod
     def gen_tid():
         return randint(0, 0xffffffff)
