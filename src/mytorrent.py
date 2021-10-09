@@ -1,92 +1,99 @@
 import socket
-import random
-import string
     
 
 from TorrentParser import TorrentParser
-from Torrent import getHashInfo
-from trackers import UDPTracker, HTTPTracker
+from trackers.HTTPTracker import HTTPTracker
+from trackers.UDPTracker import UDPTracker, UDPEvents
 from ipaddress import ip_address
-from peer import Peer
+from peer_protocol.peer import Peer
 
-# create torrent parser
-t = TorrentParser(filepath="../test.torrent")
-#t = TorrentParser(filepath="../data/httptorrents/test4.torrent")
-t.getData()
-t.getDebugInformation()
+import os
+from hashlib import sha1
+from codecs import decode
+
+#def main(con, ann):
+def http_communication(data, announce):
+    adress = data.getLinkFromAnnounce(announce) 
+    tracker = HTTPTracker(adress)
+
+    info_hash = data.info_hash_quoted
+    peer_id = data.gen_peer_id()
+    
+    # demo values
+    port = 0
+    uploaded = "0"
+    downloaded = "0"
+    left = "1000"
+
+    recv = tracker.request(info_hash, peer_id, port, uploaded, downloaded, left)
+
+    if recv != None and len(recv["peers"]) != 0:
+        print(recv)
+        ip = recv["peers"][0]["ip"]
+        peer_id = recv["peers"][0]["peer id"]
+        port = int(recv["peers"][0]["port"])
+        
+        p = Peer(ip, port)
+        p.handshake(info_hash, peer_id)
 
 
+def udp_communication(data, announce):
+    adress = data.getLinkFromAnnounce(announce)
+    port = data.getPortFromAnnounce(announce)
+    tracker = UDPTracker(adress, port)
+    
+    result = tracker.connect()
+    print(result)
 
-def main(con):
-    if con == "http" or con == "https":
-        adr_url = t.data["announce"]
-        print(adr_url)
-        tracker = HTTPTracker.HTTPTracker(adr_url)
-
-        info_hash = getHashInfo(t.data["info"])
-        peer_id = ''.join(random.choice(string.ascii_letters) for _ in range(20))
+    if result != None:
+        cid = result
+        info_hash = data.info_hash
+        peer_id = UDPTracker.gen_pid()
+        event = UDPEvents.STARTED.value
+        print(info_hash,"||", data.info_hash, "||")
+        # demo values
+        downloaded = 0
+        left = 0
+        uploaded = 0
+        num_want = 500
+        # if not given
+        ip = 0
         port = 0
-        uploaded = "0"
-        downloaded = "0"
-        left = "1000"
-        recv = tracker.request(info_hash, peer_id, port, uploaded, downloaded, left)
+        key = 0
+        
+        results = tracker.announce(cid, info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
+        tracker.close_con()
 
-        if len(recv["peers"]) != 0:
-            ip = recv["peers"][0]["ip"]
-            peer_id = recv["peers"][0]["peer id"]
-            port = int(recv["peers"][0]["port"])
+        if result != None:
+            for result in results:
+                ip, port = result
+                p = Peer(ip, port)
+                try:
+                    p.handshake(info_hash, peer_id)
+                except Exception as e:
+                    print(e)
 
-            p = Peer(ip, port)
-            p.handshake(info_hash, peer_id)
+# test part
+from Torrent import TorrentData
 
-    elif con == "udp":
-        adr = t.data["announce"].split("/")[2].split(":")[0]
-        port = int(t.data["announce"].split("/")[2].split(":")[1])
-        # sample data
-        adr = "tracker.torrent.eu.org"
-        port = 451
+#for file in os.listdir("../data/all/"):
+#fp = "../data/all/lotseed.torrent" #+ file
+fp = "../data/all/testtest.torrent"
+parser = TorrentParser(filepath=fp)
+data = parser.parse()
 
-        tracker = UDPTracker.UDPTracker(adr, port)
-        res = tracker.connect()
-        if res != None:
-            cid = res
-            info_hash = bytes(getHashInfo(t.data["info"]), 'utf-8')
-            peer_id = UDPTracker.UDPTracker.gen_pid()
-            downloaded = 0
-            left = 0
-            uploaded = 1000
-            event = UDPTracker.Events.STARTED.value
-            ip = int.from_bytes(ip_address(socket.gethostbyname(adr)).packed, byteorder='big')
-            key = 123
-            num_want = 10
-            port = port
-            
-            
-            tracker.announce(cid, info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
-
-
-# maybe skip announce, because is also in announce-list
-con = t.data["announce"].split(":")[0]
-try:
-    main(con)
-except Exception as e:
-    print(e)
-
-# go through rest of list
-if "announce-list" in t.data:
-    for announce in t.data["announce-list"]:
-        con = announce[0].split(":")[0]
+for announce in data.announces:
+    print(announce)
+    ann = data.getAnnounceConnection(announce)
+    """
+    if ann == "http" or ann == "https":
+        black_list = ["tracker.tfile.co", "inferno.demonoid.me"]
+        if all(link not in announce for link in black_list):
+            http_communication(data, announce)
+    """
+    if ann == "udp":
         try:
-            main(con)
+            udp_communication(data, announce)
         except Exception as e:
             print(e)
-
-
-"""
-from src.trackers import UDPTracker
-adr = "tracker.torrent.eu.org"
-port = 451
-udp = UDPTracker(adr, port)
-cid = udp.connect()
-udp.announce(cid, )
-"""
+#break 
