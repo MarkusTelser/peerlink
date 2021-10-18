@@ -1,0 +1,6 @@
+http://xbtt.sourceforge.net/udp_tracker_protocol.html
+https://wiki.theory.org/BitTorrentSpecification
+https://www.bittorrent.org/bittorrentecon.pdf
+https://github.com/kishanpatel22/bittorrent
+https://blog.spacepatroldelta.com/a?ID=00050-5e5287f4-a937-42bb-89c6-e7af2901a4de
+https://markuseliasson.se/article/bittorrent-in-python/
