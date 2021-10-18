@@ -1,17 +1,9 @@
-import socket
-    
-
 from TorrentParser import TorrentParser
 from trackers.HTTPTracker import HTTPTracker
 from trackers.UDPTracker import UDPTracker, UDPEvents
-from ipaddress import ip_address
 from peer_protocol.peer import Peer
 
-import os
-from hashlib import sha1
-from codecs import decode
 
-#def main(con, ann):
 def http_communication(data, announce):
     adress = data.getLinkFromAnnounce(announce) 
     tracker = HTTPTracker(adress)
@@ -28,13 +20,9 @@ def http_communication(data, announce):
     recv = tracker.request(info_hash, peer_id, port, uploaded, downloaded, left)
 
     if recv != None and len(recv["peers"]) != 0:
-        print(recv)
-        ip = recv["peers"][0]["ip"]
-        peer_id = recv["peers"][0]["peer id"]
-        port = int(recv["peers"][0]["port"])
-        
-        p = Peer(ip, port)
-        p.handshake(info_hash, peer_id)
+        return recv
+    else:
+        return False
 
 
 def udp_communication(data, announce):
@@ -43,14 +31,13 @@ def udp_communication(data, announce):
     tracker = UDPTracker(adress, port)
     
     result = tracker.connect()
-    print(result)
 
     if result != None:
         cid = result
         info_hash = data.info_hash
         peer_id = UDPTracker.gen_pid()
         event = UDPEvents.STARTED.value
-        print(info_hash,"||", data.info_hash, "||")
+
         # demo values
         downloaded = 0
         left = 0
@@ -65,35 +52,88 @@ def udp_communication(data, announce):
         tracker.close_con()
 
         if result != None:
-            for result in results:
-                ip, port = result
-                p = Peer(ip, port)
-                try:
-                    p.handshake(info_hash, peer_id)
-                except Exception as e:
-                    print(e)
+            return results
+        else:
+            return False
+            
 
-# test part
+def peer_communication(ip, port, info_hash):
+    peer_id = UDPTracker.gen_pid()
+    p = Peer(ip, port)
+    p.send_handshake(info_hash, peer_id)
+    pid = p.recv_handshake(info_hash, peer_id)
+    p.recv()
+    p.send_interested()
+    p.recv()
+    
+
+# load data from torrent
 from Torrent import TorrentData
-
-#for file in os.listdir("../data/all/"):
-#fp = "../data/all/lotseed.torrent" #+ file
 fp = "../data/all/testtest.torrent"
 parser = TorrentParser(filepath=fp)
 data = parser.parse()
 
-for announce in data.announces:
-    print(announce)
-    ann = data.getAnnounceConnection(announce)
-    """
-    if ann == "http" or ann == "https":
-        black_list = ["tracker.tfile.co", "inferno.demonoid.me"]
-        if all(link not in announce for link in black_list):
-            http_communication(data, announce)
-    """
-    if ann == "udp":
-        try:
-            udp_communication(data, announce)
-        except Exception as e:
-            print(e)
-#break 
+from concurrent.futures import ThreadPoolExecutor
+
+# create all threads and communicate to tracker
+print("-"*30)
+futures = []
+with ThreadPoolExecutor(max_workers=50) as executor:
+    for i, announce in enumerate(data.announces):
+        print(announce)
+        ann = data.getAnnounceConnection(announce)
+        if ann == "http" or ann == "https":
+            future = executor.submit(http_communication, data, announce)
+            futures.append(future)
+        elif ann == "udp":
+            future = executor.submit(udp_communication, data, announce)
+            futures.append(future)
+        else:
+            print("Unknown tracker type:", ann)
+    executor.shutdown(wait=True)
+print("-" * 30)
+
+
+# get peers back
+print("-" * 30)
+peer_list = set()
+for future in futures:
+    f = future.exception()
+    if f == None:
+        if type(future.result()) == list:
+            for res in future.result():
+                peer_list.add(res)
+    else:
+        print("exception tracker", f)
+print("-" * 30)
+
+
+# iterate over peers
+print("-" * 30)
+futures = []
+with ThreadPoolExecutor(max_workers=500) as executor:
+    for peer in peer_list:
+        ip, port = peer
+        future = executor.submit(peer_communication, ip, port, data.info_hash)
+        futures.append(future)
+    executor.shutdown(wait=True)
+print("-" * 30)
+
+
+# get working ones
+print("-" * 30)
+for future in futures:
+    f = future.exception()
+    if f == None:
+        print(f)
+    else:
+        print("exception peer", f)
+print("-" * 30)
+
+
+"""
+In the future maybe implement WebSocket trackers:
+- ws connects only to via http without SSL
+- wss connects only to via https with SSL
+https://stackoverflow.com/questions/46557485/difference-between-ws-and-wss
+"""
