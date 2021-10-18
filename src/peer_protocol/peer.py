@@ -1,6 +1,6 @@
-from socket import socket, AF_INET, SOCK_STREAM
-from struct import pack, unpack
-from peer_struct import PeerStruct, PeerMessage
+import socket
+from struct import unpack
+from peer_protocol.peer_struct import PeerStruct, PeerMessage
 
 class Peer(PeerStruct):
     TIMEOUT = 3
@@ -18,7 +18,18 @@ class Peer(PeerStruct):
         self.peer_interested = False
 
         self.create_con()
-            
+    
+    def create_con(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(Peer.TIMEOUT)
+        self.sock = sock
+
+        print(self.ip, self.port)
+        self.sock.connect((self.ip, self.port))
+    
+    def close_con(self):
+        self.sock.close()
+    
     def recv(self):
         try:
             print("listen on socket")
@@ -41,37 +52,28 @@ class Peer(PeerStruct):
         
         id = unpack("!B", recv[4:5])[0]
 
-        if id == PeerMessage.CHOKE:
+        if id == PeerMessage.CHOKE.value:
             pass
-        elif id == PeerMessage.UNCHOKE:
+        elif id == PeerMessage.UNCHOKE.value:
             pass
-        elif id == PeerMessage.INTERESTED:
+        elif id == PeerMessage.INTERESTED.value:
+            print("remote peer sends interested")
+            print(self.val_interested(recv))
+        elif id == PeerMessage.NOTINTERESTED.value:
+            print("remote peer uninterested")
+            print(self.val_not_interested(recv))
+        elif id == PeerMessage.HAVE.value:
             pass
-        elif id == PeerMessage.NOTINTERESTED:
+        elif id == PeerMessage.BITFIELD.value:
+            return self.val_bitfield(recv)
+        elif id == PeerMessage.REQUEST.value:
             pass
-        elif id == PeerMessage.HAVE:
+        elif id == PeerMessage.PIECE.value:
             pass
-        elif id == PeerMessage.BITFIELD:
-            return self.(recv)
-        elif id == PeerMessage.REQUEST:
+        elif id == PeerMessage.CANCEL.value:
             pass
-        elif id == PeerMessage.PIECE:
-            pass
-        elif id == PeerMessage.CANCEL:
-            pass
-        elif id == PeerMessage.PORT:
+        elif id == PeerMessage.PORT.value:
             pass
         else:
             print("Error: Message id unknown")
             return None
-
-    def create_con(self):
-        sock = socket(AF_INET, SOCK_STREAM)
-        sock.settimeout(Peer.TIMEOUT)
-        self.sock = sock
-
-        print(self.ip, self.port)
-        self.sock.connect((self.ip, self.port))
-    
-    def close_con(self):
-        self.sock.close()
