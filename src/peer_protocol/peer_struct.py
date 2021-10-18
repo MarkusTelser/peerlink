@@ -63,7 +63,17 @@ class PeerStruct:
 
         self.send_msg(msg)
         
-    def val_handshake(self, recv, info_hash, peer_id):
+    def recv_handshake(self, info_hash, peer_id):
+        try:
+            print("reading on socket")
+            recv = self.sock.recv(PeerMsgLengths.HANDSHAKE.value)
+        except socket.timeout:
+            print("Error: Send/Response timed out")
+            return False
+        except Exception as e:
+            print(e)
+            return False
+        print(len(recv))
         if len(recv) != PeerMsgLengths.HANDSHAKE.value:
             print("Error: Handshake message has wrong size")
             return None
@@ -232,17 +242,21 @@ class PeerStruct:
             print("Error: bitfield message too small")
             return None
 
-        length = unpack("!I", recv[:4])[0]
-        if length != len(recv) - 1:
-            print("Error: bitfield length field too small")
+        """
+        # doesnt't make any sense, the returend number is always 77
+        length = int((unpack("!I", recv[:4])[0] -1)  / 4)
+        print(length)
+        if length != len(recv) - 4:
+            print("Error: bitfield length field wrong")
             return None
+        """
 
-        bitfield = recv[5:4+length]
+        bitfield = recv[5:]
 
         # TODO iterate over bitfield to find available pieces
         print(bitfield)
         for count, bit in enumerate(bitfield):
-            pass
+            print(count, bit)
     
     """
     request: <len=0013><id=6><index><begin><length>
