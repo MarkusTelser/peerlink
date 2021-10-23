@@ -25,26 +25,45 @@ class UDPTracker:
         self.ip = address
         self.port = port
         self.sock = None
-        
-        self.create_con()
-        #self.main()
-
-    def main(self):
-        self.create_con()
-        cid = self.connect()
-        self.announce(cid)
-        #self.scrape()
 
     def create_con(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(UDPTracker.TIMEOUT)
         self.sock = sock
     
-    def close_con(self):
-        self.sock.close()
-        self.sock = None
 
+    def main(self, data):
+        self.create_con()
+        
+        result = self.connect()
 
+        if result == None:
+            raise Exception("Error: Tracker couldn't connect to Tracker")
+        
+        cid = result
+        info_hash = data.info_hash
+        peer_id = UDPTracker.gen_pid()
+        event = UDPEvents.STARTED.value
+
+        # demo values
+        downloaded = 0
+        left = 0
+        uploaded = 0
+        num_want = 500
+
+        # if not given
+        ip = 0
+        port = 0
+        key = 0
+        
+        results = self.announce(cid, info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
+        self.close_con()
+
+        if result == None:
+            raise Exception("Error: UDP-Tracker results are null")
+        
+        return results
+    
     """
     Connect packet:
 	32-bit integer	action
@@ -63,8 +82,7 @@ class UDPTracker:
             send = self.sock.sendto(msg, (self.ip, self.port))
             recv = self.sock.recv(UDPTracker.BUFFER_SIZE) 
         except socket.timeout:
-            print("Error: Send/Response timed out")
-            return
+            raise Exception("Error: Send/Response timed out")
                 
         if len(recv) < 16:
             print("Error: Announce response smaller than 16 bytes")
@@ -121,8 +139,7 @@ class UDPTracker:
             send = self.sock.sendto(msg, (self.ip, self.port))
             recv, conn = self.sock.recvfrom(UDPTracker.BUFFER_SIZE)
         except socket.timeout:
-            print("Error: Send/Response timed out")
-            return None
+            raise Exception("Error: Send/Response timed out")
 
         if len(recv) < 20:
             print("Error: Announce response smaller than 20 bytes")
@@ -259,3 +276,7 @@ class UDPTracker:
     @staticmethod
     def gen_pid():
         return urandom(20)
+    
+    def close_con(self):
+        self.sock.close()
+        self.sock = None

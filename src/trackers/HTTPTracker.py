@@ -6,6 +6,26 @@ from bencode import decode
 class HTTPTracker:
     def __init__(self, adr_url):
         self.adr_url = adr_url
+
+    def main(self, data):
+        info_hash = data.info_hash_quoted
+        peer_id = data.gen_peer_id()
+        
+        # demo values
+        port = 0
+        uploaded = "0"
+        downloaded = "0"
+        left = "1000"
+
+        recv = self.request(info_hash, peer_id, port, uploaded, downloaded, left)
+
+        if recv == None:
+            raise Exception("Error: HTTP-Tracker results are null")
+        if len(recv["peers"]) == 0:
+            raise Exception("Error: HTTP-Tracker results contain no peers")
+        return recv
+        
+    
     """
     failure_code key that tracker might send back:
 
@@ -57,19 +77,15 @@ class HTTPTracker:
         try:
             recv = get(url, request_parameters, timeout=10)
         except Exception as e:
-            print(e)
-            return
+            return e
         
         print(recv.text)
         try:
             answer = decode(recv.text)
         except Exception as e:
-            print(e)
-            return None
+            return e
 
-        #debug
-        print(json.dumps(answer, indent=4, sort_keys=True))
-        print(recv.status_code)
+        
 
         recv.close()
 
