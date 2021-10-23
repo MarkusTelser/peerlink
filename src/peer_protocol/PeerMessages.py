@@ -1,8 +1,8 @@
-from enum import Enum
 from struct import pack, unpack
+from collections import namedtuple
 import socket
 
-class PeerMessageIDs(Enum):
+class PeerMessageIDs:
     CHOKE = 0x0
     UNCHOKE = 0x1
     INTERESTED = 0x2
@@ -15,7 +15,7 @@ class PeerMessageIDs(Enum):
     PORT = 0x9
 
  # BITFIELD, PIECE have variable len
-class PeerMsgLengths(Enum):
+class PeerMsgLengths:
     HANDSHAKE = 68
     KEEP_ALIVE = 4
     CHOKE = 5
@@ -27,6 +27,18 @@ class PeerMsgLengths(Enum):
     REQUEST = 17
     CANCEL = 17
 
+class PeerMessageStructures:
+    KeepAlive = namedtuple('KeepAlive', '')
+    Choke = namedtuple('Choke', '')
+    Unchoke = namedtuple('Unchoke', '')
+    Interested = namedtuple('Interested', '')
+    NotInterested = namedtuple('NotInterested', '')
+    Have = namedtuple('Have', 'piece_index')
+    Bitfield = namedtuple('Bitfield', 'bitfield')
+    Request = namedtuple('Request', 'index begin length')
+    Piece = namedtuple('Piece', 'index begin block')
+    Cancel = namedtuple('Cancel', 'index begin length')
+    Port = namedtuple('Port', 'listen_port')
 
 """
 this class contains a validate (def val)
@@ -35,7 +47,7 @@ so communication in each direction is easily possible
 in an upper class socket a receive is 
 implemented, because we don't always know what we receive
 """
-class PeerStruct:  
+class PeerMessages:  
     def send_msg(self, msg):
         try:
             send = self.sock.send(msg)

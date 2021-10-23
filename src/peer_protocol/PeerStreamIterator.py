@@ -1,22 +1,8 @@
 from struct import unpack
-from typing import NamedTuple
-from collections import namedtuple
+from peer_protocol.Peer import Peer
+from peer_protocol.PeerMessages import *
 
-class PeerMessages:
-    KeepAlive = namedtuple('KeepAlive', '')
-    Choke = namedtuple('Choke', '')
-    Unchoke = namedtuple('Unchoke', '')
-    Interested = namedtuple('Interested', '')
-    NotInterested = namedtuple('NotInterested', '')
-    Have = namedtuple('Have', 'piece_index')
-    Bitfield = namedtuple('Bitfield', 'bitfield')
-    Request = namedtuple('Request', 'index begin length')
-    Piece = namedtuple('Piece', 'index begin block')
-    Cancel = namedtuple('Cancel', 'index begin length')
-    Port = namedtuple('Port', 'listen_port')
-
-
-class PeerStreamIterator:
+class PeerStreamIterator(PeerMessages):
     def __init__(self):
         self.data = b''
 
@@ -29,38 +15,38 @@ class PeerStreamIterator:
             length = unpack("!I", self.data[:4])[0]
             if length == 0:
                 self.data = self.data[HEADER_LENGTH:]
-                return PeerMessages.KeepAlive
+                return PeerMessageStructures.KeepAlive
             
             if len(self.data) >= length + HEADER_LENGTH:
                 id == unpack("!B", self.data[4:5])[0]
 
                 if 0 <= id <= 9:
-                    data = ""
+                    ret = None
 
                     if id == 0:
-                        return PeerMessages.Choke
+                        ret = PeerMessageStructures.Choke
                     elif id == 1:
-                        return PeerMessages.Unchoke
+                        ret =  PeerMessageStructures.Unchoke
                     elif id == 2:
-                        return PeerMessages.Interested
+                        ret = PeerMessageStructures.Interested
                     elif id == 3:
-                        return PeerMessages.NotInterested
+                        ret =  PeerMessageStructures.NotInterested
                     elif id == 4:
-                        pass
+                        ret =  PeerMessages.val_have()
                     elif id == 5:
-                        pass
+                        ret =  PeerMessages.val_bitfield()
                     elif id == 6:
-                        pass
+                        ret =  PeerMessages.val_request()
                     elif id == 7:
-                        pass
+                        ret =  PeerMessages.val_piece()
                     elif id == 8:
-                        pass
+                        ret =  PeerMessages.val_cancel()
                     elif id == 9:
-                        pass
+                        ret =  PeerMessages.val_port()
                     
                     # clean up data and return parsed data 
                     self.data = self.data[HEADER_LENGTH + length:]
-                    return data
+                    return ret
                 else:
                     raise Exception("Error: Unknown message id", id)
             else:

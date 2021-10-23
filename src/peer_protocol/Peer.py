@@ -4,7 +4,7 @@ from peer_protocol.peer_struct import PeerStruct, PeerMessage
 
 class Peer(PeerStruct):
     TIMEOUT = 3
-    BUFFER_SIZE = 1024
+    BUFFER_SIZE = 10240
 
     def __init__(self, ip, port):
         self.sock = None
@@ -23,8 +23,6 @@ class Peer(PeerStruct):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(Peer.TIMEOUT)
         self.sock = sock
-
-        print(self.ip, self.port)
         self.sock.connect((self.ip, self.port))
     
     def close_con(self):
@@ -32,21 +30,17 @@ class Peer(PeerStruct):
     
     def recv(self):
         try:
-            print("listen on socket")
             recv = self.sock.recv(Peer.BUFFER_SIZE) 
-            print(recv)
         except socket.timeout:
-            #print("Error: Send/Response timed out")
-            self.sock.close()
-            return
+            #self.sock.close()
+            raise Exception("Error: Listening timed out")
         except Exception as e:
             print(e)
-            self.sock.close()
+            #self.sock.close()
             return
 
         if len(recv) < 4:
-            print("Error: Peer message too small")
-            return False
+            raise Exception("Error: Peer message too small",len(recv),recv)
         elif len(recv) == 4:
             return self.val_keep_alive(recv)
         
@@ -65,7 +59,10 @@ class Peer(PeerStruct):
         elif id == PeerMessage.HAVE.value:
             pass
         elif id == PeerMessage.BITFIELD.value:
-            return self.val_bitfield(recv)
+            print("received bitfield")
+            print(unpack("!I", recv[0:4]))
+            self.val_bitfield(recv)
+            return recv
         elif id == PeerMessage.REQUEST.value:
             pass
         elif id == PeerMessage.PIECE.value:
@@ -75,5 +72,5 @@ class Peer(PeerStruct):
         elif id == PeerMessage.PORT.value:
             pass
         else:
-            print("Error: Message id unknown")
-            return None
+            raise Exception("Error: Message id unknown", id, recv)
+        return recv
