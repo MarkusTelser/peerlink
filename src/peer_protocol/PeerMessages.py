@@ -1,3 +1,4 @@
+from os import stat
 from struct import pack, unpack
 from collections import namedtuple
 import socket
@@ -15,7 +16,7 @@ class PeerMessageIDs:
     PORT = 0x9
 
  # BITFIELD, PIECE have variable len
-class PeerMsgLengths:
+class PeerMessageLengths:
     HANDSHAKE = 68
     KEEP_ALIVE = 4
     CHOKE = 5
@@ -39,7 +40,7 @@ class PeerMessageStructures:
     Piece = namedtuple('Piece', 'index begin block')
     Cancel = namedtuple('Cancel', 'index begin length')
     Port = namedtuple('Port', 'listen_port')
-
+    
 """
 this class contains a validate (def val)
 and build (def bld) for each peer message type
@@ -47,21 +48,11 @@ so communication in each direction is easily possible
 in an upper class socket a receive is 
 implemented, because we don't always know what we receive
 """
-class PeerMessages:  
-    def send_msg(self, msg):
-        try:
-            send = self.sock.send(msg)
-        except socket.timeout:
-            raise Exception("Error: Sending timed out")
-        except Exception as e:
-            print(e)
-            return False
-        return send
-
+class PeerMessages:
     """
     handshake: <pstrlen><pstr><reserved><info_hash><peer_id>
     """
-    def send_handshake(self, info_hash, peer_id):
+    def bld_handshake(self, info_hash, peer_id):
         pstrlen = 19
         pstr = b'BitTorrent protocol'
         
@@ -71,124 +62,80 @@ class PeerMessages:
         msg += pack('!20s', info_hash)
         msg += pack('!20s', peer_id)
 
-        len = self.send_msg(msg)
-        if len != PeerMessageLengths.HANDSHAKE.value:
-            raise Exception("Error: Handshake not sent fully", len)
-        
-    def recv_handshake(self, info_hash, peer_id):
-        try:
-            recv = self.sock.recv(PeerMessageLengths.HANDSHAKE.value)
-        except socket.timeout:
-            raise Exception("Error: Response timed out")
-        except Exception as e:
-            print(e)
-            return False
-        
-        if len(recv) != PeerMessageLengths.HANDSHAKE.value:
-            raise Exception("Error: Handshake message has wrong size", len(recv), recv)
-        
-        recv_info_hash = unpack("!20s", recv[28:48])[0]
-        if recv_info_hash != info_hash:
-            raise Exception("Error: Received info hash does not match")
-
-        recv_peer_id = unpack("!20s", recv[48:68])[0]
-        if recv_peer_id == peer_id:
-            raise Exception("Erro: Peer didn't return unique peer id")
-
-        return recv_peer_id
+        return msg
 
     """
     keep-alive: <len=0000>
     """
-    def send_keep_alive(self):
+    def bld_keep_alive(self):
         length = 0
         msg = pack("!I", length)
-        self.send_msg(msg)
+        return msg
 
     """
     choke: <len=0001><id=0>
     """
-    def send_choke(self):
+    def bld_choke(self):
         length = 1
-        id = PeerMessageIDs.CHOKE.value
+        id = PeerMessageIDs.CHOKE
         msg = pack("!IB", length, id)
-
-        self.send_msg(msg)
-    
+        return msg
 
     """
     unchoke: <len=0001><id=1>
     """
-    def send_unchoke(self):
+    def bld_unchoke(self):
         length = 1
-        id = PeerMessageIDs.UNCHOKE.value
+        id = PeerMessageIDs.UNCHOKE
         msg = pack("!IB", length, id)
-
-        self.send_msg(msg)
+        return msg
 
     """
     interested: <len=0001><id=2>
     """
-    def send_interested(self):
+    def bld_interested(self):
         length = 1
-        id = PeerMessageIDs.INTERESTED.value
+        id = PeerMessageIDs.INTERESTED
         msg = pack("!IB", length, id)
-
-        len = self.send_msg(msg)
-        if len != PeerMessageLengths.INTERESTED.value:
-            raise Exception("Error: Interested not fully send", len)
-
+        return msg
 
     """
     not interested: <len=0001><id=3>
     """
-    def send_not_interested(self):
+    def bld_not_interested(self):
         length = 1
-        id = PeerMessageIDs.NOTINTERESTED.value
+        id = PeerMessageIDs.NOTINTERESTED
         msg = pack("!IB", length, id)
-
-        self.send_msg(msg)
-    
+        return msg
 
     """
     have: <len=0005><id=4><piece index>
     """
-    def send_have(self, piece_index):
+    def bld_have(self, piece_index):
         length = 5
-        id = PeerMessageIDs.HAVE.value
+        id = PeerMessageIDs.HAVE
 
         msg = pack("!IB", length, id)
         msg += pack("!20s", piece_index)
-
-        self.send_msg(msg)
+        return msg
     
     def val_have(self, recv):
-        if len(recv) != PeerMessageLengths.HAVE.value:
-            print("Error: Have message has wrong size")
-            return None
-        
-        length = unpack("!I", recv[:4])[0]
-        if length != 5:
-            print("Error: Have length field not 1")
-            return None
-        
         piece_index = unpack("!20s", recv[5:25])[0]
-
         return piece_index
     
     """
     bitfield: <len=0001+X><id=5><bitfield>
     """
-    def send_bitfield(self, bitfield):
+    def bld_bitfield(self, bitfield):
         length = 1 + len(bitfield)
-        id = PeerMessageIDs.BITFIELD.value
+        id = PeerMessageIDs.BITFIELD
 
         msg = pack("!IB", length, id)
         msg += pack(f"{len(bitfield)}s", bitfield)
+        return msg
 
-        self.send_msg(msg)
-
-    def val_bitfield(self, recv):
+    @staticmethod
+    def val_bitfield(recv):
         """
         if len(recv) <= 5:
             raise Exception("Error: bitfield message too small", recv)
@@ -216,106 +163,62 @@ class PeerMessages:
     """
     request: <len=0013><id=6><index><begin><length>
     """
-    def send_request(self, index, begin, length):
+    def bld_request(self, index, begin, length):
         len = 13
-        id = PeerMessageIDs.REQUEST.value
+        id = PeerMessageIDs.REQUEST
 
         msg = pack("!IB", len, id)
         msg += pack("!III", index, begin, length)
-
-        self.send_msg(msg)
+        return msg
 
     def val_request(self, recv):
-        if len(recv) != PeerMessageLengths.REQUEST.value:
-            print("Error: Request message has wrong size")
-            return None
-        
-        length = unpack("!I", recv[:4])[0]
-        if length != PeerMessageLengths.REQUEST.value:
-            print("Error: Request length not 17")
-            return None
-        
         index, begin, length = unpack("!III", recv[5:17])
-
         return index, begin, length
 
 
     """
     piece: <len=0009+X><id=7><index><begin><block>
     """
-    def send_piece(self, index, begin, block):
+    def bld_piece(self, index, begin, block):
         length = 9 + len(block)
-        id = PeerMessageIDs.PIECE.value
+        id = PeerMessageIDs.PIECE
 
         msg = pack("!IB", length, id)
         msg += pack(f"!II{len(block)}s", index, begin, block)
-
-        self.send_msg(msg)
+        return msg
     
-    def val_piece(self, recv):
-        if len(recv) <= 13:
-            print("Error: Piece message has wrong size")
-            return None
-        
-        length = unpack("!I", recv[:4])[0]
-        if length != len(recv) -4:
-            print("Error: Piece length wrong size")
-            return None
-        
-        index, begin, block = unpack(f"!II{len(recv) - 9}s", recv[5:])
-
+    @staticmethod
+    def val_piece(recv):
+        index, begin, block = unpack(f"!II{len(recv) - 13}s", recv[5:])
         return index, begin, block
 
     """
     cancel: <len=0013><id=8><index><begin><length>
     """
-    def send_cancel(self, index, begin, length):
+    def bld_cancel(self, index, begin, length):
         len = 13
-        id = PeerMessageIDs.CANCEL.value
+        id = PeerMessageIDs.CANCEL
 
         msg = pack("!IB", len, id)
         msg += pack("!III", index, begin, length)
-
-        self.send_msg(msg)
+        return msg
 
     def val_cancel(self, recv):
-        if len(recv) != PeerMessageLengths.CANCEL.value:
-            print("Error: Cancel message has wrong size")
-            return None
-        
-        length = unpack("!I", recv[:4])[0]
-        if length != 13:
-            print("Error: Cancel length field not 13")
-            return None
-        
         index, begin, length = unpack("!III", recv[5:17])
-
         return index, begin, length
 
     # if DHT tracker is supported
     """
     port: <len=0003><id=9><listen-port>
     """
-    def send_port(self, listen_port):
+    def bld_port(self, listen_port):
         length = 3
-        id = PeerMessageIDs.PORT.value
+        id = PeerMessageIDs.PORT
 
         msg = pack("!IB", length, id)
         msg += pack("!I", listen_port)
+        return msg
 
-        self.send_msg(msg)
-
-
-    def val_port(self, recv):
-        if len(recv) != PeerMessageLengths.PORT.value:
-            print("Error: Port message has wrong size")
-            return None
-        
-        length = unpack("!I", recv[:4])[0]
-        if length != 3:
-            print("Error: Port length field not 3")
-            return None
-        
+    def val_port(self, recv):    
         listen_port = unpack("!I", recv[5:9])[0]
-
         return listen_port

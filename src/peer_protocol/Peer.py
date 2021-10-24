@@ -1,12 +1,14 @@
 import socket
 from struct import unpack
-from peer_protocol.peer_struct import PeerStruct, PeerMessage
+from peer_protocol.PeerMessages import PeerMessageLengths
+from peer_protocol.PeerStreamIterator import PeerStreamIterator
 
-class Peer(PeerStruct):
-    TIMEOUT = 3
-    BUFFER_SIZE = 10240
-
+"""
+implement peer protocol
+"""
+class Peer(PeerStreamIterator):
     def __init__(self, ip, port):
+        super().__init__()
         self.sock = None
         self.ip = ip
         self.port = port
@@ -18,59 +20,45 @@ class Peer(PeerStruct):
         self.peer_interested = False
 
         self.create_con()
-    
+      
     def create_con(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(Peer.TIMEOUT)
         self.sock = sock
         self.sock.connect((self.ip, self.port))
-    
-    def close_con(self):
-        self.sock.close()
-    
-    def recv(self):
+
+    def send_msg(self, msg, expected_len=-1):
         try:
-            recv = self.sock.recv(Peer.BUFFER_SIZE) 
+            send_len = self.sock.send(msg)
+        except Exception as e:
+            raise Exception("Error: ", e)
+        
+        if expected_len != -1 and expected_len != send_len:
+            raise Exception("Error: Didn't send everything")
+
+    def recv_handshake(self, info_hash, peer_id):
+        try:
+            recv = self.sock.recv(PeerMessageLengths.HANDSHAKE)
         except socket.timeout:
-            #self.sock.close()
-            raise Exception("Error: Listening timed out")
+            raise Exception("Error: Response timed out")
         except Exception as e:
             print(e)
-            #self.sock.close()
-            return
-
-        if len(recv) < 4:
-            raise Exception("Error: Peer message too small",len(recv),recv)
-        elif len(recv) == 4:
-            return self.val_keep_alive(recv)
+            return False
         
-        id = unpack("!B", recv[4:5])[0]
+        if len(recv) != PeerMessageLengths.HANDSHAKE:
+            raise Exception("Error: Handshake message has wrong size", len(recv), recv)
+        
+        recv_info_hash = unpack("!20s", recv[28:48])[0]
+        if recv_info_hash != info_hash:
+            raise Exception("Error: Received info hash does not match")
 
-        if id == PeerMessage.CHOKE.value:
-            pass
-        elif id == PeerMessage.UNCHOKE.value:
-            pass
-        elif id == PeerMessage.INTERESTED.value:
-            print("remote peer sends interested")
-            print(self.val_interested(recv))
-        elif id == PeerMessage.NOTINTERESTED.value:
-            print("remote peer uninterested")
-            print(self.val_not_interested(recv))
-        elif id == PeerMessage.HAVE.value:
-            pass
-        elif id == PeerMessage.BITFIELD.value:
-            print("received bitfield")
-            print(unpack("!I", recv[0:4]))
-            self.val_bitfield(recv)
-            return recv
-        elif id == PeerMessage.REQUEST.value:
-            pass
-        elif id == PeerMessage.PIECE.value:
-            pass
-        elif id == PeerMessage.CANCEL.value:
-            pass
-        elif id == PeerMessage.PORT.value:
-            pass
-        else:
-            raise Exception("Error: Message id unknown", id, recv)
-        return recv
+        recv_peer_id = unpack("!20s", recv[48:68])[0]
+        if recv_peer_id == peer_id:
+            raise Exception("Error: Peer didn't return unique peer id")
+
+        return recv_peer_id
+    
+    def recv_msg(self):
+        return self.recv(self.sock)
+
+    def close_con(self):
+        self.sock.close()
