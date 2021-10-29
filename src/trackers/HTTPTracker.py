@@ -1,21 +1,36 @@
 import json
+from random import
+from string import ascii_letters, choice
 
 from requests import get
 from bencode import decode
+
+class HTTPEvents:
+    STARTED = "started"
+    STOPPED = "stopped"
+    COMPLETED = "completed"
 
 class HTTPTracker:
     def __init__(self, adr_url):
         self.adr_url = adr_url
 
-    def main(self, data):
-        info_hash = data.info_hash_quoted
-        peer_id = data.gen_peer_id()
-        
+    def main(self, info_hash, peer_id):
+        event = HTTPEvents.STARTED
+        peer_id = "-qB3090-" + ''.join(choice(ascii_letters) for _ in range(12)), 'utf-8'
+
         # demo values
+        ip = 0
         port = 0
         uploaded = "0"
         downloaded = "0"
         left = "1000"
+
+        # optional
+        numwant = 50
+        no_peer_id = 1
+        compact = 0
+        key = ""
+        trackerid = ""
 
         recv = self.request(info_hash, peer_id, port, uploaded, downloaded, left)
 
@@ -79,14 +94,13 @@ class HTTPTracker:
         except Exception as e:
             return e
         
-        print(recv.text)
         try:
             answer = decode(recv.text)
         except Exception as e:
             return e
 
-        
-
         recv.close()
-
         return answer
+    
+    def gen_pid(self):
+        return 

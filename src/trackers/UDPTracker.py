@@ -1,8 +1,9 @@
 from enum import Enum
 from random import randint
+from string import ascii_letters
 from struct import pack, unpack
 import socket
-from os import urandom
+from random import ascii_letters, choice
 
 class Actions(Enum):
     CONNECT = 0x0
@@ -32,7 +33,7 @@ class UDPTracker:
         self.sock = sock
     
 
-    def main(self, data):
+    def main(self, info_hash):
         self.create_con()
         
         result = self.connect()
@@ -41,7 +42,6 @@ class UDPTracker:
             raise Exception("Error: Tracker couldn't connect to Tracker")
         
         cid = result
-        info_hash = data.info_hash
         peer_id = UDPTracker.gen_pid()
         event = UDPEvents.STARTED.value
 
@@ -275,7 +275,7 @@ class UDPTracker:
     
     @staticmethod
     def gen_pid():
-        return urandom(20)
+        return bytes("-qB3090-" + ''.join(choice(ascii_letters) for _ in range(12)), 'utf-8')
     
     def close_con(self):
         self.sock.close()
