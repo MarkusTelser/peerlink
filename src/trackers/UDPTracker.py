@@ -3,7 +3,9 @@ from random import randint
 from string import ascii_letters
 from struct import pack, unpack
 import socket
-from random import ascii_letters, choice
+from random import choice
+
+from exceptions import *
 
 class Actions(Enum):
     CONNECT = 0x0
@@ -22,24 +24,26 @@ class UDPTracker:
     BUFFER_SIZE = 2048
     TIMEOUT = 5
 
-    def __init__(self, address, port):
-        self.ip = address
+    def __init__(self, host, port, info_hash):
+        self.host = host
         self.port = port
+        self.info_hash = info_hash
         self.sock = None
 
     def create_con(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(UDPTracker.TIMEOUT)
+        try:
+            sock.connect((self.host, self.port))
+        except socket.gaierror as e:
+            raise UnknownHost("Couldn't resolve host name")
         self.sock = sock
     
 
-    def main(self, info_hash):
+    def main(self):
         self.create_con()
         
         result = self.connect()
-
-        if result == None:
-            raise Exception("Error: Tracker couldn't connect to Tracker")
         
         cid = result
         peer_id = UDPTracker.gen_pid()
@@ -56,7 +60,7 @@ class UDPTracker:
         port = 0
         key = 0
         
-        results = self.announce(cid, info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
+        results = self.announce(cid, self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
         self.close_con()
 
         if result == None:
@@ -71,19 +75,21 @@ class UDPTracker:
     64-bit integer	connection_id
     """
     def connect(self):
-        if self.sock == None:
-            print("Error: Socket not created")
-            return
-
         TID = self.gen_tid()
         msg = pack('!QII', UDPTracker.IDENTIFICATION, Actions.CONNECT.value, TID)
 
         try:
-            send = self.sock.sendto(msg, (self.ip, self.port))
+            send = self.sock.send(msg)    
+        except socket.timeout:
+            raise SendTimeout("Sending connect timed out")
+        
+        try:
             recv = self.sock.recv(UDPTracker.BUFFER_SIZE) 
         except socket.timeout:
-            raise Exception("Error: Send/Response timed out")
-                
+            raise ReceiveTimeout("Recieving connect timed out")
+        except ConnectionRefusedError:
+            raise ConnectionRefused("Connection refused")
+        
         if len(recv) < 16:
             print("Error: Announce response smaller than 16 bytes")
             return
@@ -122,10 +128,6 @@ class UDPTracker:
     16-bit integer port
     """
     def announce(self, cid, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0x0, num_want=-1):
-        if self.sock == None:
-            print("Error: Socket not created")
-            return
-        
         # create message
         TID = self.gen_tid()
         msg = pack('!QII', cid, Actions.ANNOUNCE.value, TID)
@@ -135,11 +137,14 @@ class UDPTracker:
         
         # send and receive announce packet
         try:
-            print("udp tracker: ", self.ip, self.port)
-            send = self.sock.sendto(msg, (self.ip, self.port))
-            recv, conn = self.sock.recvfrom(UDPTracker.BUFFER_SIZE)
+            send = self.sock.send(msg)
         except socket.timeout:
-            raise Exception("Error: Send/Response timed out")
+            raise TorrentExceptions("Sending announce timed out")
+        
+        try:
+            recv = self.sock.recv(UDPTracker.BUFFER_SIZE)
+        except socket.timeout:
+            raise TorrentExceptions("Receiving announce timed out")
 
         if len(recv) < 20:
             print("Error: Announce response smaller than 20 bytes")
@@ -170,9 +175,6 @@ class UDPTracker:
             tcp_port = unpack('!H', recv[24 + i * 6:26 + i * 6])[0]
             results.append((ip, tcp_port))
 
-        print("Interval : ", interval) 
-        print("Leechers:", leechers," Seeders:", seeders) 
-        print(results)
         return results
 
 
@@ -184,10 +186,6 @@ class UDPTracker:
 	20-byte string	info_hash
     """
     def scrape(self, cid, info_hashes: list):
-        if self.sock == None:
-            print("Error: Socket not created")
-            return
-        
         # create message
         TID = self.gen_tid()
         msg = pack('!QII', cid, Actions.SCRAPE.value, TID)
@@ -196,7 +194,7 @@ class UDPTracker:
 
         # send and receive announce packet
         try:
-            send = self.sock.sendto(msg, (self.ip, self.port))
+            send = self.sock.send(msg)
             recv, conn = self.sock.recvfrom(UDPTracker.BUFFER_SIZE)
         except socket.timeout:
             print("Error: Send/Response timed out")
