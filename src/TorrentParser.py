@@ -1,65 +1,70 @@
 from os.path import exists
 from bencode import decode
 from datetime import datetime
-
 from bencode import bdecode, decode
 from Torrent import TorrentData, TorrentFile
 
 class TorrentParser:
-    def __init__(self, file=None, filepath=None):
-        self.file = file
-        self.filepath = filepath
-        self.data = None
-
-    def parse(self):
-        # get file and extract data
-        if self.filepath != None:
-            print(self.filepath)
-            if exists(self.filepath):
-                with open(self.filepath, "rb") as f:
-                    encry = f.read()
-                self.bdata = bdecode(encry)
-                self.data = decode(encry)
-            else:
-                print("Error: File doesnt exist")
-        elif self.file != None:
-            encry = self.file.read()
-            self.bdata = bdecode(encry)
-            self.data = decode(encry)
+    @staticmethod
+    def parse_file(file):
+        if file == None:
+            raise Exception("Error: File equals None")
+        encry = file.read()
+        data = decode(encry)
+        bdata = bdecode(encry)
+        return TorrentParser.parse(data, bdata)
+    
+    @staticmethod
+    def parse_filepath(filepath):
+        if exists(filepath):
+            with open(filepath, "rb") as f:
+                encry = f.read()
+            data = decode(encry)
+            bdata = bdecode(encry)
+            return TorrentParser.parse(data, bdata)
         else:
-            print("Error: No File or Filepath provided")
-            return
+            print("Error: File doesnt exist")
+    
+    @staticmethod
+    def parse_magnet_link(link):
+        pass
+
+    @staticmethod
+    def parse(data, bdata):
+        if data == None or bdata == None:
+            raise Exception("Error: File data given equals None")
 
         # create torrent object to save torrent
         torrent = TorrentData()    
         
         # check if contains tracker, in announce/announce-list otherwise error
-        if "announce" in self.data:
-            torrent.announces.add(self.data["announce"])
-        if "announce-list" in self.data:
-            for announce in self.data["announce-list"]:
-                torrent.announces.add(announce[0])
-        if not "announce" in self.data and not "announce-list" in self.data:
+        if "announce" in data:
+            torrent.announces.append(data["announce"])
+        if "announce-list" in data:
+            for announce in data["announce-list"]:
+                if not announce[0] in torrent.announces:
+                    torrent.announces.append(announce[0])
+        if not "announce" in data and not "announce-list" in data:
             print("Error: Neither announce nor announce-list in torrent")
             return
 
         # optional fields
-        if "created by" in self.data:
-            torrent.created_by = self.data["created by"]
-        if "creation date" in self.data:
-            date = datetime.utcfromtimestamp(self.data["creation date"])
+        if "created by" in data:
+            torrent.created_by = data["created by"]
+        if "creation date" in data:
+            date = datetime.utcfromtimestamp(data["creation date"])
             torrent.creation_date = date.strftime('%Y-%m-%d %H:%M:%S')
-        if "comment" in self.data:
-            torrent.comment = self.data["comment"]
-        if "encoding" in self.data:
-            torrent.encoding = self.data["encoding"]
-        if "nodes" in self.data:
-            for ip, port in self.data["nodes"]:
+        if "comment" in data:
+            torrent.comment = data["comment"]
+        if "encoding" in data:
+            torrent.encoding = data["encoding"]
+        if "nodes" in data:
+            for ip, port in data["nodes"]:
                 torrent.nodes.add(tuple((ip, port)))
         
-        if "info" in self.data:
-            info = self.data.get("info")
-            torrent.info = self.bdata['info']
+        if "info" in data:
+            info = data.get("info")
+            torrent.info = bdata['info']
 
             torrent.pieces = info["pieces"]
             torrent.piece_length = info["piece length"]
@@ -97,5 +102,5 @@ class TorrentParser:
                 torrent.private = True if info["private"] == 0 else False
         else:
             raise Exception("Error: Doesnt contain info in torrent")
-
+    
         return torrent
