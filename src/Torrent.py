@@ -13,7 +13,7 @@ class TorrentFile:
 
 class TorrentData:
     def __init__(self):
-        self.announces = set()
+        self.announces = list()
         self.created_by = ""
         self.creation_date = ""
         self.comment = ""
@@ -28,41 +28,19 @@ class TorrentData:
         self.info = None
         self.private = False
 
+    def check_piece_hash(self, index, hash):
+        true_hash = self.pieces[index * 20: (index + 1) * 20]
+        return true_hash == hash
+
     @property
     def info_hash(self):
         encoded = bencode(self.info)
-        hash = sha1(encoded).digest()
+        hash = sha1(encoded).digest()   
         return hash
             
     @property 
     def info_hash_quoted(self):
         return quote_plus(self.info_hash)
-
-    def generate_pieces(self):
-        pass
-
-    @staticmethod
-    def getAnnounceConnection(announce):
-        return announce.split("://")[0]
-
-    @staticmethod
-    def getLinkFromAnnounce(announce):
-        ann = TorrentData.getAnnounceConnection(announce)
-        if ann == "http":
-            return "http://" + announce.split("/")[2]
-        elif ann == "https":
-            return "https://" + announce.split("/")[2]
-        elif ann == "udp":
-            return announce.split("/")[2].split(":")[0]
-    
-    @staticmethod
-    def getPortFromAnnounce(announce):
-        link = announce.split("/")[2]
-        if ":" in link:
-            return int(link.split(":")[1])
-        else:
-            pass
-        # TODO return ports range to try out
     
     @staticmethod
     def gen_peer_id():
