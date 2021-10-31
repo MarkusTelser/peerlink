@@ -13,22 +13,32 @@ class TorrentExceptions(Exception):
     pass
 
 """ --Torrent Sub-Exceptions-- """
-
-class NetworkExceptions(Exception):
+class NetworkExceptions(TorrentExceptions):
     pass
 
-class MessageExceptions(Exception):
+class MessageExceptions(TorrentExceptions):
     pass
 
 """ --Network Sub-Exceptions-- """
 
-class SendTimeoutException(NetworkExceptions):
+class SendTimeout(NetworkExceptions):
     pass
 
-class ReceiveTimeoutException(NetworkExceptions):
+class ReceiveTimeout(NetworkExceptions):
+    pass
+
+class ConnectionRefused(NetworkExceptions):
+    pass
+
+class UnknownHost(NetworkExceptions):
     pass
 
 """ --Message Sub-Exceptions-- """
 
-class InvalidResponseException(MessageExceptions):
+
+""" --General Sub-Exceptions-- """
+class UnknownTrackerType(TorrentExceptions):
+    pass
+
+class NotSupportedOperation(TorrentExceptions):
     pass
