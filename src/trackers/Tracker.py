@@ -12,10 +12,11 @@ class TrackerType(Enum):
     HTTPS = 2
 
 class Tracker(Thread):
-    def __init__(self, link, data):
+    def __init__(self, link, info_hash, info_hash_quoted):
         Thread.__init__(self)
         self.link = link
-        self.data  =data
+        self.info_hash = info_hash
+        self.info_hash_quoted = info_hash_quoted
 
         self.type = None
         self.peers = list()
@@ -48,10 +49,10 @@ class Tracker(Thread):
         if self.error != "":
             return
         elif self.type == TrackerType.HTTP or self.type == TrackerType.HTTPS:
-            tracker = HTTPTracker(self.address, self.data.info_hash_quoted)
+            tracker = HTTPTracker(self.address, self.info_hash_quoted)
         elif self.type == TrackerType.UDP:
             ip, port = self.address
-            tracker = UDPTracker(ip, port, self.data.info_hash)
+            tracker = UDPTracker(ip, port, self.info_hash)
         
         # call sub class to get peers, handle exceptions
         try:
