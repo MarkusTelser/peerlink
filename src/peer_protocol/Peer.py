@@ -1,17 +1,21 @@
 import socket
 from struct import unpack
-from peer_protocol.PeerMessages import PeerMessageLengths
+from peer_protocol.PeerMessages import PeerMessageLengths, PeerMessageStructures
 from peer_protocol.PeerStreamIterator import PeerStreamIterator
+from threading import Thread
 
 """
 implement peer protocol
 """
 class Peer(PeerStreamIterator):
-    def __init__(self, ip, port):
+    TIMEOUT = 10
+
+    def __init__(self, address, info_hash, peer_id):
         super().__init__()
         self.sock = None
-        self.ip = ip
-        self.port = port
+        self.address = address #  => (ip, port)
+        self.info_hash = info_hash
+        self.peer_id = peer_id
 
         # TODO implement after right
         self.am_choking = True
@@ -19,12 +23,28 @@ class Peer(PeerStreamIterator):
         self.peer_choking = True
         self.peer_interested = False
 
+    def main(self):
         self.create_con()
+        
+        # send and receive handshake
+        msg = self.bld_handshake(self.info_hash, self.peer_id)
+        self.send_msg(msg, expected_len=68)
+        self.recv_handshake(self.info_hash, self.peer_id)
+
+        listen_thread = Thread(target=self.recv_msg)
+        send_thread = Thread(target=self.send)
+
+        # TODO thread listen on socket
+        # TODO thread gets requests from piece manager
       
     def create_con(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(self.TIMEOUT)
         self.sock = sock
-        self.sock.connect((self.ip, self.port))
+        self.sock.connect(self.address)
+    
+    def send(self):
+        pass
 
     def send_msg(self, msg, expected_len=-1):
         try:
@@ -58,7 +78,33 @@ class Peer(PeerStreamIterator):
         return recv_peer_id
     
     def recv_msg(self):
-        return self.recv(self.sock)
+        recv = self.recv(self.sock)
+
+        if isinstance(recv, PeerMessageStructures.Choke):
+            self.am_choking = True
+        elif isinstance(recv, PeerMessageStructures.Unchoke):
+            self.am_choking = False
+        elif isinstance(recv, PeerMessageStructures.Interested):
+            self.am_interested = True
+        elif isinstance(recv, PeerMessageStructures.NotInterested):
+            self.am_interested = False
+        
+        if isinstance(recv, PeerMessageStructures.Have):
+            pass
+        elif isinstance(recv, PeerMessageStructures.Bitfield):
+            pass
+        elif isinstance(recv, PeerMessageStructures.Request):
+            # TODO implement with seeding
+            pass
+        elif isinstance(recv, PeerMessageStructures.Piece):
+            pass
+        elif isinstance(recv, PeerMessageStructures.Cancel):
+            # TODO implement with EndGame Strategy
+            pass
+        elif isinstance(recv, PeerMessageStructures.Port):
+            # TODO implement with DHT
+            pass
+        
 
     def close_con(self):
         self.sock.close()

@@ -121,7 +121,8 @@ class PeerMessages:
     
     def val_have(self, recv):
         piece_index = unpack("!20s", recv[5:25])[0]
-        return piece_index
+        ret = PeerMessageStructures.Have(piece_index)
+        return ret
     
     """
     bitfield: <len=0001+X><id=5><bitfield>
@@ -136,29 +137,9 @@ class PeerMessages:
 
     @staticmethod
     def val_bitfield(recv):
-        """
-        if len(recv) <= 5:
-            raise Exception("Error: bitfield message too small", recv)
-        """
-        """
-        # doesnt't make any sense, the returend number is always 77
-        length = int((unpack("!I", recv[:4])[0] -1)  / 4)
-        print(length)
-        if length != len(recv) - 4:
-            print("Error: bitfield length field wrong")
-            return None
-        """
-        length = int(unpack("!I", recv[:4])[0]) - 1
-        if length > len(recv) - 5:
-            print("missing bitfield")
-
         bitfield = recv[5:]
-        return bitfield
-
-        # TODO iterate over bitfield to find available pieces
-        #print(bitfield)
-        #for count, bit in enumerate(bitfield):
-        #    print(count, bit)
+        ret = PeerMessageStructures.Bitfield(bitfield)
+        return ret
     
     """
     request: <len=0013><id=6><index><begin><length>
@@ -173,7 +154,8 @@ class PeerMessages:
 
     def val_request(self, recv):
         index, begin, length = unpack("!III", recv[5:17])
-        return index, begin, length
+        ret = PeerMessageStructures.Request(index, begin, length)
+        return ret
 
 
     """
@@ -187,10 +169,10 @@ class PeerMessages:
         msg += pack(f"!II{len(block)}s", index, begin, block)
         return msg
     
-    @staticmethod
-    def val_piece(recv):
+    def val_piece(self, recv):
         index, begin, block = unpack(f"!II{len(recv) - 13}s", recv[5:])
-        return index, begin, block
+        ret = PeerMessageStructures.Piece(index, begin, block)
+        return ret
 
     """
     cancel: <len=0013><id=8><index><begin><length>
@@ -205,7 +187,8 @@ class PeerMessages:
 
     def val_cancel(self, recv):
         index, begin, length = unpack("!III", recv[5:17])
-        return index, begin, length
+        ret = PeerMessageStructures.Cancel(index, begin, length)
+        return ret
 
     # if DHT tracker is supported
     """
@@ -221,4 +204,5 @@ class PeerMessages:
 
     def val_port(self, recv):    
         listen_port = unpack("!I", recv[5:9])[0]
-        return listen_port
+        ret = PeerMessageStructures.Port(listen_port)
+        return ret

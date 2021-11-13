@@ -1,19 +1,20 @@
 from struct import unpack
 from peer_protocol.PeerMessages import *
-import sys
+from exceptions import *
 import traceback
 
 BUFFER_SIZE = 10000
 
 class PeerStreamIterator(PeerMessages):
-    def __init__(self):
+    def __init__(self, socket):
         super().__init__()
+        self.socket = socket
         self.data = b''
     
-    def recv(self, socket):
+    def recv(self):
         while True:
             try:
-                recv = socket.recv(BUFFER_SIZE)
+                recv = self.socket.recv(BUFFER_SIZE)
                 self.data += recv
                 parsed = self.parse()
                 if parsed != None:
@@ -21,7 +22,7 @@ class PeerStreamIterator(PeerMessages):
             except Exception as e:
                 print("tr", traceback.print_exc(e))
                 print("Error: here", e.message)
-                break
+                return None
     
     def parse(self):
         HEADER_LENGTH = 4
@@ -30,9 +31,8 @@ class PeerStreamIterator(PeerMessages):
             length = unpack("!I", self.data[:4])[0]
             if length == 0:
                 self.data = self.data[HEADER_LENGTH:]
-                return PeerMessageStructures.KeepAlive
+                return None
             
-            print(self.data)
             if len(self.data) >= length + HEADER_LENGTH:
                 mid = unpack("!B", self.data[4:5])[0]
 
@@ -55,7 +55,6 @@ class PeerStreamIterator(PeerMessages):
                     elif mid == 6:
                         ret = PeerMessages.val_request(msg)
                     elif mid == 7:
-                        len(msg)
                         ret = PeerMessages.val_piece(msg)
                     elif mid == 8:
                         ret = PeerMessages.val_cancel(msg)
@@ -64,12 +63,13 @@ class PeerStreamIterator(PeerMessages):
                     
                     # clean up data and return parsed data
                     self.data = self.data[HEADER_LENGTH + length:]
-                    print(self.data)
                     return ret
                 else:
-                    raise Exception("Error: Unknown message id", mid)
+                    raise MessageExceptions("Unknown message id", mid)
             else:
-                print("Info: don't have all parts of message")
+                pass
+                #print("Info: don't have all parts of message")
         else:
-            print("Info: message too small")
+            pass
+            #print("Info: message too small")
         return None
