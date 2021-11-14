@@ -20,8 +20,7 @@ class PeerStreamIterator(PeerMessages):
                 if parsed != None:
                     return parsed
             except Exception as e:
-                print("tr", traceback.print_exc(e))
-                print("Error: here", e.message)
+                print(e)
                 return None
     
     def parse(self):
@@ -41,25 +40,25 @@ class PeerStreamIterator(PeerMessages):
                     msg = self.data[:HEADER_LENGTH + length]
 
                     if mid == 0:
-                        ret = PeerMessageStructures.Choke
+                        ret = PeerMessageStructures.Choke()
                     elif mid == 1:
-                        ret = PeerMessageStructures.Unchoke
+                        ret = PeerMessageStructures.Unchoke()
                     elif mid == 2:
-                        ret = PeerMessageStructures.Interested
+                        ret = PeerMessageStructures.Interested()
                     elif mid == 3:
-                        ret = PeerMessageStructures.NotInterested
+                        ret = PeerMessageStructures.NotInterested()
                     elif mid == 4:
-                        ret = PeerMessages.val_have(msg)
+                        ret = self.val_have(msg)
                     elif mid == 5:
-                        ret = PeerMessages.val_bitfield(msg)
+                        ret = self.val_bitfield(msg)
                     elif mid == 6:
-                        ret = PeerMessages.val_request(msg)
+                        ret = self.val_request(msg)
                     elif mid == 7:
-                        ret = PeerMessages.val_piece(msg)
+                        ret = self.val_piece(msg)
                     elif mid == 8:
-                        ret = PeerMessages.val_cancel(msg)
+                        ret = self.val_cancel(msg)
                     elif mid == 9:
-                        ret = PeerMessages.val_port(msg)
+                        ret = self.val_port(msg)
                     
                     # clean up data and return parsed data
                     self.data = self.data[HEADER_LENGTH + length:]
