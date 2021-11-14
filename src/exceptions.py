@@ -21,6 +21,9 @@ class MessageExceptions(TorrentExceptions):
 
 """ --Network Sub-Exceptions-- """
 
+class ConnectTimeout(NetworkExceptions):
+    pass
+
 class SendTimeout(NetworkExceptions):
     pass
 
@@ -28,6 +31,9 @@ class ReceiveTimeout(NetworkExceptions):
     pass
 
 class ConnectionRefused(NetworkExceptions):
+    pass
+
+class ConnectionClosed(NetworkExceptions):
     pass
 
 class UnknownHost(NetworkExceptions):
