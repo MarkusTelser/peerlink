@@ -1,13 +1,16 @@
 from peer_protocol.PeerIDs import PeerIDs
 from peer_protocol.PieceManager import PieceManager
+from FileHandler import FileHandler
 from trackers.Tracker import Tracker
 from peer_protocol.Peer import Peer
 
 class Swarm:
-    def __init__(self, pieces_count) -> None:
+    def __init__(self, data) -> None:
         self.peers = list()
 
-        self.piece_manager = PieceManager(pieces_count)
+        self.data = data
+        self.piece_manager = PieceManager(data.pieces_count)
+        self.file_handler = FileHandler(data, "downloaded.file")
 
     def connect_trackers(self, announces, info_hash, info_hash_quoted):
         threads = []
@@ -39,7 +42,7 @@ class Swarm:
         for peer in self.peers:
             address = peer
             peer_id = PeerIDs.generate()
-            p = Peer(address, info_hash, peer_id, self.piece_manager)
+            p = Peer(address, peer_id, self.data, self.piece_manager, self.file_handler)
             p.start()
             threads.append(p)
 
