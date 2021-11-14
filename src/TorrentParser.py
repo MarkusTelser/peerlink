@@ -67,6 +67,7 @@ class TorrentParser:
             torrent.info = bdata['info']
 
             torrent.pieces = info["pieces"]
+            torrent.pieces_count = int(len(info["pieces"]) / 20)
             torrent.piece_length = info["piece length"]
             del info["pieces"]
             

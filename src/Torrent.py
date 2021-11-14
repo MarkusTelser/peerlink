@@ -21,6 +21,7 @@ class TorrentData:
         self.nodes = set()
 
         self.pieces = bytes()
+        self.pieces_count = 0
         self.piece_length = 0
 
         self.has_multi_file = False
