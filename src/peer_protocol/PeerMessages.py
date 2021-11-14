@@ -120,7 +120,7 @@ class PeerMessages:
         return msg
     
     def val_have(self, recv):
-        piece_index = unpack("!20s", recv[5:25])[0]
+        piece_index = unpack("!I", recv[5:9])[0]
         ret = PeerMessageStructures.Have(piece_index)
         return ret
     
