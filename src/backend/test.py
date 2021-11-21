@@ -15,7 +15,7 @@ print(len(peers))
 fp = "../data/all/testtest.torrent"
 data = TorrentParser.parse_filepath(fp)
 
-s = Swarm(data.pieces_count)
+s = Swarm(data)
 
 s.peers = peers
 s.connect_peers(data.info_hash)

@@ -5,17 +5,16 @@ from PyQt6.QtCore import QSize, Qt
 from load_window import LoadWindow
 
 
-
 class StartWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        
         self.setWindowTitle("FastPeer - StartPage")
+        self.setObjectName("StartWindow")
 
         # set screen size
-        width = 900
-        min_width = 875
-        height = 700
-        min_height = 550
+        width, height = 900, 700
+        min_width, min_height = 875, 550
         self.resize(width, height)
         self.setMinimumSize(QSize(min_width, min_height))
         
@@ -31,7 +30,7 @@ class StartWindow(QMainWindow):
         self.setWindowIconText("logo")      
 
         # set background gradient
-        self.setStyleSheet("""QMainWindow{
+        self.setStyleSheet("""QMainWindow#StartWindow{
             background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1,
             stop:0 rgba(255, 0, 0, 255), stop:1 rgba(0, 42, 255, 255));
         }""")
@@ -42,6 +41,7 @@ class StartWindow(QMainWindow):
 
         self.addWidgets()
 
+        self.setWindowFlag(Qt.WindowType.CoverWindow)
         self.setCentralWidget(self.widget)  
 
     def addWidgets(self):
@@ -117,8 +117,10 @@ class StartWindow(QMainWindow):
         
     def dropEvent(self, event):
         print("drop event")
-        
-        LoadWindow().show()
+        print(event.mimeData().data('application/x-bittorrent'))
+        from ..src.TorrentParser import TorrentParser
+        data = TorrentParser.parse_filepath(event.mimeData().urls()[0])
+        LoadWindow(self, None, data).show()
         
         """
         # if not working then do this
