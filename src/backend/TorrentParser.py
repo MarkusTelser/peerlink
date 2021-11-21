@@ -2,7 +2,7 @@ from os.path import exists
 from bencode import decode
 from datetime import datetime
 from bencode import bdecode, decode
-from Torrent import TorrentData, TorrentFile
+from .Torrent import TorrentData, TorrentFile
 
 class TorrentParser:
     @staticmethod
@@ -78,7 +78,7 @@ class TorrentParser:
                 torrent.files[first] = []
 
                 for file in info["files"]:
-                    f = TorrentFile(file["path"][0])
+                    f = TorrentFile(file["path"][0], file["length"])
                     
                     # optional fields
                     if all(enc in file for enc in ["md5", "md5sum"]):
