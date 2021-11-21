@@ -1,12 +1,13 @@
 import sys
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (
-    QCheckBox, QComboBox, QFileDialog, QGridLayout, QGroupBox, QLabel, 
+    QAbstractScrollArea, QCheckBox, QComboBox, QFileDialog, QGridLayout, QGroupBox, QLabel, 
     QLineEdit, QMainWindow, QPushButton, QTreeView, QWidget, QApplication)
 from PyQt6.QtGui import QGuiApplication, QIcon, QStandardItem, QStandardItemModel
 from os.path import expanduser
 
-from src.Torrent import TorrentData
+from ..backend.TorrentParser import TorrentData
+import os
 
 class LoadWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -27,7 +28,7 @@ class LoadWindow(QMainWindow):
         self.move(qtRectangle.topLeft())
 
         # set icon to window
-        icon = QIcon('logo.png')
+        icon = QIcon('resources/logo.png')
         self.setWindowIcon(icon)
         self.setWindowIconText("logo") 
 
@@ -81,30 +82,48 @@ class LoadWindow(QMainWindow):
         vbox.addWidget(start, 3, 0, 1, 0)
         vbox.addWidget(sequential, 4, 0, 1, 0)
 
-        layout.addWidget(groupbox, 0, 0)
+        # add info about torrent
+        self.label1 = QLabel('Created by: ')
+        self.label2 = QLabel('Creation date: ')
+        self.label3 = QLabel('Comment: ')
+        self.label4 = QLabel('Hash: ')
+        vbox.addWidget(self.label1, 5, 0)
+        vbox.addWidget(self.label2, 6, 0 )
+        vbox.addWidget(self.label3, 7, 0)
+        vbox.addWidget(self.label4, 8, 0)
+
+        #groupbox.setMinimumWidth(100)
+        groupbox.setMaximumWidth(self.width() / 2)
+        layout.addWidget(groupbox, 0, 0, 1, 2)
 
         # add cancel and ok button for this window
         cancel = QPushButton("cancel", self)
         ok = QPushButton("ok", self)
-        layout.addWidget(cancel, 3, 3)        
-        layout.addWidget(ok, 3, 4)
+        layout.addWidget(cancel, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)        
+        layout.addWidget(ok, 1, 3, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        tree_view = QTreeView()
-        model = QStandardItemModel()
-        model.setHorizontalHeaderLabels(['id', 'name', 'size'])
+        # add tree view of files struct
+        self.tree_view = QTreeView()
+        self.model = QStandardItemModel()
+        self.model.setHorizontalHeaderLabels(['id', 'name', 'size'])
 
+        """
+        
         root = QStandardItem('1')
         root.setCheckable(True)
-        root.appendRow([QStandardItem('2'), QStandardItem('item2'), QStandardItem('item3')])
-        model.appendRow([root, QStandardItem('root'), QStandardItem('100')])
+        root.setChild(0, QStandardItem('2'))
+        root.setChild(1, QStandardItem('item2'))
+        root.setChild(2, QStandardItem('item3'))
+        model.appendRow(root)
+        """
         
-        tree_view.expand(root.index())
-        tree_view.expandRecursively(root.index(), 10)
-        print(model.columnCount(), model.rowCount())
-        tree_view.setModel(model)
+        self.tree_view.setModel(self.model)
+        #tree_view.expand(root.index())
 
-        layout.addWidget(tree_view, 0, 2, 2, 3)
+        layout.addWidget(self.tree_view, 0, 2, 1, 2)
 
+        print("columns: ", layout.columnCount())
+        print("rows: ", layout.rowCount())
         self.setCentralWidget(widget)
     
     def pressedPathSelect(self, event):
@@ -130,9 +149,47 @@ class LoadWindow(QMainWindow):
             self.download_path.setText('')
             self.download_path.setEnabled(True)
             self.path_select.setEnabled(True)
+    
+    def gen_readable_size(bits) -> str:
+        pass
 
     def show(self, torrent_data: TorrentData):
-        self.download_path.setText(torrent_data.creation_date)
+        self.label1.setText(self.label1.text() + torrent_data.created_by)
+        self.label2.setText(self.label2.text() + torrent_data.creation_date)
+        self.label3.setText(self.label3.text() + torrent_data.comment)
+        self.label4.setText(self.label4.text() + torrent_data.info_hash_hex)
+
+        root_file = list(torrent_data.files.keys())[0]
+        root_node = QStandardItem(str(0))
+        root_node.setEditable(False)
+        root_node.setIcon(QIcon('resources/icon.png'))
+        
+        for i, item in enumerate(torrent_data.files[root_file]):
+            id = QStandardItem(str(i+1))
+            id.setCheckable(True)
+            id.setEditable(False)
+            id.setIcon(QIcon('resources/logo.png'))
+
+            name = QStandardItem(item.name)
+            name.setEditable(False)
+
+            size = QStandardItem(str(item.length))
+            size.setEditable(False)
+            
+            root_node.appendRow([id, name, size])
+        
+        self.model.appendRow([root_node, QStandardItem(root_file.name), QStandardItem(str(root_file.length))])
+
+        self.tree_view.setModel(self.model)
+        self.tree_view.expandAll()
+        # resize to minimum text
+        print(self.model.columnCount(root_node.index()))
+        for i in range(self.model.columnCount(root_node.index())):
+            self.tree_view.resizeColumnToContents(i)
+        
+
+        self.setWindowTitle(list(torrent_data.files.keys())[0].name)
+        super().show()
 
 
 

@@ -2,8 +2,9 @@ import sys
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QMainWindow, QPushButton, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtGui import QFont, QGuiApplication, QIcon, QPixmap
 from PyQt6.QtCore import QSize, Qt
-from load_window import LoadWindow
+from .load_window import LoadWindow
 
+import os
 
 class StartWindow(QMainWindow):
     def __init__(self):
@@ -25,7 +26,7 @@ class StartWindow(QMainWindow):
         self.move(qtRectangle.topLeft())
 
         # set icon to window
-        icon = QIcon('logo.png')
+        icon = QIcon('resources/logo.png')
         self.setWindowIcon(icon)
         self.setWindowIconText("logo")      
 
@@ -57,7 +58,7 @@ class StartWindow(QMainWindow):
         self.layout.addWidget(label1, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         label = QLabel()
-        pixmap = QPixmap('logo.png')
+        pixmap = QPixmap('resources/logo.png')
         pixmap2 = pixmap.scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio)
         label.setPixmap(pixmap2)
         self.layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -118,9 +119,10 @@ class StartWindow(QMainWindow):
     def dropEvent(self, event):
         print("drop event")
         print(event.mimeData().data('application/x-bittorrent'))
-        from ..src.TorrentParser import TorrentParser
-        data = TorrentParser.parse_filepath(event.mimeData().urls()[0])
-        LoadWindow(self, None, data).show()
+        from src.backend.TorrentParser import TorrentParser
+        data = TorrentParser.parse_filepath(event.mimeData().urls()[0].path())
+        window = LoadWindow(self)
+        window.show(data)
         
         """
         # if not working then do this
