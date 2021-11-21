@@ -39,6 +39,12 @@ class TorrentData:
         hash = sha1(encoded).digest()   
         return hash
             
+    @property
+    def info_hash_hex(self):
+        encoded = bencode(self.info)
+        hex_hash = sha1(encoded).hexdigest()
+        return hex_hash
+
     @property 
     def info_hash_quoted(self):
         return quote_plus(self.info_hash)
