@@ -75,20 +75,21 @@ class Bencoder:
             raise Exception('wrong type', typ)
 
 
-import bencode
-import hashlib
+if __name__ == "__main__":
+    import bencode
+    import hashlib
 
-with open(f"../../../data/all/testtest.torrent", "rb") as f:
-        data = f.read()
+    with open(f"../../../data/all/testtest.torrent", "rb") as f:
+            data = f.read()
 
-b = Bencoder()
-result = b.decode(data)
+    b = Bencoder()
+    result = b.decode(data)
 
-# my result
-encr = bencode.bencode(result['info'])
-print(hashlib.sha1(encr).digest())
+    # my result
+    encr = bencode.bencode(result['info'])
+    print(hashlib.sha1(encr).digest())
 
-# true result (should be the same)
-result = bencode.decode(data)
-encr = bencode.bencode(result['info'])
-print(hashlib.sha1(encr).digest())
+    # true result (should be the same)
+    result = bencode.decode(data)
+    encr = bencode.bencode(result['info'])
+    print(hashlib.sha1(encr).digest())
