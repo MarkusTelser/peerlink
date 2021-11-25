@@ -2,7 +2,7 @@ from os.path import exists
 from bencode import decode
 from datetime import datetime
 from bencode import bdecode, decode
-from .Torrent import TorrentData, TorrentFile
+from .TorrentData import TorrentData, TorrentFile
 
 class TorrentParser:
     @staticmethod
