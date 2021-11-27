@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QGuiApplication, QIcon, QStandardItem, QStandardItemModel
 from os.path import expanduser
 
-from ..backend.TorrentParser import TorrentData
+from ..backend.metadata.TorrentParser import TorrentData
 import os
 
 class LoadWindow(QMainWindow):

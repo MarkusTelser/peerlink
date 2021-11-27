@@ -1,3 +1,10 @@
-from src.frontend.start_window import StartWindow
+from PyQt6.QtWidgets import QApplication
+from src.frontend import StartWindow
+import sys
 
-StartWindow()
+app = QApplication(sys.argv)
+
+window = StartWindow()
+window.show()
+
+sys.exit(app.exec())
