@@ -19,6 +19,7 @@ class TorrentData:
         self.comment = ""
         self.encoding = ""
         self.nodes = set()
+        self.httpseeds = list()
 
         self.pieces = bytes()
         self.pieces_count = 0

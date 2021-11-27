@@ -19,6 +19,9 @@ class NetworkExceptions(TorrentExceptions):
 class MessageExceptions(TorrentExceptions):
     pass
 
+class DecodeExceptions(TorrentExceptions):
+    pass
+
 """ --Network Sub-Exceptions-- """
 
 class ConnectTimeout(NetworkExceptions):
@@ -41,6 +44,9 @@ class UnknownHost(NetworkExceptions):
 
 """ --Message Sub-Exceptions-- """
 
+""" --Decode Exceptions-- """
+class MissingRequiredField(DecodeExceptions):
+    pass
 
 """ --General Sub-Exceptions-- """
 class UnknownTrackerType(TorrentExceptions):

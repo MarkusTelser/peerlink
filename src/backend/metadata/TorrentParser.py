@@ -3,6 +3,7 @@ from bencode import decode
 from datetime import datetime
 from bencode import bdecode, decode
 from .TorrentData import TorrentData, TorrentFile
+from src.backend.exceptions import *
 
 class TorrentParser:
     @staticmethod
@@ -32,7 +33,7 @@ class TorrentParser:
     @staticmethod
     def parse(data, bdata):
         if data == None or bdata == None:
-            raise Exception("Error: File data given equals None")
+            raise Exception("Error: no file data")
 
         # create torrent object to save torrent
         torrent = TorrentData()    
@@ -40,13 +41,12 @@ class TorrentParser:
         # check if contains tracker, in announce/announce-list otherwise error
         if "announce" in data:
             torrent.announces.append(data["announce"])
+        else:
+            raise MissingRequiredField("announce key not in torrent")
         if "announce-list" in data:
             for announce in data["announce-list"]:
                 if not announce[0] in torrent.announces:
                     torrent.announces.append(announce[0])
-        if not "announce" in data and not "announce-list" in data:
-            print("Error: Neither announce nor announce-list in torrent")
-            return
 
         # optional fields
         if "created by" in data:
@@ -61,24 +61,43 @@ class TorrentParser:
         if "nodes" in data:
             for ip, port in data["nodes"]:
                 torrent.nodes.add(tuple((ip, port)))
+        if "httpseeds" in data:
+            for address in data["httpseeds"]:
+                torrent.httpseeds.add(address)
         
         if "info" in data:
             info = data.get("info")
             torrent.info = bdata['info']
 
+            if "pieces" not in info:
+                raise MissingRequiredField("Pieces not in torrent")
+            if "piece length" not in info:
+                raise MissingRequiredField("Piece length not in torrent")
+            
             torrent.pieces = info["pieces"]
             torrent.pieces_count = int(len(info["pieces"]) / 20)
-            torrent.piece_length = info["piece length"]
-            del info["pieces"]
+            torrent.piece_length = int(info["piece length"])
+            #del info["pieces"]
+
+            # TODO BEP-0030 merkle trees
             
             # either single or multiple file mode, otherwise error
             if "files" in info:
+                if "name" not in info:
+                    raise MissingRequiredField("Name not in torrent")
+                
                 torrent.has_multi_file = True
                 first = TorrentFile(info["name"])
                 torrent.files[first] = []
 
                 for file in info["files"]:
-                    f = TorrentFile(file["path"][0], file["length"])
+                    if "path" not in file:
+                        raise MissingRequiredField("Path not in torrent")
+                    if "length" not in file:
+                        raise MissingRequiredField("Length not in torrent")
+
+                    file_path = '/'.join(file["path"])
+                    f = TorrentFile(file_path, file["length"])
                     
                     # optional fields
                     if all(enc in file for enc in ["md5", "md5sum"]):
@@ -92,16 +111,20 @@ class TorrentParser:
                         f.checksum = file["sha1"]
                     torrent.files[first].append(f)
             elif "length" in info:
+                if "name" not in info:
+                    raise MissingRequiredField("Name not in torrent")
+                if "length" not in info:
+                    raise MissingRequiredField("Length not in torrent")
                 torrent.has_multi_file = False
                 f = TorrentFile(info["name"], info["length"])
                 torrent.files = {f:None}
             else:
-                raise Exception("Error: Neither single or multiple file mode")
+                raise MissingRequiredField("Neither single or multiple file mode")
 
             # optional fields
             if "private" in info:
-                torrent.private = True if info["private"] == 0 else False
+                torrent.private = bool(info["private"] == 1)
         else:
-            raise Exception("Error: Doesnt contain info in torrent")
+            raise MissingRequiredField("info key not in torrent")
     
         return torrent
