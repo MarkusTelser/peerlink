@@ -1,5 +1,6 @@
 from bencode import bencode
 from hashlib import sha1
+from base64 import b32encode
 from urllib.parse import quote_plus 
 from random import choice
 from string import ascii_letters
@@ -44,11 +45,16 @@ class TorrentData:
     def info_hash_hex(self):
         encoded = bencode(self.info)
         hex_hash = sha1(encoded).hexdigest()
-        return hex_hash
+        return hex_hash.upper()
 
     @property 
     def info_hash_quoted(self):
         return quote_plus(self.info_hash)
+
+    @property
+    def info_hash_base32(self):
+        base32 = b32encode(self.info_hash).decode('utf-8')
+        return base32
     
     @staticmethod
     def gen_peer_id():

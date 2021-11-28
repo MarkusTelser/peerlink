@@ -48,6 +48,9 @@ class UnknownHost(NetworkExceptions):
 class MissingRequiredField(DecodeExceptions):
     pass
 
+class WrongFormat(DecodeExceptions):
+    pass
+
 """ --General Sub-Exceptions-- """
 class UnknownTrackerType(TorrentExceptions):
     pass
