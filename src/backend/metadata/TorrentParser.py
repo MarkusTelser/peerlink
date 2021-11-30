@@ -1,6 +1,6 @@
 from os.path import exists
 from datetime import datetime
-from bencode import decode
+from .Bencoder import decode, encode
 from .TorrentData import TorrentData, TorrentFile
 from src.backend.exceptions import *
 
@@ -22,10 +22,6 @@ class TorrentParser:
             return TorrentParser.parse(data)
         else:
             print("Error: File doesnt exist")
-    
-    @staticmethod
-    def parse_magnet_link(link: str):
-        pass
 
     @staticmethod
     def parse(data):

@@ -1,4 +1,4 @@
-from bencode import bencode
+from .Bencoder import encode
 from hashlib import sha1
 from base64 import b32encode
 from urllib.parse import quote_plus 
@@ -38,13 +38,13 @@ class TorrentData:
 
     @staticmethod
     def gen_info_hash(info):
-        encoded = bencode(info)
+        encoded = encode(info)
         hash = sha1(encoded).digest()   
         return hash
             
     @staticmethod
     def gen_info_hash_hex(info):
-        encoded = bencode(info)
+        encoded = encode(info)
         hex_hash = sha1(encoded).hexdigest()
         return hex_hash.upper()
 

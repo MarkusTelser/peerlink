@@ -12,8 +12,8 @@ class MagnetLink:
         self.keywords = list()
         self.select_only = list()
 
-    
-    def parse(self, link):
+    @staticmethod
+    def parse(self, link: str):
         if link[:8] != "magnet:?":
             raise WrongFormat("doesn't start like a magnet link")
         
