@@ -23,7 +23,7 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtCore import QSize, Qt
 from src.backend.metadata import TorrentParser
-from .load_window import LoadWindow
+from .ViewWindow import ViewWindow
 from os.path import expanduser
 import sys
 
@@ -32,7 +32,7 @@ class StartWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle("FastPeer - StartPage")
+        self.setWindowTitle("FastPeer - Start Page")
         self.setObjectName("StartWindow")
         self.setAcceptDrops(True)
 
@@ -122,7 +122,7 @@ class StartWindow(QMainWindow):
         extra_info.setFont(small_font)
         extra_info.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
         self.layout.addWidget(extra_info)
-        
+    
     def drawDragDropScreen(self):
         layout = QVBoxLayout()
         widget = QWidget()
@@ -162,7 +162,7 @@ class StartWindow(QMainWindow):
                 file_path = event.mimeData().urls()[0].path()
                 data = TorrentParser.parse_filepath(file_path)
                 
-                window = LoadWindow(self)
+                window = ViewWindow(self)
                 window.show(data)
 
         self.addWidgets()
@@ -182,7 +182,7 @@ class StartWindow(QMainWindow):
             file_path = dialog.selectedFiles()[0]
             print(file_path)
             data = TorrentParser.parse_filepath(file_path)
-            window = LoadWindow(self)
+            window = ViewWindow(self)
             window.show(data)
         
     def open_magnetlink(self):
@@ -191,7 +191,7 @@ class StartWindow(QMainWindow):
         if dialog.exec():
             magnet_link = dialog.text_box.text()
             #data = TorrentParser.parse_magnet_link(magnet_link)
-            #window = LoadWindow(self)
+            #window = ViewWindow(self)
             #window.show(data)
 
 

@@ -9,17 +9,18 @@ from os.path import expanduser
 from ..backend.metadata.TorrentParser import TorrentData
 import os
 
-class LoadWindow(QMainWindow):
+class ViewWindow(QMainWindow):
     def __init__(self, parent=None):
-        super(LoadWindow, self).__init__(parent)
-        self.setWindowTitle("FastPeer - LoadPage")
+        super(ViewWindow, self).__init__(parent)
+        self.setWindowTitle("FastPeer - View Torrent")
         self.torrent_data = None
 
         # set minimum and standard window size
-        width, height = 1000, 800
-        min_width, min_height = 300, 300
-        self.resize(width, height)
-        self.setMinimumSize(QSize(min_width, min_height))
+        #width, height = 1000, 800
+        #min_width, min_height = 300, 300
+        #self.resize(width, height)
+        #self.setMinimumSize(QSize(min_width, min_height))
+        
 
         # center in the middle of screen
         qtRectangle = self.frameGeometry()
@@ -40,12 +41,14 @@ class LoadWindow(QMainWindow):
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
 
         self.addWidgets()
+
+        self.setFixedSize(self.layout.sizeHint())
     
     def addWidgets(self):
         # set layout and create central widget
         widget = QWidget()
-        layout = QGridLayout(widget)
-        widget.setLayout(layout)
+        self.layout = QGridLayout(widget)
+        widget.setLayout(self.layout)
 
         groupbox = QGroupBox("options:")
         
@@ -94,13 +97,13 @@ class LoadWindow(QMainWindow):
 
         #groupbox.setMinimumWidth(100)
         groupbox.setMaximumWidth(self.width() / 2)
-        layout.addWidget(groupbox, 0, 0, 1, 2)
+        self.layout.addWidget(groupbox, 0, 0, 1, 2)
 
         # add cancel and ok button for this window
         cancel = QPushButton("cancel", self)
         ok = QPushButton("ok", self)
-        layout.addWidget(cancel, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)        
-        layout.addWidget(ok, 1, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(cancel, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)        
+        self.layout.addWidget(ok, 1, 3, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # add tree view of files struct
         self.tree_view = QTreeView()
@@ -108,7 +111,6 @@ class LoadWindow(QMainWindow):
         self.model.setHorizontalHeaderLabels(['id', 'name', 'size'])
 
         """
-        
         root = QStandardItem('1')
         root.setCheckable(True)
         root.setChild(0, QStandardItem('2'))
@@ -120,10 +122,10 @@ class LoadWindow(QMainWindow):
         self.tree_view.setModel(self.model)
         #tree_view.expand(root.index())
 
-        layout.addWidget(self.tree_view, 0, 2, 1, 2)
+        self.layout.addWidget(self.tree_view, 0, 2, 1, 2)
 
-        print("columns: ", layout.columnCount())
-        print("rows: ", layout.rowCount())
+        print("columns: ", self.layout.columnCount())
+        print("rows: ", self.layout.rowCount())
         self.setCentralWidget(widget)
     
     def pressedPathSelect(self, event):
@@ -164,30 +166,35 @@ class LoadWindow(QMainWindow):
         root_node.setEditable(False)
         root_node.setIcon(QIcon('resources/icon.png'))
         
-        for i, item in enumerate(torrent_data.files[root_file]):
-            id = QStandardItem(str(i+1))
-            id.setCheckable(True)
-            id.setEditable(False)
-            id.setIcon(QIcon('resources/logo.png'))
+        if torrent_data.files[root_file]:
+            for i, item in enumerate(torrent_data.files[root_file]):
+                id = QStandardItem(str(i+1))
+                id.setCheckable(True)
+                id.setEditable(False)
+                id.setIcon(QIcon('resources/logo.png'))
 
-            name = QStandardItem(item.name)
-            name.setEditable(False)
+                if "/" in item.name:
+                    start_node = root_node
+                    for folder in item.name.split("/"):
+                        QStandardItem(folder)
 
-            size = QStandardItem(str(item.length))
-            size.setEditable(False)
-            
-            root_node.appendRow([id, name, size])
+                name = QStandardItem(item.name)
+                name.setEditable(False)
+
+                size = QStandardItem(str(item.length))
+                size.setEditable(False)
+                
+                root_node.appendRow([id, name, size])
         
         self.model.appendRow([root_node, QStandardItem(root_file.name), QStandardItem(str(root_file.length))])
-
         self.tree_view.setModel(self.model)
         self.tree_view.expandAll()
+
         # resize to minimum text
         print(self.model.columnCount(root_node.index()))
         for i in range(self.model.columnCount(root_node.index())):
             self.tree_view.resizeColumnToContents(i)
         
-
         self.setWindowTitle(list(torrent_data.files.keys())[0].name)
         super().show()
 
@@ -199,7 +206,7 @@ class LoadWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    window = LoadWindow()
+    window = ViewWindow()
     window.show()
 
     app.exec()
