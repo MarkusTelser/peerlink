@@ -1,7 +1,6 @@
 from os.path import exists
-from bencode import decode
 from datetime import datetime
-from bencode import bdecode, decode
+from bencode import decode
 from .TorrentData import TorrentData, TorrentFile
 from src.backend.exceptions import *
 
@@ -12,27 +11,25 @@ class TorrentParser:
             raise Exception("Error: File equals None")
         encry = file.read()
         data = decode(encry)
-        bdata = bdecode(encry)
-        return TorrentParser.parse(data, bdata)
+        return TorrentParser.parse(data)
     
     @staticmethod
-    def parse_filepath(filepath):
+    def parse_filepath(filepath: str):
         if exists(filepath):
             with open(filepath, "rb") as f:
                 encry = f.read()
             data = decode(encry)
-            bdata = bdecode(encry)
-            return TorrentParser.parse(data, bdata)
+            return TorrentParser.parse(data)
         else:
             print("Error: File doesnt exist")
     
     @staticmethod
-    def parse_magnet_link(link):
+    def parse_magnet_link(link: str):
         pass
 
     @staticmethod
-    def parse(data, bdata):
-        if data == None or bdata == None:
+    def parse(data):
+        if data == None:
             raise Exception("Error: no file data")
 
         # create torrent object to save torrent
@@ -67,7 +64,8 @@ class TorrentParser:
         
         if "info" in data:
             info = data.get("info")
-            torrent.info = bdata['info']
+            torrent.info_hash = TorrentData.gen_info_hash(info)
+            torrent.info_hash_hex = TorrentData.gen_info_hash_hex(info)
 
             if "pieces" not in info:
                 raise MissingRequiredField("Pieces not in torrent")

@@ -28,22 +28,23 @@ class TorrentData:
 
         self.has_multi_file = False
         self.files = {}
-        self.info = None
+        self.info_hash = ""
+        self.info_hash_hex = ""
         self.private = False
 
     def check_piece_hash(self, index, hash):
         true_hash = self.pieces[index * 20: (index + 1) * 20]
         return true_hash == hash
 
-    @property
-    def info_hash(self):
-        encoded = bencode(self.info)
+    @staticmethod
+    def gen_info_hash(info):
+        encoded = bencode(info)
         hash = sha1(encoded).digest()   
         return hash
             
-    @property
-    def info_hash_hex(self):
-        encoded = bencode(self.info)
+    @staticmethod
+    def gen_info_hash_hex(info):
+        encoded = bencode(info)
         hex_hash = sha1(encoded).hexdigest()
         return hex_hash.upper()
 
