@@ -51,6 +51,9 @@ class MissingRequiredField(DecodeExceptions):
 class WrongFormat(DecodeExceptions):
     pass
 
+class WrongType(DecodeExceptions):
+    pass
+
 """ --General Sub-Exceptions-- """
 class UnknownTrackerType(TorrentExceptions):
     pass
