@@ -3,3 +3,4 @@ trackers.txt
 *.pyc
 __pycache__
 data/
+peerlink/
