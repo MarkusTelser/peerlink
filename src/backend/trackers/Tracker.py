@@ -1,10 +1,10 @@
 from enum import Enum
 from threading import Thread
-from trackers.HTTPTracker import HTTPTracker
-from trackers.UDPTracker import UDPTracker
+from .HTTPTracker import HTTPTracker
+from .UDPTracker import UDPTracker
 
 # exception catching
-from exceptions import *
+from ..exceptions import *
 
 class TrackerType(Enum):
     UDP = 0

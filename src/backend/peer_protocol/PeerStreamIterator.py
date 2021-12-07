@@ -1,6 +1,6 @@
 from struct import unpack
-from peer_protocol.PeerMessages import *
-from exceptions import *
+from .PeerMessages import *
+from ..exceptions import *
 import traceback
 
 BUFFER_SIZE = 10000

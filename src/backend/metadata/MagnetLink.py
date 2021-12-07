@@ -1,5 +1,5 @@
 from urllib.parse import unquote_plus
-from src.backend.exceptions import *
+from ..exceptions import *
 
 class MagnetLink:
     def __init__(self):
@@ -12,7 +12,6 @@ class MagnetLink:
         self.keywords = list()
         self.select_only = list()
 
-    @staticmethod
     def parse(self, link: str):
         if link[:8] != "magnet:?":
             raise WrongFormat("doesn't start like a magnet link")
@@ -69,13 +68,13 @@ class MagnetLink:
         if not self.hash:
             raise MissingRequiredField("Hash not in magnet link")
 
+if __name__ == "__main__":
+    link = "magnet:?xt=urn:btih:6EEFF1201E4649AB020B5104E9642D97935823DF&dn=Free+Solo+%282018%29+%2B+Extras+%281080p+BluRay+x265+HEVC+10bit+EAC3+5+1+Bandi%29&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Fipv6.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.demonii.si%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Fdenis.stalker.upeer.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce"
+    m = MagnetLink()
+    m.parse(link)
 
-link = "magnet:?xt=urn:btih:6EEFF1201E4649AB020B5104E9642D97935823DF&dn=Free+Solo+%282018%29+%2B+Extras+%281080p+BluRay+x265+HEVC+10bit+EAC3+5+1+Bandi%29&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Fipv6.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.demonii.si%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Fdenis.stalker.upeer.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce"
-m = MagnetLink()
-m.parse(link)
-
-print()
-print("Name:", m.name)
-print("Trackers:", m.trackers)
-print("Hashes:", m.hash)
-print(m.select_only)
+    print()
+    print("Name:", m.name)
+    print("Trackers:", m.trackers)
+    print("Hashes:", m.hash)
+    print(m.select_only)

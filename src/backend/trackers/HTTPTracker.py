@@ -1,11 +1,12 @@
 import requests
+from requests import ConnectionError
 from random import choice
 from string import ascii_letters
-from bencode import decode
 
 # exception
-from exceptions import *
-from requests import ConnectionError
+from ..exceptions import *
+from ..metadata.Bencoder import decode
+
 from bencode import BencodeDecodeError
 
 class HTTPEvents:
@@ -91,10 +92,9 @@ class HTTPTracker:
         except ConnectionError as e:
             raise NetworkExceptions(str(e) + self.url)
 
-        try:
-            answer = decode(recv.text)
-        except BencodeDecodeError as e:
-            raise MessageExceptions(str(e))
+        
+        answer = decode(recv.text)
+        
         
         # decode bencoded answer
         if "failure reason" in answer:
@@ -154,10 +154,7 @@ class HTTPTracker:
         except ConnectionError as e:
             raise NetworkExceptions(str(e))
 
-        try:
-            answer = decode(recv.text)
-        except BencodeDecodeError as e:
-            raise MessageExceptions(str(e))
+        answer = decode(recv.text)        
 
         if "failure reason" in answer:
             raise MessageExceptions(f"Scrape failed: {answer['failure reason']}")

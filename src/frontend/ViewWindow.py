@@ -16,11 +16,10 @@ class ViewWindow(QMainWindow):
         self.torrent_data = None
 
         # set minimum and standard window size
-        #width, height = 1000, 800
-        #min_width, min_height = 300, 300
-        #self.resize(width, height)
-        #self.setMinimumSize(QSize(min_width, min_height))
-        
+        width, height = 1000, 800
+        min_width, min_height = 300, 300
+        self.resize(width, height)
+        self.setMinimumSize(QSize(min_width, min_height))
 
         # center in the middle of screen
         qtRectangle = self.frameGeometry()
@@ -41,8 +40,6 @@ class ViewWindow(QMainWindow):
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
 
         self.addWidgets()
-
-        self.setFixedSize(self.layout.sizeHint())
     
     def addWidgets(self):
         # set layout and create central widget
@@ -176,7 +173,7 @@ class ViewWindow(QMainWindow):
                 if "/" in item.name:
                     start_node = root_node
                     for folder in item.name.split("/"):
-                        QStandardItem(folder)
+                        print(root_node.row())
 
                 name = QStandardItem(item.name)
                 name.setEditable(False)

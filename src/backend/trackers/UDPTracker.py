@@ -5,7 +5,7 @@ from struct import pack, unpack
 import socket
 from random import choice
 
-from exceptions import *
+from ..exceptions import *
 
 class Actions(Enum):
     CONNECT = 0x0

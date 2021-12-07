@@ -1,9 +1,9 @@
-from .Bencoder import encode
 from hashlib import sha1
 from base64 import b32encode
 from urllib.parse import quote_plus 
 from random import choice
 from string import ascii_letters
+from .Bencoder import encode
 
 class TorrentFile:
     def __init__(self, name, length=0, encoding=None, checksum=None):

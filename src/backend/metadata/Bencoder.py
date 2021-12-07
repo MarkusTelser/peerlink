@@ -1,7 +1,5 @@
 from collections import OrderedDict
-
-from src.backend.exceptions import WrongFormat, WrongType
-
+from ..exceptions import WrongFormat, WrongType
 
 class Bencoder:
     def __init__(self) -> None:

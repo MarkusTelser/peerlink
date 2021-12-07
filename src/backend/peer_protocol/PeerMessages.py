@@ -1,7 +1,7 @@
+import socket
 from os import stat
 from struct import pack, unpack
 from collections import namedtuple
-import socket
 
 class PeerMessageIDs:
     CHOKE = 0x0

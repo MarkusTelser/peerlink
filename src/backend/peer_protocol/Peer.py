@@ -1,13 +1,13 @@
 import socket
-from struct import unpack
-from peer_protocol.PeerMessages import PeerMessageLengths, PeerMessageStructures
-from peer_protocol.PeerStreamIterator import PeerStreamIterator
-from threading import Thread
-from exceptions import *
-from math import ceil
-import errno
-
 import sys
+import errno
+from struct import unpack
+from threading import Thread
+from math import ceil
+from .PeerMessages import PeerMessageLengths, PeerMessageStructures
+from .PeerStreamIterator import PeerStreamIterator
+from ..exceptions import *
+from .PeerIDs import PeerIDs
 
 """
 implement peer protocol
@@ -41,7 +41,8 @@ class Peer(Thread):
             # send and receive handshake
             msg = self.psiterator.bld_handshake(self.info_hash, self.peer_id)
             self.send_msg(msg, expected_len=68)
-            _, reserved = self.recv_handshake(self.info_hash, self.peer_id)
+            peer_id, reserved = self.recv_handshake(self.info_hash, self.peer_id)
+            print(peer_id, PeerIDs.get_client(peer_id))
         except Exception as e:
             return
         #print("success", self.address, reserved)
