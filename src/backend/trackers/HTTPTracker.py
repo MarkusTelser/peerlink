@@ -7,8 +7,6 @@ from string import ascii_letters
 from ..exceptions import *
 from ..metadata.Bencoder import decode
 
-from bencode import BencodeDecodeError
-
 class HTTPEvents:
     STARTED = "started"
     STOPPED = "stopped"

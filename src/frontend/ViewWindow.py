@@ -158,30 +158,12 @@ class ViewWindow(QMainWindow):
         self.label3.setText(self.label3.text() + torrent_data.comment)
         self.label4.setText(self.label4.text() + torrent_data.info_hash_hex)
 
-        root_file = list(torrent_data.files.keys())[0]
+        root_file = torrent_data.files
         root_node = QStandardItem(str(0))
         root_node.setEditable(False)
         root_node.setIcon(QIcon('resources/icon.png'))
         
-        if torrent_data.files[root_file]:
-            for i, item in enumerate(torrent_data.files[root_file]):
-                id = QStandardItem(str(i+1))
-                id.setCheckable(True)
-                id.setEditable(False)
-                id.setIcon(QIcon('resources/logo.png'))
-
-                if "/" in item.name:
-                    start_node = root_node
-                    for folder in item.name.split("/"):
-                        print(root_node.row())
-
-                name = QStandardItem(item.name)
-                name.setEditable(False)
-
-                size = QStandardItem(str(item.length))
-                size.setEditable(False)
-                
-                root_node.appendRow([id, name, size])
+        self.iterate_tree(root_file, root_node)
         
         self.model.appendRow([root_node, QStandardItem(root_file.name), QStandardItem(str(root_file.length))])
         self.tree_view.setModel(self.model)
@@ -192,8 +174,26 @@ class ViewWindow(QMainWindow):
         for i in range(self.model.columnCount(root_node.index())):
             self.tree_view.resizeColumnToContents(i)
         
-        self.setWindowTitle(list(torrent_data.files.keys())[0].name)
+        self.setWindowTitle(torrent_data.files.name)
         super().show()
+        
+    def iterate_tree(self, root_file, root_node,  number=0):
+        if root_file.children:
+            for child in root_file.children:
+                id = QStandardItem(str(number+1))
+                id.setCheckable(True)
+                id.setEditable(False)
+                id.setIcon(QIcon('resources/logo.png'))
+
+                name = QStandardItem(child.name)
+                name.setEditable(False)
+
+                size = QStandardItem(str(child.length))
+                size.setEditable(False)
+                root_node.appendRow([id, name, size])
+                
+                self.iterate_tree(child, id, number=number+1)
+                number += 1
 
 
 

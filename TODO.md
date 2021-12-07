@@ -7,7 +7,7 @@ To keep track of all the BEPs I have already implemented and which will be imple
 - [ ] [Magnet Links (BEP 9)](http://bittorrent.org/beps/bep_0009.html)
 - [ ] [UDP Tracker (BEP 15)](http://bittorrent.org/beps/bep_0015.html)
 - [x] [Compact Tracker Peer List (BEP 23)](http://bittorrent.org/beps/bep_0023.html)
-- [ ] [Tracker Scrape (BEP 48)](http://bittorrent.org/beps/bep_0048.html)
+- [x] [Tracker Scrape (BEP 48)](http://bittorrent.org/beps/bep_0048.html)
 - [ ] [File indices Magnet Link (BEP 53)](http://bittorrent.org/beps/bep_0053.html)
 
 ## Near Future:
