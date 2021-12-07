@@ -1,21 +1,8 @@
 from os.path import exists
 from datetime import datetime
-from .Bencoder import decode, encode
-from .TorrentData import TorrentData, TorrentFile
+from .Bencoder import decode
+from .TorrentData import *
 from ..exceptions import *
-
-def parse_filepath_struct(files: list[TorrentFile], filepath: str):
-        file_struct = filepath.split("/")
-        
-        current_depth = files
-        print(file_struct)
-        print(current_depth)
-        for item in file_struct:
-            if item not in current_depth:
-                i = TorrentFile(item)
-                current_depth.append(i)
-            print(item)
-            current_depth = files[item]
 
 class TorrentParser:
     @staticmethod
@@ -92,18 +79,16 @@ class TorrentParser:
                     raise MissingRequiredField("Name not in torrent")
                 
                 torrent.has_multi_file = True
-                first = TorrentFile(info["name"])
-                torrent.files[first] = []
+                root = TorrentFile(info["name"])
+                torrent.files = root
 
                 for file in info["files"]:
                     if "path" not in file:
                         raise MissingRequiredField("Path not in torrent")
                     if "length" not in file:
                         raise MissingRequiredField("Length not in torrent")
-
-                    file_path = '/'.join(file["path"])
-                    parse_filepath_struct(torrent.files[first], file_path)
-                    f = TorrentFile(file_path, file["length"])
+                    
+                    f = TorrentFile(length=file["length"])
                     
                     # optional fields
                     if all(enc in file for enc in ["md5", "md5sum"]):
@@ -115,7 +100,10 @@ class TorrentParser:
                     if "sha1" in file:
                         f.encoding = "sha1"
                         f.checksum = file["sha1"]
-                    torrent.files[first].append(f)
+                    
+                    add_node(root, file["path"], f)
+                
+                calc_folder_size(root)
             elif "length" in info:
                 if "name" not in info:
                     raise MissingRequiredField("Name not in torrent")
@@ -123,7 +111,7 @@ class TorrentParser:
                     raise MissingRequiredField("Length not in torrent")
                 torrent.has_multi_file = False
                 f = TorrentFile(info["name"], info["length"])
-                torrent.files = {f:None}
+                torrent.files = f
             else:
                 raise MissingRequiredField("Neither single or multiple file mode")
 
