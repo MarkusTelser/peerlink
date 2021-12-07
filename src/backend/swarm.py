@@ -1,8 +1,8 @@
-from peer_protocol.PeerIDs import PeerIDs
-from peer_protocol.PieceManager import PieceManager
-from FileHandler import FileHandler
-from trackers.Tracker import Tracker
-from peer_protocol.Peer import Peer
+from .peer_protocol.PeerIDs import PeerIDs
+from .peer_protocol.PieceManager import PieceManager
+from .FileHandler import FileHandler
+from .trackers.Tracker import Tracker
+from .peer_protocol.Peer import Peer
 
 class Swarm:
     def __init__(self, data) -> None:
@@ -14,15 +14,17 @@ class Swarm:
 
     def connect_trackers(self, announces, info_hash, info_hash_quoted):
         threads = []
-        for announce in announces: 
-            t = Tracker(announce, info_hash, info_hash_quoted)
-            threads.append(t)
-            t.start()
+        for tiers in announces: 
+            for announce in tiers:
+                t = Tracker(announce, info_hash, info_hash_quoted)
+                threads.append(t)
+                t.start()
 
         for thread in threads:
             thread.join()
 
         print("-"*30)
+        print("Errors:")
         peers = list()
         for thread in threads:
             if thread.successful:
@@ -30,8 +32,9 @@ class Swarm:
                     for peer in thread.peers:
                         peers.append(peer)
             else:
-                print(thread.error, thread.link)
+                print("error: ", thread.error, thread.link)
         print("-" * 30)
+        
         print(peers)
         self.peers = peers
 

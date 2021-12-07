@@ -2,7 +2,20 @@ from os.path import exists
 from datetime import datetime
 from .Bencoder import decode, encode
 from .TorrentData import TorrentData, TorrentFile
-from src.backend.exceptions import *
+from ..exceptions import *
+
+def parse_filepath_struct(files: list[TorrentFile], filepath: str):
+        file_struct = filepath.split("/")
+        
+        current_depth = files
+        print(file_struct)
+        print(current_depth)
+        for item in file_struct:
+            if item not in current_depth:
+                i = TorrentFile(item)
+                current_depth.append(i)
+            print(item)
+            current_depth = files[item]
 
 class TorrentParser:
     @staticmethod
@@ -33,13 +46,11 @@ class TorrentParser:
         
         # check if contains tracker, in announce/announce-list otherwise error
         if "announce" in data:
-            torrent.announces.append(data["announce"])
+            torrent.announces = data["announce"]
         else:
-            raise MissingRequiredField("announce key not in torrent")
+            raise MissingRequiredField("neither announce/announce-list key in torrent")
         if "announce-list" in data:
-            for announce in data["announce-list"]:
-                if not announce[0] in torrent.announces:
-                    torrent.announces.append(announce[0])
+            torrent.announces = data["announce-list"]
 
         # optional fields
         if "created by" in data:
@@ -91,6 +102,7 @@ class TorrentParser:
                         raise MissingRequiredField("Length not in torrent")
 
                     file_path = '/'.join(file["path"])
+                    parse_filepath_struct(torrent.files[first], file_path)
                     f = TorrentFile(file_path, file["length"])
                     
                     # optional fields
