@@ -4,3 +4,4 @@ trackers.txt
 __pycache__
 data/
 peerlink/
+.vscode
