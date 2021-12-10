@@ -1,6 +1,6 @@
-from ..metadata.TorrentParser import TorrentParser
+from src.backend.metadata.TorrentParser import TorrentParser
 
-data = TorrentParser.parse_filepath("../../../data/all/Free Solo Documentary (2018).torrent")
+data = TorrentParser.parse_filepath("../data/all/Free Solo Documentary (2018).torrent")
 
 def iterate_tree(root_node, depth=0):
     print("  " * depth + root_node.name, root_node.length)

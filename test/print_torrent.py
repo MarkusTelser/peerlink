@@ -1,14 +1,17 @@
 from json import encoder
-import bencode
+from src.backend.metadata.TorrentParser import TorrentParser
+from src.backend.metadata.Bencoder import decode
 from collections import OrderedDict
 import json
 import os
 
 
-for item in os.listdir("../../../data/all/"):
-    with open(f"../../../data/all/{item}",'rb') as f:
+for item in os.listdir("data/all"):
+    with open(f"data/all/{item}",'rb') as f:
         data = f.read()
-    d = bencode.decode(data)
+    
+    d = decode(data)
+    
     del d.get("info")["pieces"]
     if "magnet-info" in d:
         del d.get("magnet-info")["info_hash"]
