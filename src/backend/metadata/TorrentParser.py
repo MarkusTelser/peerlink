@@ -33,7 +33,7 @@ class TorrentParser:
         
         # check if contains tracker, in announce/announce-list otherwise error
         if "announce" in data:
-            torrent.announces = data["announce"]
+            torrent.announces = [[data["announce"]]]
         else:
             raise MissingRequiredField("neither announce/announce-list key in torrent")
         if "announce-list" in data:
