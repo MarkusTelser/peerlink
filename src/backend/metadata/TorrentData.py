@@ -19,7 +19,7 @@ class TorrentFile:
 
 class TorrentData:
     def __init__(self):
-        self.announces = list()
+        self.announces = [[]]
         self.created_by = ""
         self.creation_date = ""
         self.comment = ""
