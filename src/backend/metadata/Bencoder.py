@@ -94,7 +94,7 @@ class Bencoder:
             self.i += 1
             return b'e'
         else:
-            raise WrongType('not supported type: ' + typ)
+            raise WrongType('not supported type: ', typ)
     
     def encode(self, data):
         typ = type(data)
@@ -152,7 +152,7 @@ class Bencoder:
             ret += b'e'
             return ret
         else:
-            raise WrongType('not supported type: ' + typ)
+            raise WrongType('not supported type: ', typ)
 
 
 b = Bencoder()
