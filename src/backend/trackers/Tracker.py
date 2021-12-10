@@ -49,7 +49,7 @@ class Tracker(Thread):
         if self.error != "":
             return
         elif self.type == TrackerType.HTTP or self.type == TrackerType.HTTPS:
-            tracker = HTTPTracker(self.address, self.info_hash_quoted)
+            tracker = HTTPTracker(self.address, self.info_hash)
         elif self.type == TrackerType.UDP:
             ip, port = self.address
             tracker = UDPTracker(ip, port, self.info_hash)
@@ -58,10 +58,11 @@ class Tracker(Thread):
         try:
             peers = tracker.main()
             self.peers = peers
+            
         except TorrentExceptions as e:
             self.error = e
-        except Exception as e:
-            # TODO log unexpected exception
-            print("----", type(e).__name__, str(e))
+        #except Exception as e:
+        #    # TODO log unexpected exception
+        #    print("----", type(e).__name__, str(e))
         else:
             self.successful = True

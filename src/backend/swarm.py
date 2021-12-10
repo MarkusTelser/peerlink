@@ -14,6 +14,7 @@ class Swarm:
 
     def connect_trackers(self, announces, info_hash, info_hash_quoted):
         threads = []
+        print(announces)
         for tiers in announces: 
             for announce in tiers:
                 t = Tracker(announce, info_hash, info_hash_quoted)
@@ -33,6 +34,14 @@ class Swarm:
                         peers.append(peer)
             else:
                 print("error: ", thread.error, thread.link)
+        print("-" * 30)
+        
+        print("working trackers:")
+        for thread in threads:
+            if thread:
+                if thread.successful:
+                    print(thread.link, len(thread.peers))
+        print("amount of peers:", len(peers))
         print("-" * 30)
         
         print(peers)
