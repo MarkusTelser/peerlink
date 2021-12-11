@@ -250,6 +250,11 @@ class PeerIDs:
         return "-qB3090-" + ''.join(choice(ascii_letters) for _ in range(12))
     
     @staticmethod
+    def generate_key():
+        # key with atleast 32 bit entrophy for identification with peer id
+        return ''.join(choice(ascii_letters) for _ in range(4))
+    
+    @staticmethod
     def get_client(pid: bytes):
         client = "unknown"
         version = -1
