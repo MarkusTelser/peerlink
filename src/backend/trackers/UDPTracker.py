@@ -24,11 +24,16 @@ class UDPTracker:
     BUFFER_SIZE = 2048
     TIMEOUT = 5
 
-    def __init__(self, host, port, info_hash):
+    def __init__(self, host, port, info_hash, start_queue, result_queue):
         self.host = host
-        self.port = port
+        self.port = port 
         self.info_hash = info_hash
         self.sock = None
+        
+        self.start_queue = start_queue
+        self.result_queue = result_queue
+        self.peers = list()
+        self.error = None
 
     def create_con(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -40,12 +45,7 @@ class UDPTracker:
         self.sock = sock
     
 
-    def main(self):
-        self.create_con()
-        
-        result = self.connect()
-        
-        cid = result
+    def announce(self):
         peer_id = UDPTracker.gen_pid()
         event = UDPEvents.STARTED.value
 
@@ -60,13 +60,29 @@ class UDPTracker:
         port = 0
         key = 0
         
-        results = self.announce(cid, self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
-        self.close_con()
-
-        if result == None:
-            raise Exception("Error: UDP-Tracker results are null")
+        try:
+            self.create_con()
+            cid = self.connect()
+            peers = self._announce(cid, self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
+            self.peers = peers
+            self.close_con()
+        except Exception as e:
+            self.error = str(e)
         
-        return results
+        self.start_queue.get()
+        self.result_queue.put(self)
+        
+    def scrape(self):
+        try:
+            self.create_con()
+            cid = self.connect()
+            peers = self._scrape(cid, self.info_hash)
+            self.peers = peers
+        except Exception as e:
+            self.error = str(e)
+        
+        self.start_queue.get()
+        self.result_queue.put(self)
     
     """
     Connect packet:
@@ -127,7 +143,7 @@ class UDPTracker:
     32-bit integer num_want
     16-bit integer port
     """
-    def announce(self, cid, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0x0, num_want=-1):
+    def _announce(self, cid, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0x0, num_want=-1):
         # create message
         TID = self.gen_tid()
         msg = pack('!QII', cid, Actions.ANNOUNCE.value, TID)
@@ -185,13 +201,16 @@ class UDPTracker:
 	32-bit integer	transaction_id
 	20-byte string	info_hash
     """
-    def scrape(self, cid, info_hashes: list):
+    def _scrape(self, cid, info_hashes: list):
         # create message
         TID = self.gen_tid()
         msg = pack('!QII', cid, Actions.SCRAPE.value, TID)
-        for info_hash in info_hashes:
-            msg += pack('!I20s', info_hash)
-
+        if type(info_hashes) == list:
+            for info_hash in info_hashes:
+                msg += pack('!20s', info_hash)
+        elif type(info_hashes) == bytes:
+            msg += pack('!20s', info_hashes)
+            
         # send and receive announce packet
         try:
             send = self.sock.send(msg)
@@ -205,7 +224,7 @@ class UDPTracker:
             return None
         
         # TODO print error message
-        action = unpack('!I', recv[:4])
+        action = unpack('!I', recv[:4])[0]
         if action == Actions.ERROR.value:
             self.error(recv, TID)
             return None
@@ -213,7 +232,7 @@ class UDPTracker:
             print("Error: Action is neither scrape or error")
             return None
         
-        tid = unpack("!I", recv[4:8])
+        tid = unpack("!I", recv[4:8])[0]
         if tid != TID:
             print("Error: Not the same transaction ID")
             return None
@@ -222,9 +241,9 @@ class UDPTracker:
         results = []
         count_addr = int((len(recv) - 8) / 12)
         for i in range(count_addr):
-            seeders = unpack('!I', recv[8 + i * 12:12 + i * 12])
-            completed = unpack('!I', recv[12 + i * 12:16 + i * 12])
-            leecher = unpack('!I', recv[16 + i * 12:20 + i * 12])
+            seeders = unpack('!I', recv[8 + i * 12:12 + i * 12])[0]
+            completed = unpack('!I', recv[12 + i * 12:16 + i * 12])[0]
+            leecher = unpack('!I', recv[16 + i * 12:20 + i * 12])[0]
             results.append((seeders, completed, leecher))
         
         print(results)

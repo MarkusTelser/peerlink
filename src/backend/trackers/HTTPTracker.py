@@ -1,20 +1,18 @@
+from os import stat_result
 import requests
-from requests import ConnectionError
-from random import choice
-from string import ascii_letters
-from requests.exceptions import RequestException, Timeout
 from socket import inet_ntoa, inet_ntop
 from socket import AF_INET6
 from struct import unpack
 
-from requests.models import HTTPError
-from requests.sessions import TooManyRedirects
-from json import dumps
+from ..metadata.Bencoder import decode
+from ..peer_protocol.PeerIDs import PeerIDs
 
 # exception
 from ..exceptions import *
-from ..metadata.Bencoder import decode
-from ..peer_protocol.PeerIDs import PeerIDs
+from requests.models import HTTPError
+from requests.sessions import TooManyRedirects
+from requests import ConnectionError
+from requests.exceptions import RequestException, Timeout
 
 class HTTPEvents:
     STARTED = "started"
@@ -22,43 +20,62 @@ class HTTPEvents:
     COMPLETED = "completed"
 
 class HTTPTracker:
-    TIMEOUT = 5
+    TIMEOUT = 3
 
-    def __init__(self, url, info_hash):
+
+    def __init__(self, url, info_hash, start_queue, result_queue):
         self.url = url
         self.info_hash = info_hash
         
         self.interval = 0
         self.min_interval = 0
-        
+        self.min_request_interval = 0 # min scrape interval
         self.complete = 0
         self.incomplete = 0
-        
         self.peers = list()
-        
         self.trackerid = ""
+        
+        self.start_queue = start_queue
+        self.result_queue = result_queue
+        self.error = None
 
-    def main(self):
+
+    def announce(self):
         event = HTTPEvents.STARTED
         peer_id = PeerIDs.generate()
 
         # demo values
-        ip = 0
         port = 6881
         uploaded = "0"
         downloaded = "0"
         left = "1000000"
 
         # optional
+        ip = 0
         numwant = 50
         no_peer_id = 1
-        compact = 0
-        key = ""
+        compact = 1
+        key = PeerIDs.generate_key()
         trackerid = ""
-
-        recv = self.request(self.info_hash, peer_id, port, uploaded, downloaded, left, compact)
         
-        return recv
+        try:
+            recv = self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
+            self.peers = recv
+        except Exception as e:
+            self.error = str(e)
+        
+        self.start_queue.get()
+        self.result_queue.put(self)
+        
+    def scrape(self):
+        try:
+            recv = self._scrape(self.info_hash)
+            self.peers = recv
+        except Exception as e:
+            self.error = str(e)
+        
+        self.start_queue.get()
+        self.result_queue.put(self)
         
     
     """
@@ -74,8 +91,6 @@ class HTTPTracker:
     event (optional)
     numwant (optional) default 50
     trackerid (optional)
-    
-    Extensions:
     no_peer_id (optional)
     compact (optional) 1 = true, 0 false
     
@@ -98,7 +113,7 @@ class HTTPTracker:
     peers_ipv6 (optional): when compact ipv6 are requested
     or peers6 (optional): same as peers_ipv6
     """
-    def request(self, info_hash, peer_id, port, uploaded, downloaded, left, ip=None, event=None, numwant=None, no_peer_id=None, compact=None, key=None, trackerid=None):
+    def _announce(self, info_hash, peer_id, port, uploaded, downloaded, left, ip=None, event=None, numwant=None, no_peer_id=None, compact=None, key=None, trackerid=None):
         params = {}
 
         # required parameters
@@ -142,7 +157,6 @@ class HTTPTracker:
         except RequestException as e:
             raise NetworkExceptions("5" + str(e))
         
-
         answer = decode(recv.content)
         
         # decode bencoded answer
@@ -190,7 +204,7 @@ class HTTPTracker:
                     self.peers.append((ip, port, peer_id))
                 else:
                     self.peers.append((ip, port))
-        # optioanl compact representation of peers
+        # optional compact representation of peers
         elif type(answer.get("peers")) == bytes:
             byte_string = answer.get("peers")
             peer_count = int(len(byte_string) / 6) # 4 bytes ipv4 + 2 bytes port
@@ -229,6 +243,7 @@ class HTTPTracker:
         print(answer.get("peers"))
         return self.peers
 
+
     """
     The original BitTorrent Protocol Specification defines one exchange 
     between a client and a tracker referred to as an announce. In order to 
@@ -238,32 +253,63 @@ class HTTPTracker:
     noted that scrape exchanges have no effect on a peer's participation
     in a swarm.
     """
-    def scrape(self, info_hashes): 
+    def _scrape(self, info_hashes=None): 
         if not "announce" in self.url:
-            raise NotSupportedOperation(f"Url contains no announce {self.url}")
+            raise WrongFormat(f"Url contains no announce {self.url}")
         link = self.url.replace("announce","scrape")
 
-        params = "?"
+        params = {}
 
-        # scrape one or multiple info_hashes
-        if type(info_hashes) == list:
-            for info_hash in info_hashes:
-                params += f"info_hash={info_hash}&"
-        elif type(info_hashes) == str:
-            params += f"info_hash={info_hashes}"
+        # no info_hash param is send, all stats for all torrents are send (shouldn't be used)
+        if info_hashes == None or len(info_hashes) == 0:
+            pass
+        # scrape one or multiple info_hashes, either str or list
+        elif type(info_hashes) == bytes or type(info_hashes) == list:
+            params["info_hash"] = info_hashes
         
-        request_link = link + params
         try:
-            recv = requests.get(request_link, timeout=HTTPTracker.TIMEOUT)
+            recv = requests.get(link, params=params, timeout=HTTPTracker.TIMEOUT)
+        except HTTPError as e:
+            raise NetworkExceptions("1" + str(e))
+            # unsuccessful status code
+        except Timeout as e:
+            raise NetworkExceptions("2 Request timed out")
+            # request timed out
+        except TooManyRedirects as e:
+            raise NetworkExceptions("3" +str(e))
+            # exceeds number of max redirect
         except ConnectionError as e:
-            raise NetworkExceptions(str(e))
+            raise NetworkExceptions("4 Network problem" + self.url)
+            # the event of a network problem (e.g. DNS failure, refused connection, etc)
+        except RequestException as e:
+            raise NetworkExceptions("5" + str(e))
+            # any other possible exception
 
-        answer = decode(recv.text)        
+        answer = decode(recv.content)        
         
         if "failure reason" in answer:
             raise MessageExceptions(f"Scrape failed: {answer['failure reason']}")
 
         if not "files" in answer:
             raise MessageExceptions("Files field in scrape response missing")
+        
+        files = answer.get("files")
+        for file in files:
+            print(answer.get("files").get(file))
+            if "complete" not in files.get(file):
+                raise MissingRequiredField("Complete not in scrape answer")
+            if "incomplete" not in files.get(file):
+                raise MissingRequiredField("Incomplete not in scrape answer")
+            #if "downloaded" not in files.get(file):
+            #    raise MissingRequiredField("Downloaded not in scrape answer")
+            # optional keys like name
+        
+        # other optional unofficial keys
+        if "flags" in answer:
+            flags = answer.get("flags")
+            if "min_request_interval" in flags:
+                self.min_request_interval = flags["min_request_interval"]
+                print(self.min_request_interval)
+            print(flags)
         
         return answer.get("files")
