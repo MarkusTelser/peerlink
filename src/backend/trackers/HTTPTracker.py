@@ -23,7 +23,7 @@ class HTTPTracker:
     TIMEOUT = 3
 
 
-    def __init__(self, url, info_hash, start_queue, result_queue):
+    def __init__(self, url, info_hash, semaphore, result_queue):
         self.url = url
         self.info_hash = info_hash
         
@@ -35,7 +35,7 @@ class HTTPTracker:
         self.peers = list()
         self.trackerid = ""
         
-        self.start_queue = start_queue
+        self.semaphore = semaphore
         self.result_queue = result_queue
         self.error = None
 
@@ -58,24 +58,24 @@ class HTTPTracker:
         key = PeerIDs.generate_key()
         trackerid = ""
         
-        try:
-            recv = self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
-            self.peers = recv
-        except Exception as e:
-            self.error = str(e)
-        
-        self.start_queue.get()
-        self.result_queue.put(self)
+        with self.semaphore:
+            try:
+                recv = self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
+                self.peers = recv
+            except Exception as e:
+                self.error = str(e)
+            finally:
+                self.result_queue.put(self)
         
     def scrape(self):
-        try:
-            recv = self._scrape(self.info_hash)
-            self.peers = recv
-        except Exception as e:
-            self.error = str(e)
-        
-        self.start_queue.get()
-        self.result_queue.put(self)
+        with self.semaphore:
+            try:
+                recv = self._scrape(self.info_hash)
+                self.peers = recv
+            except Exception as e:
+                self.error = str(e)
+            finally:
+                self.result_queue.put(self)   
         
     
     """
@@ -193,7 +193,6 @@ class HTTPTracker:
         
         self.interval = answer["interval"]
         self.min_interval = answer["interval"]
-        print("Interval", answer["interval"])
         
         if type(answer.get("peers")) == list:  
             for peer in answer.get("peers"):
@@ -216,16 +215,12 @@ class HTTPTracker:
         # other optional fields
         if "min interval" in answer:
             self.min_interval = answer["min interval"]
-            print("min interval", answer["min interval"])
         if "tracker id" in answer:
             self.trackerid = answer["tracker id"]
-            print("Tracker id", answer["tracker id"])
         if "complete" in answer:
             self.complete = answer["complete"]
-            print("Complete", answer["complete"])
         if "incomplete" in answer:
             self.incomplete = answer["incomplete"]
-            print("Incomplete", answer["incomplete"])
 
         # list of all ipv6 address currently monitored by tracker
         # peers_ipv6 should be same as peers6, but in earlier extension (may be depreciated)
@@ -239,8 +234,7 @@ class HTTPTracker:
         
         recv.close()
         
-        print(answer.keys())
-        print(answer.get("peers"))
+        print(self.url, len(answer.get("peers")))
         return self.peers
 
 
