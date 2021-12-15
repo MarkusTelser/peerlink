@@ -4,8 +4,7 @@ To keep track of all the BEPs I have already implemented and which will be imple
 
 ## In Progress: 
 - [x] [Explanation of Protocol (BEP 3)](http://bittorrent.org/beps/bep_0003.html)
-- [x] [Tracker Scrape (BEP 48)](http://bittorrent.org/beps/bep_0048.html)
-- [ ] [UDP Tracker (BEP 15)](http://bittorrent.org/beps/bep_0015.html)
+- [x] [UDP Tracker Protocol Extensions (BEP 41)](https://www.bittorrent.org/beps/bep_0041.html)
 - [ ] [Magnet Links (BEP 9)](http://bittorrent.org/beps/bep_0009.html)
 - [ ] [File indices Magnet Link (BEP 53)](http://bittorrent.org/beps/bep_0053.html)
 
@@ -27,6 +26,8 @@ To keep track of all the BEPs I have already implemented and which will be imple
 - [x] [Multitracker in Metadata (BEP 12)](http://bittorrent.org/beps/bep_0012.html)
 - [x] [Compact Tracker Peer List (BEP 23)](http://bittorrent.org/beps/bep_0023.html)
 - [x] [IPv6 Tracker Extension (BEP 7)](http://bittorrent.org/beps/bep_0007.html)
+- [x] [Tracker Scrape (BEP 48)](http://bittorrent.org/beps/bep_0048.html)
+- [x] [UDP Tracker (BEP 15)](http://bittorrent.org/beps/bep_0015.html)
 
 ## Review:
 - [ ] [Extension Protocol (BEP 10)](http://bittorrent.org/beps/bep_0010.html)
@@ -42,7 +43,6 @@ To keep track of all the BEPs I have already implemented and which will be imple
 ## Missing:
 - [ ] [Tracker Peer Obfuscation (BEP 8)](http://bittorrent.org/beps/bep_0008.html)
 - [ ] [HTTP Seeding (BEP 17)](http://bittorrent.org/beps/bep_0017.html)
-- [ ] [WebSeed - HTTP/FTP Seeding (GetRight style) (BEP 19)](http://bittorrent.org/beps/bep_0019.html)
 - [ ] [Extension for partial seeds (BEP 21)](http://bittorrent.org/beps/bep_0021.html)
 - [ ] [BitTorrent Local Tracker Discovery Protocol (BEP 22)](http://bittorrent.org/beps/bep_0022.html)
 - [ ] [Tracker Returns External IP (BEP 24)](http://bittorrent.org/beps/bep_0024.html)
