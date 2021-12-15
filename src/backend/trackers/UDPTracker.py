@@ -4,8 +4,13 @@ from string import ascii_letters
 from struct import pack, unpack
 import socket
 from random import choice
+from ipaddress import IPv6Address, ip_address
+from time import time
 
 from ..exceptions import *
+from src.backend.peer_protocol.PeerIDs import PeerIDs
+
+
 
 class Actions(Enum):
     CONNECT = 0x0
@@ -21,19 +26,58 @@ class UDPEvents(Enum):
 
 class UDPTracker:
     IDENTIFICATION = 0x41727101980
+    MAX_TIMEOUT_CYCLES = 8
+    CID_EXPIRY_TIME = 60
     BUFFER_SIZE = 2048
     TIMEOUT = 5
 
-    def __init__(self, host, port, info_hash, start_queue, result_queue):
+    def __init__(self, host, port, info_hash, semaphore, result_queue):
         self.host = host
         self.port = port 
         self.info_hash = info_hash
         self.sock = None
         
-        self.start_queue = start_queue
+        self.semaphore = semaphore
         self.result_queue = result_queue
+        
         self.peers = list()
         self.error = None
+        self.n_cycles = 0
+        self.cid_expiry_date = 0
+
+    def _send(self, msg):
+        try:
+            self.sock.sendall(msg)
+        except socket.timeout:
+            raise SendTimeout("Sending connect timed out")
+        except socket.error as e: # alias of OSError
+            raise NetworkExceptions(e)
+    
+    def _sendrecv(self, msg):
+        successful = False
+        while self.n_cycles <= UDPTracker.MAX_TIMEOUT_CYCLES and not successful:
+            try:
+                timeout = 15 * (2 ** self.n_cycles)
+                self.sock.settimeout(timeout)
+                
+                self._send(msg)
+                recv = self.sock.recv(UDPTracker.BUFFER_SIZE)
+            except ConnectionRefusedError:
+                raise ConnectionRefused("Connection refused")
+            except socket.timeout:
+                print(f"received timeout after {timeout}s")
+                self.n_cycles += 1
+            except socket.error as e: # alias of OSError
+                raise NetworkExceptions(e)
+            else:
+                successful = True
+
+        # maximal number of retry cycles exceeded
+        if self.n_cycles == UDPTracker.MAX_TIMEOUT_CYCLES + 1:
+            raise ReceiveTimeout(f"timed out after {UDPTracker.MAX_TIMEOUT_CYCLES} retry cycles")
+        
+        self.n_cycles = 0 # reset timeout cycles to zero
+        return recv
 
     def create_con(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -43,10 +87,13 @@ class UDPTracker:
         except socket.gaierror as e:
             raise UnknownHost("Couldn't resolve host name")
         self.sock = sock
+        
+    def close_con(self):
+        self.sock.close()
+        self.sock = None
     
-
     def announce(self):
-        peer_id = UDPTracker.gen_pid()
+        peer_id = bytes(PeerIDs.generate_key(), 'utf-8')
         event = UDPEvents.STARTED.value
 
         # demo values
@@ -60,107 +107,118 @@ class UDPTracker:
         port = 0
         key = 0
         
-        try:
-            self.create_con()
-            cid = self.connect()
-            peers = self._announce(cid, self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
-            self.peers = peers
-            self.close_con()
-        except Exception as e:
-            self.error = str(e)
-        
-        self.start_queue.get()
-        self.result_queue.put(self)
+        with self.semaphore:
+            try:
+                self.create_con()
+                peers = self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
+                self.peers = peers
+                print(self.host, self.port, self.peers)
+            except Exception as e:
+                self.error = str(e)
+            finally:
+                if self.sock is not None:
+                    self.close_con()
+                self.result_queue.put(self)
+            
         
     def scrape(self):
-        try:
-            self.create_con()
-            cid = self.connect()
-            peers = self._scrape(cid, self.info_hash)
-            self.peers = peers
-        except Exception as e:
-            self.error = str(e)
+        with self.semaphore:
+            try:
+                self.create_con()
+                peers = self._scrape(self.info_hash)
+                self.peers = peers
+            except Exception as e:
+                self.error = str(e)
+            finally:
+                if self.sock is not None:
+                    self.close_con()
+                self.result_queue.put(self)
         
-        self.start_queue.get()
-        self.result_queue.put(self)
     
     """
-    Connect packet:
-	32-bit integer	action
-	32-bit integer	transaction_id
+    Connect request:
+	32-bit integer	action // = 0x41727101980
+	32-bit integer	transaction_id // = 0 (CONNECT)
     64-bit integer	connection_id
+    
+    Connect response:
+    32-bit integer action // = 0 (CONNECT)
+    32-bit integer transaction_id
+    64-bit integer connection_id
     """
     def connect(self):
         TID = self.gen_tid()
         msg = pack('!QII', UDPTracker.IDENTIFICATION, Actions.CONNECT.value, TID)
 
-        try:
-            send = self.sock.send(msg)    
-        except socket.timeout:
-            raise SendTimeout("Sending connect timed out")
-        
-        try:
-            recv = self.sock.recv(UDPTracker.BUFFER_SIZE) 
-        except socket.timeout:
-            raise ReceiveTimeout("Recieving connect timed out")
-        except ConnectionRefusedError:
-            raise ConnectionRefused("Connection refused")
+        # send and receive connect packet
+        recv = self._sendrecv(msg)
         
         if len(recv) < 16:
-            print("Error: Announce response smaller than 16 bytes")
-            return
+            raise WrongFormat("Announce response smaller than 16 bytes")
 
-        # TODO print error message
         action = unpack('!I', recv[:4])[0]
         if action == Actions.ERROR.value:
             self.error(recv, TID)
             return
+        
         if action != Actions.CONNECT.value:
-            print("Error: Action neither connect or error")
-            return
+            raise WrongFormat("Action neither connect or error")
 
         tid = unpack('!I', recv[4:8])[0]
         if tid != TID:
-            print("Error: Transaction id aren't equal")
-            return
+            raise WrongFormat("Transaction id aren't equal")
         
-        return unpack('!Q', recv[8:16])[0]
-
+        cid = unpack('!Q', recv[8:16])[0]
+        
+        # set expiry time until which this cid is valid
+        self.cid_expiry_date = time() + UDPTracker.CID_EXPIRY_TIME
+        
+        return cid
 
     """
-    Announce Packet:
+    Announce request:
     64-bit integer connection_id
-    32-bit integer action
+    32-bit integer action // = 1 (ANNOUNCE)
     32-bit integer transaction_id
     20-byte string info_hash
     20-byte string peer_id
     64-bit integer downloaded
     64-bit integer left
     64-bit integer uploaded
-    32-bit integer event
-    32-bit integer IP address
+    32-bit integer event // 0 = None
+    32-bit integer IP address // 0 = DEFAULT
     32-bit integer key
-    32-bit integer num_want
+    32-bit integer num_want // -1 = DEFAULT
     16-bit integer port
+    
+    Announce response:
+    32-bit integer action // = 1 (ANNOUNCE)
+    32-bit integer transaction_id
+    32-bit integer interval
+    32-bit integer leechers
+    32-bit integer seeders
+    32-bit integer IP address
+    16-bit integer TCP port
     """
-    def _announce(self, cid, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0x0, num_want=-1):
+    def _announce(self, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0, num_want=-1):
+        # update cid if expired / not existing
+        if time() > self.cid_expiry_date:
+            cid = self.connect()
+        
         # create message
         TID = self.gen_tid()
+        
+        # don't insert ip, if it is ipv6 address (128bit instead of 32bit)
+        if ip != 0 and type(ip_address(ip)) == IPv6Address:
+            ip = 0
+        
         msg = pack('!QII', cid, Actions.ANNOUNCE.value, TID)
         msg += pack('!20s20sQ', info_hash, peer_id, dowloaded)
         msg += pack('!QQI', left, uploaded, event)
         msg += pack('!IIIH', ip, key, num_want, port)
         
         # send and receive announce packet
-        try:
-            send = self.sock.send(msg)
-        except socket.timeout:
-            raise TorrentExceptions("Sending announce timed out")
-        
-        try:
-            recv = self.sock.recv(UDPTracker.BUFFER_SIZE)
-        except socket.timeout:
-            raise TorrentExceptions("Receiving announce timed out")
+        recv = self._sendrecv(msg)
 
         if len(recv) < 20:
             print("Error: Announce response smaller than 20 bytes")
@@ -195,29 +253,37 @@ class UDPTracker:
 
 
     """
-    Scrape packet:
+    Scrape request:
 	64-bit integer	connection_id
-	32-bit integer	action	
+	32-bit integer	action // = 2 (SCRAPE)
 	32-bit integer	transaction_id
 	20-byte string	info_hash
+ 
+    Scrape response:
+    32-bit integer action // = 2 (SCRAPE)
+    32-bit integer transaction_id
+    32-bit integer seeders
+    32-bit integer completed
+    32-bit integer leechers
     """
-    def _scrape(self, cid, info_hashes: list):
+    def _scrape(self, info_hashes: list):
+        # update cid if expired / not existing
+        if time() > self.cid_expiry_date:
+            cid = self.connect()
+        
         # create message
         TID = self.gen_tid()
         msg = pack('!QII', cid, Actions.SCRAPE.value, TID)
+        
         if type(info_hashes) == list:
             for info_hash in info_hashes:
-                msg += pack('!20s', info_hash)
+                # up to 74 torrents scraped at once
+                msg += pack('!20s', info_hash[:74])
         elif type(info_hashes) == bytes:
             msg += pack('!20s', info_hashes)
             
-        # send and receive announce packet
-        try:
-            send = self.sock.send(msg)
-            recv, conn = self.sock.recvfrom(UDPTracker.BUFFER_SIZE)
-        except socket.timeout:
-            print("Error: Send/Response timed out")
-            return None
+        # send and receive scrape packet
+        recv = self._sendrecv(msg)
         
         if len(recv) < 8:
             print("Error: Scrape response smaller than 8 bytes")
@@ -248,23 +314,12 @@ class UDPTracker:
         
         print(results)
         return results
-        
 
     """
-    Authenticate packet:
-    8-byte zero-padded string	username
-	8-byte string	hash
-
-    hash = first 8 bytes of sha1(input + username + sha1(password))
-    """
-    def authenticate(self, username, password):
-        pass
-
-    """
-    Error packet:
-    32-bit integer	action
-	32-bit integer	transaction_id
-	string	message
+    Error response:
+    32-bit integer action // = 3 (ERROR)
+	32-bit integer transaction_id
+	string message
     """
     def error(self, data, tid):
         if len(data) < 8:
@@ -285,15 +340,14 @@ class UDPTracker:
         if len(data) > 8:
             print("Error message:", data[8:len(data)])
     
+    """
+    Authenticate request:
+    8-byte string username // zero padded
+	8-byte string hash // first 8 bytes of sha1(input + username + sha1(password))
+    """
+    def authenticate(self, username, password):
+        pass
     
     @staticmethod
     def gen_tid():
         return randint(0, 0xffffffff)
-    
-    @staticmethod
-    def gen_pid():
-        return bytes("-qB3090-" + ''.join(choice(ascii_letters) for _ in range(12)), 'utf-8')
-    
-    def close_con(self):
-        self.sock.close()
-        self.sock = None
