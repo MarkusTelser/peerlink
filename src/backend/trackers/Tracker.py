@@ -10,6 +10,10 @@ class TrackerType(Enum):
     UDP = 1
     UNSUPPORTED = 2
 
+"""
+parse URL according to URI (Uniform Resource Identifiers) schemes
+https://datatracker.ietf.org/doc/html/rfc3986
+"""
 def parse_url(announce_url: str):
     typ = announce_url.split("://")[0]
     
@@ -23,7 +27,11 @@ def parse_url(announce_url: str):
         tracker_type = TrackerType.UDP
         ip = announce_url.split("/")[2].split(":")[0]
         port = int(announce_url.split("/")[2].split(":")[1])
-        tracker_address = (ip, port)
+        if len(announce_url.split("/")) > 3:
+            extension = "/" + "/".join(announce_url.split("/")[3:])
+        else:
+            extension = "" 
+        tracker_address = (ip, port, extension)
     else:
         tracker_type = TrackerType.UNSUPPORTED
         
@@ -38,8 +46,8 @@ def give_object(announce_url: str, info_hash: bytes, start_queue, result_queue):
     if typ == TrackerType.HTTP:
         tracker = HTTPTracker(address, info_hash, start_queue, result_queue)
     elif typ == TrackerType.UDP:
-        host, port = address
-        tracker = UDPTracker(host, port, info_hash, start_queue, result_queue)
+        host, port, extension = address
+        tracker = UDPTracker(host, port, extension, info_hash, start_queue, result_queue)
     elif typ == TrackerType.UNSUPPORTED:
         # TODO tracker type not recognized
         pass

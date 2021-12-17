@@ -1,15 +1,14 @@
+import socket
+from time import time
 from enum import Enum
+from random import choice
 from random import randint
 from string import ascii_letters
 from struct import pack, unpack
-import socket
-from random import choice
 from ipaddress import IPv6Address, ip_address
-from time import time
 
-from ..exceptions import *
+from src.backend.exceptions import *
 from src.backend.peer_protocol.PeerIDs import PeerIDs
-
 
 
 class Actions(Enum):
@@ -24,6 +23,12 @@ class UDPEvents(Enum):
     STARTED = 0x2
     STOPPED = 0x3
 
+# UDP Tracker Extension (BEP 41)
+class UDPExtensionTypes(Enum):
+    EndOfOptions = 0x0
+    NOP = 0x1
+    URLData = 0x2
+
 class UDPTracker:
     IDENTIFICATION = 0x41727101980
     MAX_TIMEOUT_CYCLES = 8
@@ -31,9 +36,10 @@ class UDPTracker:
     BUFFER_SIZE = 2048
     TIMEOUT = 5
 
-    def __init__(self, host, port, info_hash, semaphore, result_queue):
+    def __init__(self, host, port, extension, info_hash, semaphore, result_queue):
         self.host = host
         self.port = port 
+        self.extension = extension
         self.info_hash = info_hash
         self.sock = None
         
@@ -110,7 +116,7 @@ class UDPTracker:
         with self.semaphore:
             try:
                 self.create_con()
-                peers = self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want)
+                peers = self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want, self.extension)
                 self.peers = peers
                 print(self.host, self.port, self.peers)
             except Exception as e:
@@ -133,7 +139,6 @@ class UDPTracker:
                 if self.sock is not None:
                     self.close_con()
                 self.result_queue.put(self)
-        
     
     """
     Connect request:
@@ -200,7 +205,7 @@ class UDPTracker:
     32-bit integer IP address
     16-bit integer TCP port
     """
-    def _announce(self, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0, num_want=-1):
+    def _announce(self, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0, num_want=-1, extensions=""):
         # update cid if expired / not existing
         if time() > self.cid_expiry_date:
             cid = self.connect()
@@ -216,6 +221,9 @@ class UDPTracker:
         msg += pack('!20s20sQ', info_hash, peer_id, dowloaded)
         msg += pack('!QQI', left, uploaded, event)
         msg += pack('!IIIH', ip, key, num_want, port)
+        
+        # add extension bytes, even if there is none
+        msg += self.encodeExt(extensions)
         
         # send and receive announce packet
         recv = self._sendrecv(msg)
@@ -341,12 +349,26 @@ class UDPTracker:
             print("Error message:", data[8:len(data)])
     
     """
-    Authenticate request:
-    8-byte string username // zero padded
-	8-byte string hash // first 8 bytes of sha1(input + username + sha1(password))
+    Option Types: 
+    EndOfOptions <type=0x0> (is equal to no more bytes)
+    NOP <type=0x1> (used for padding, has no effect)
+    URLData <type=0x2><len_data><data>
+    
+    Extension Format:
+    1 byte option-type
+    1 byte length of data
+    n bytes length data field
     """
-    def authenticate(self, username, password):
-        pass
+    def encodeExt(self, url_string: str):
+        ret = bytes()
+        
+        url_len = len(url_string)
+        ret += pack("!B", UDPExtensionTypes.URLData.value) # type
+        ret += pack("!B", len(url_string)) # length 
+        if url_len != 0:
+            ret += pack(f"!{url_len}s", bytes(url_string, 'utf-8')) # data
+        
+        return ret
     
     @staticmethod
     def gen_tid():
