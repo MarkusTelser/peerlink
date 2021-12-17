@@ -18,11 +18,14 @@ for item in os.listdir("data/all"):
     # print(d)
     
     # remove standard keys
-    """
     del d["info"]
     if "announce" in d:
         del d["announce"]
     if "announce-list" in d:
+        for tiers in d.get("announce-list"):
+            for announce in tiers:
+                if "?" in announce:
+                    print(announce)
         del d["announce-list"]
     if "created by" in d:
         del d["created by"]
@@ -32,7 +35,6 @@ for item in os.listdir("data/all"):
         del d["comment"]
     if "encoding" in d:
         del d["encoding"]
-    """
 
     print(json.dumps(d, indent=4, sort_keys=True))
 
