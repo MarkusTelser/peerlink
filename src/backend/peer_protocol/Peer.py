@@ -1,13 +1,17 @@
-import socket
+
 import sys
 import errno
+import socket
+from math import ceil
+from enum import Enum
 from struct import unpack
 from threading import Thread
-from math import ceil
+
 from .PeerMessages import PeerMessageLengths, PeerMessageStructures
 from .PeerStreamIterator import PeerStreamIterator
-from ..exceptions import *
+from src.backend.exceptions import *
 from .PeerIDs import PeerIDs
+
 
 """
 implement peer protocol
@@ -15,12 +19,15 @@ implement peer protocol
 class Peer(Thread):
     TIMEOUT = 10
 
-    def __init__(self, address, peer_id, data, piece_manager, file_handler):
+    def __init__(self, address, data, piece_manager, file_handler, peer_id=""):
         super().__init__()
         self.sock = None
         self.address = address #  => (ip, port)
         self.info_hash = data.info_hash
-        self.peer_id = bytes(peer_id, 'utf-8')
+        if type(peer_id) == str:
+            self.peer_id = bytes(peer_id, 'utf-8')
+        elif type(peer_id) == bytes:
+            self.peer_id = peer_id
         
         self.data = data
         self.piece_manager = piece_manager
@@ -42,8 +49,8 @@ class Peer(Thread):
             msg = self.psiterator.bld_handshake(self.info_hash, self.peer_id)
             self.send_msg(msg, expected_len=68)
             peer_id, reserved = self.recv_handshake(self.info_hash, self.peer_id)
-            print(peer_id, PeerIDs.get_client(peer_id))
         except Exception as e:
+            print(e)
             return
         #print("success", self.address, reserved)
 
@@ -132,14 +139,16 @@ class Peer(Thread):
             raise MessageExceptions("Error: Only BitTorrent protocol supported", pstrlen, pstr)
 
         reserved = unpack("!8s", recv[20:28])[0]
+        print(reserved)
 
         recv_info_hash = unpack("!20s", recv[28:48])[0]
         if recv_info_hash != info_hash:
             raise MessageExceptions("Error: Received info hash does not match")
 
         recv_peer_id = unpack("!20s", recv[48:68])[0]
-        if recv_peer_id == peer_id:
-            raise MessageExceptions("Error: Peer didn't return unique peer id")
+        #if peer_id != "" and recv_peer_id != peer_id:
+        #    print(recv_peer_id, peer_id)
+        #    raise MessageExceptions("Error: Peer didn't return unique peer id")
 
         return recv_peer_id, reserved
     
@@ -176,6 +185,7 @@ class Peer(Thread):
             pass
         else:
             pass
+        print(recv)
         return recv
         
     def add_bitfield(self, bitfield):

@@ -23,16 +23,19 @@ class Swarm:
         self.piece_manager = PieceManager(data.pieces_count)
         self.file_handler = FileHandler(data, "downloaded.file")
         
+        self.peer_limit = BoundedSemaphore(value=Swarm.MAX_PEERS)
+        self.tracker_limit = BoundedSemaphore(value=Swarm.MAX_TRACKER)
+        self.peer_list = list()
         self.tracker_list = list()
-        self.semaphore = BoundedSemaphore(value=Swarm.MAX_TRACKER)
         self.finished_tracker = Queue()
+        
 
     def init_tracker(self):
         print(self.announces)
         
         for tiers in self.announces: 
             for announce in tiers:
-                tracker = give_object(announce, self.info_hash, self.semaphore, self.finished_tracker)
+                tracker = give_object(announce, self.info_hash, self.tracker_limit, self.finished_tracker)
                 if tracker != None:
                     self.tracker_list.append(tracker)
     
@@ -44,6 +47,7 @@ class Swarm:
             thread = Thread(target=t.announce)
             thread.start()
         
+        """
         finished = 0
         while finished != len(self.tracker_list):
             t = self.finished_tracker.get()
@@ -58,11 +62,41 @@ class Swarm:
                     print(tracker.host, tracker.port, tracker.peers)
             else:
                 print(tracker.error)
+        """
             
 
     def connect_peers(self, info_hash):
-        finished = 0
-        while finished != count:
-            item = finished_tracker.get()
+        finished = 0 
+        while finished != len(self.tracker_list):
+            item = self.finished_tracker.get()
             finished += 1
-            print(item, "finished")
+            
+            print(item)
+            if item:
+                if item.peers:
+                    # iterate over returned peers
+                    print(item.peers)
+                    self.add_peerlist(item.peers)
+                    
+    def add_peerlist(self, peer_list: list):
+        for peer in peer_list:
+            ip, port = peer[0], peer[1]
+            
+            found = False
+            for p in self.peer_list:
+                if p.address[0] == ip and p.address[1] == port:
+                    found = True
+                    break
+            
+            if not found:
+                address = (ip, port)
+                if len(peer) == 2:
+                    p = Peer(address, self.data, self.piece_manager, self.file_handler)
+                elif len(peer) == 3:
+                    p = Peer(address, self.data, self.piece_manager, self.file_handler, peer[2])
+                p.start()
+                print(address, "started")
+                
+                self.peer_list.append(p)
+            else:
+                print(len(self.peer_list))

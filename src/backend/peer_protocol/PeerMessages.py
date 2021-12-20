@@ -13,7 +13,24 @@ class PeerMessageIDs:
     REQUEST = 0x6
     PIECE = 0x7
     CANCEL = 0x8
+    
+    # DHT extension
     PORT = 0x9
+    
+    # Fast extension
+    SUGGEST = 0x0D
+    HAVEALL = 0x0E
+    HAVENONE = 0x0F
+    REJECTREQUEST = 0x10
+    ALLOWEDFAST = 0x11
+    
+    # Hash Transfer Protcol
+    HASHREQUEST = 0x15
+    HASHES = 0x16
+    HASHREJECT = 0x17
+    
+    # client specific
+    LTEPHANDSHAKE = 0x14
 
  # BITFIELD, PIECE have variable len
 class PeerMessageLengths:
