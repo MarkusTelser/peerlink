@@ -11,7 +11,12 @@ from .PeerMessages import PeerMessageLengths, PeerMessageStructures
 from .PeerStreamIterator import PeerStreamIterator
 from src.backend.exceptions import *
 from .PeerIDs import PeerIDs
+"""
+set timeout new every time
+use sched library
+select should work, especially for client server model (maybe problems with win comptability)
 
+"""
 
 """
 implement peer protocol

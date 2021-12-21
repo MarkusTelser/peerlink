@@ -118,7 +118,6 @@ class UDPTracker:
                 self.create_con()
                 peers = self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want, self.extension)
                 self.peers = peers
-                print(self.host, self.port, self.peers)
             except Exception as e:
                 self.error = str(e)
             finally:

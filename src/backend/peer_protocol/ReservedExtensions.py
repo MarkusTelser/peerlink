@@ -31,16 +31,24 @@ extension_table = [
 ]
 
 
+def comp_bytes(byte_string, value):
+    bits_string = "{0:b}".format(byte_string)
+    bits_value = "{0:b}".format(value)
+    if int(bits_string) & int(bits_value) == int(bits_value):
+        return True
+    return False
+
+
 def get_extensions(reserved_bytes: bytes):
     extensions = list()
     for ext in extension_table:
         byte, value, extension = ext
-        if reserved_bytes[byte] == value:
+        if comp_bytes(reserved_bytes[byte], value):
             if extension not in extensions: 
                 extensions.append(extension)
     return extensions
 
-b = b'\x00\x00\x00\x00\x00\x10\x00\x05'
-e = get_extensions(b)
-print(b)
-print(e)
+if __name__ == "__main__":
+    b = b'\x00\x00\x00\x00\x00\x10\x00\x05'
+    e = get_extensions(b)
+    print(b, e)

@@ -233,8 +233,6 @@ class HTTPTracker:
                 self.peers.append((ip, port))
         
         recv.close()
-        
-        print(self.url, len(answer.get("peers")))
         return self.peers
 
 
