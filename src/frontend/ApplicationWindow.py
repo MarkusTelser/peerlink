@@ -1,34 +1,28 @@
 from PyQt6.QtWidgets import (
     QApplication,
-    QLabel,
     QMainWindow,
-    QMenuBar,
-    QMenu,
     QSizePolicy,
     QSplitter,
-    QStatusBar,
     QTabWidget,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QToolBar,
     QHBoxLayout,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
-    QWidget,
-    QFrame
+    QWidget
 )
 
-from PyQt6.QtGui import (
-    QAction,
-    QGuiApplication,
-    QIcon,
-    QKeySequence
-)
+from PyQt6.QtGui import QGuiApplication
 import PyQt6
 import sys
 from PyQt6.QtCore import QSize, Qt
 import time
 from threading import Thread
+from src.frontend.widgets.MenuBar import MenuBar
+from src.frontend.widgets.SidePanel import SidePanel
+from src.frontend.widgets.StatusBar import StatusBar
+from src.frontend.widgets.ToolBar import ToolBar
+
+from src.frontend.TorrentViewModel import TorrentModel, TorrentView
 
 class ApplicationWindow(QMainWindow):
     def __init__(self):
@@ -51,9 +45,9 @@ class ApplicationWindow(QMainWindow):
         
         self.central_widget = QWidget()
         self.central_widget.setStyleSheet("background-color: red;")
-        self.layout = QHBoxLayout()
+        self.main_layout = QHBoxLayout()
         
-        self.central_widget.setLayout(self.layout)
+        self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
 
         self.addWidgets()
@@ -62,69 +56,28 @@ class ApplicationWindow(QMainWindow):
         Thread(target=self.appendRowEnd).start()
         
         self.show()
-        
-    def appendRowEnd(self):
-        time.sleep(3)
-        row_count = self.tableWidget.rowCount()
-        self.tableWidget.insertRow(row_count)
-        self.tableWidget.setItem(row_count, 0, QTableWidgetItem("text1"))
-        self.tableWidget.setItem(row_count, 1, QTableWidgetItem("text2"))
     
     def addWidgets(self):
-        # horizontal splitter between left side panel and right two panels
+        # horizontal splitter for side panel, vertical splitter
         hori_splitter = QSplitter()
         hori_splitter.setOrientation(Qt.Orientation.Horizontal)
-        self.layout.addWidget(hori_splitter)
+        self.main_layout.addWidget(hori_splitter)
         
-        # vertical splitter between top und bottom right panels
-        vert_splitter = QSplitter()
-        vert_splitter.setOrientation(Qt.Orientation.Vertical)
-        
-        # left side panel
-        tabWidget = QTabWidget()
-        tabWidget.setStyleSheet("background-color: green;")
-        tabWidget.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        
-        tab1 = QWidget()
-        tabWidget.addTab(tab1, "filters")
-        
-        tab2 = QWidget()
-        tabWidget.addTab(tab2, "other")
-        hori_splitter.addWidget(tabWidget)
+        side_panel = SidePanel()
+        hori_splitter.addWidget(side_panel)
         hori_splitter.setStretchFactor(0, 30)
         
-        # default panel
-        header_data = ["name", "city"]
-        rows = [
-            ["Aloysius", "Indore"],
-            ["Alan", "Bhopal"],
-            ["Arnavi", "Mandsaur"]
-        ]
+        # vertical splitter for main table, info table
+        vert_splitter = QSplitter()
+        vert_splitter.setOrientation(Qt.Orientation.Vertical)
+        hori_splitter.addWidget(vert_splitter)
+        hori_splitter.setCollapsible(1, False)
+        hori_splitter.setStretchFactor(1, 70)
         
-        self.tableWidget = QTableWidget()
-        self.tableWidget.setRowCount(len(rows))
-        self.tableWidget.setColumnCount(len(rows[0]))
-        self.tableWidget.setStyleSheet("background-color: yellow;")
-        
-        self.tableWidget.setHorizontalHeaderLabels(header_data)
-        for i, row in enumerate(rows):
-            print(i, row)
-            self.tableWidget.insertRow(i)
-            for j, column in enumerate(row):
-                item = QTableWidgetItem(column)
-                self.tableWidget.insertItem(i, j, item)
-   
-        
-        
-        # make
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        self.tableWidget.horizontalHeader().setSectionsMovable(True)
-        self.tableWidget.verticalHeader().hide()
-        
-        self.tableWidget.horizontalHeader().setSectionsClickable(True) # sort if clicked
-        self.tableWidget.horizontalHeader().setStretchLastSection(True)
-        
-        vert_splitter.addWidget(self.tableWidget)
+        # add main torrent table model / view
+        self.table_model = TorrentModel()
+        self.table_view = TorrentView(self.table_model, self)
+        vert_splitter.addWidget(self.table_view)
         
         # bottom info panel
         panel2 = QTabWidget()
@@ -135,79 +88,23 @@ class ApplicationWindow(QMainWindow):
         
         panel2.setStyleSheet("background-color: blue;")
         vert_splitter.addWidget(panel2)
-        vert_splitter.setSizes([1, 0])
-        
-        hori_splitter.addWidget(vert_splitter)
-        hori_splitter.setCollapsible(1, False)
-        hori_splitter.setStretchFactor(1, 70)
-        
+        vert_splitter.setSizes([1, 0]) # hide info table
+
 
     def addBars(self):
-        self.attachMenuBar()
-        self.attachToolBar()
-        self.attachStatusBar()
-        
-    def attachMenuBar(self):
-        menuBar = QMenuBar()
-        
-        # file menu
-        fileMenu = QMenu("&File", self)
-        fileIcon = QIcon("resources/file.svg")
-        fileShortcut = QKeySequence("Ctrl+O")
-        fileMenu.addAction(fileIcon, "Open file", self.pressed, fileShortcut)
-        fileMenu.addAction("Open magnet link")
-        fileMenu.addSeparator()
-        fileMenu.addAction("Exit")
-        menuBar.addMenu(fileMenu)
-        
-        # edit menu
-        editMenu = QMenu("&Edit", self)
-        menuBar.addMenu(editMenu)
-        
-        # settings menu
-        settingsMenu = QMenu("&Settings", self)
-        menuBar.addMenu(settingsMenu)
-        
-        # help menu
-        helpMenu = QMenu("&Help", self)
-        menuBar.addMenu(helpMenu)
-        
+        menuBar = MenuBar()
         self.setMenuBar(menuBar)
-    
-    def attachToolBar(self):
-        toolBar = QToolBar()
-        toolBar.setMovable(False)
         
-        resume = QAction("Resume", self)
-        resume.setToolTip("is resuming the current torrent")
-        toolBar.addAction(resume)
-        toolBar.addAction("Pause")
-        toolBar.addAction("Resume All")
-        toolBar.addAction("Pause All")
-        
+        toolBar = ToolBar()
         self.addToolBar(toolBar)
         
-    def attachStatusBar(self):
-        statusBar = QStatusBar()
-        
-        download_speed = QLabel("0 MB/s")
-        statusBar.addPermanentWidget(download_speed)
-        
-        upload_speed = QLabel("0 MB/s")
-        statusBar.addPermanentWidget(upload_speed)
-        
-        count_peers = QLabel("10 Peers")
-        statusBar.addPermanentWidget(count_peers)
-        
-        count_nodes = QLabel("0 DHT Nodes")
-        statusBar.addPermanentWidget(count_nodes)
-        
+        statusBar = StatusBar()
         self.setStatusBar(statusBar)
-    
-    def pressed(self):
-        print("pressed")
-    
-    
+        
+    def appendRowEnd(self):
+        time.sleep(3)
+        self.table_model.data.append(["hello1", "hello2"])
+        self.table_model.updatedData.emit()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
