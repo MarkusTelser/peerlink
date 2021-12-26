@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="68.784 28.474 457.826 443.875" xmlns="http://www.w3.org/2000/svg">
+  <g id="Layer_1" transform="matrix(1, 0, 0, 1, 184.831894, 12.603851)">
+    <title>Layer 1</title>
+    <g transform="matrix(-1.043719, 0.005813, -0.005408, -0.971379, 241.70076, 473.917419)" stroke="null" id="g-1" style="">
+      <path opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="path-1" stroke-width="0" style="stroke: rgb(100, 71, 51); fill: rgb(250, 129, 8);"/>
+      <path opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="path-2" stroke-width="0" style="stroke: rgb(100, 71, 51); fill: rgb(250, 129, 8);"/>
+      <path opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="path-3" stroke-width="0" style="stroke: rgb(100, 71, 51); fill: rgb(250, 129, 8);"/>
+      <path opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="path-4" stroke-width="0" style="stroke: rgb(100, 71, 51); fill: rgb(250, 129, 8);"/>
+    </g>
+    <g transform="rotate(179.681 203.796 203.463)" stroke="null" id="svg_5">
+      <path stroke="#546433" opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="svg_1" stroke-width="0" style="fill: rgb(237, 230, 7);"/>
+      <path stroke="#546433" opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="svg_2" stroke-width="0" style="fill: rgb(237, 230, 7);"/>
+      <path stroke="#546433" opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="svg_3" stroke-width="0" style="fill: rgb(237, 230, 7);"/>
+      <path stroke="#546433" opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="svg_4" stroke-width="0" style="fill: rgb(237, 230, 7);"/>
+    </g>
+  </g>
+</svg>
