@@ -9,18 +9,26 @@ class ToolBar(QToolBar):
         
         self.setMovable(False)
         
-        resume = QAction("Resume", self)
-        resume.setToolTip("is resuming the current torrent")
-        self.addAction(resume)
+        self.open_file = QAction("Open file", self)
+        self.open_file.setToolTip("open torrent file to download")
+        self.addAction(self.open_file)
         
-        pause = QAction("Pause", self)
-        pause.setToolTip("is pausing the current torrent")
-        self.addAction(pause)
+        self.open_magnet_link = QAction("Open magnet link", self)
+        self.open_magnet_link.setToolTip("open magnet link")
+        self.addAction(self.open_magnet_link)
         
-        resume_all = QAction("Resume All", self)
-        resume_all.setToolTip("resuming all torrents")
-        self.addAction(resume_all)
+        self.resume = QAction("Resume", self)
+        self.resume.setToolTip("is resuming the current torrent")
+        self.addAction(self.resume)
         
-        pause_all = QAction("Pause All", self)
-        pause_all.setToolTip("pausing all torrents")
-        self.addAction(pause_all)
+        self.pause = QAction("Pause", self)
+        self.pause.setToolTip("is pausing the current torrent")
+        self.addAction(self.pause)
+        
+        self.resume_all = QAction("Resume All", self)
+        self.resume_all.setToolTip("resuming all torrents")
+        self.addAction(self.resume_all)
+        
+        self.pause_all = QAction("Pause All", self)
+        self.pause_all.setToolTip("pausing all torrents")
+        self.addAction(self.pause_all)

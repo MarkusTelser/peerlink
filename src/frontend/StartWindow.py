@@ -1,16 +1,11 @@
 from PyQt6.QtWidgets import (
-    QApplication, 
-    QLineEdit, 
+    QApplication,
     QMainWindow, 
     QPushButton, 
     QWidget, 
     QVBoxLayout, 
     QLabel, 
-    QFileDialog, 
-    QMessageBox, 
-    QDialog, 
-    QDialogButtonBox, 
-    QBoxLayout
+    QFileDialog
 )
 from PyQt6.QtGui import (
     QDragLeaveEvent, 
@@ -23,7 +18,8 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtCore import QSize, Qt
 from src.backend.metadata import TorrentParser
-from .ViewWindow import ViewWindow
+from src.frontend.ViewWindow import ViewWindow
+from src.frontend.widgets.MagnetLinkDialog import MagnetLinkDialog
 from os.path import expanduser
 import sys
 
@@ -190,52 +186,16 @@ class StartWindow(QMainWindow):
         
         if dialog.exec():
             magnet_link = dialog.text_box.text()
+            # TODO implement when Magnet Link is ready
             #data = TorrentParser.parse_magnet_link(magnet_link)
             #window = ViewWindow(self)
             #window.show(data)
 
-
-class MagnetLinkDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-
-        self.setWindowTitle('Add Magnet Link')
-        self.setWindowIcon(QIcon('resources/logo.png'))
-        QApplication.clipboard().dataChanged.connect(self.insert_clipboard)
-        self.setFixedSize(600, 120)
-        
-        message = QLabel("Enter magnet link:")
-        self.layout.addWidget(message)
-
-        self.text_box = QLineEdit()
-        self.insert_clipboard()
-        self.layout.addWidget(self.text_box)
-
-        # button box with add and cancel
-        buttonBox = QDialogButtonBox()
-        buttonBox.addButton(QDialogButtonBox.StandardButton.Cancel)
-        add_button = QPushButton(QIcon('resources/add.svg'), ' Add', self)
-        buttonBox.addButton(add_button, QDialogButtonBox.ButtonRole.AcceptRole)
-        buttonBox.layout().setDirection(QBoxLayout.Direction.LeftToRight)
-        buttonBox.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
-        buttonBox.rejected.connect(self.reject)
-        buttonBox.accepted.connect(self.accept)
-        self.layout.addWidget(buttonBox)
-
-    def insert_clipboard(self):
-        clipboard = QApplication.clipboard().text()
-        if clipboard.startswith('magnet:?'):
-            self.text_box.setText(clipboard)
+            
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
     
-    def accept(self):
-        if self.text_box.text():
-            return super().accept()
-        else:
-            error_window = QMessageBox(self)
-            error_window.setIcon(QMessageBox.Icon.Critical)
-            error_window.setText('No magnet link inserted!')
-            error_window.setWindowTitle("Error")
-            error_window.show()
+    window = StartWindow()
+    window.show()
+    
+    app.exec()

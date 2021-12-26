@@ -17,12 +17,14 @@ import sys
 from PyQt6.QtCore import QSize, Qt
 import time
 from threading import Thread
+from src.backend.metadata.TorrentParser import TorrentParser
 from src.frontend.widgets.MenuBar import MenuBar
 from src.frontend.widgets.SidePanel import SidePanel
 from src.frontend.widgets.StatusBar import StatusBar
 from src.frontend.widgets.ToolBar import ToolBar
-
-from src.frontend.TorrentViewModel import TorrentModel, TorrentView
+from src.frontend.ViewWindow import ViewWindow
+from src.frontend.models.TorrentListModel import TorrentListModel
+from src.frontend.views.TorrentListView import TorrentListView
 
 class ApplicationWindow(QMainWindow):
     def __init__(self):
@@ -75,8 +77,8 @@ class ApplicationWindow(QMainWindow):
         hori_splitter.setStretchFactor(1, 70)
         
         # add main torrent table model / view
-        self.table_model = TorrentModel()
-        self.table_view = TorrentView(self.table_model, self)
+        self.table_model = TorrentListModel()
+        self.table_view = TorrentListView(self.table_model, self)
         vert_splitter.addWidget(self.table_view)
         
         # bottom info panel
@@ -96,6 +98,7 @@ class ApplicationWindow(QMainWindow):
         self.setMenuBar(menuBar)
         
         toolBar = ToolBar()
+        toolBar.open_file.triggered.connect(self.open_file_window)
         self.addToolBar(toolBar)
         
         statusBar = StatusBar()
@@ -105,6 +108,14 @@ class ApplicationWindow(QMainWindow):
         time.sleep(3)
         self.table_model.data.append(["hello1", "hello2"])
         self.table_model.updatedData.emit()
+    
+    def open_file_window(self):
+        path = "data/all/test.torrent"
+        data = TorrentParser.parse_filepath(path)
+       
+        window = ViewWindow(self)
+        window.show(data)
+        print("hello")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
