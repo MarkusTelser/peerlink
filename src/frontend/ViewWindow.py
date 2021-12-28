@@ -1,4 +1,5 @@
 
+from os import error
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -9,6 +10,7 @@ from PyQt6.QtWidgets import (
     QLabel, 
     QLineEdit,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QSplitter,
     QVBoxLayout,
@@ -224,8 +226,11 @@ class ViewWindow(QMainWindow):
         # check if path is not empty, correct and a directory
         path = self.download_path.text().strip()
         if not path:
-            error_msg = QErrorMessage(self)
-            error_msg.showMessage("download path is empty")
+            error_msg = QMessageBox(self)
+            error_msg.setWindowIcon(QIcon('resources/warning.svg'))
+            error_msg.setWindowTitle("Error")
+            error_msg.setText("download path is empty")
+            error_msg.show()
             return
         if not exists(path):
             error_msg = QErrorMessage(self)

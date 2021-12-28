@@ -12,6 +12,7 @@ from PyQt6.QtCore import QSize, Qt
 import sys
 
 from src.backend.metadata.TorrentParser import TorrentParser
+from src.frontend.widgets.FileDialog import FileDialog
 from src.frontend.widgets.MenuBar import MenuBar
 from src.frontend.widgets.SidePanel import SidePanel
 from src.frontend.widgets.StatusBar import StatusBar
@@ -55,7 +56,7 @@ class ApplicationWindow(QMainWindow):
         self.setMenuBar(menuBar)
         
         toolBar = ToolBar()
-        toolBar.open_file.triggered.connect(self.open_file_window)
+        toolBar.open_file.clicked.connect(self.open_file_window)
         self.addToolBar(toolBar)
         
         statusBar = StatusBar()
@@ -94,15 +95,17 @@ class ApplicationWindow(QMainWindow):
         vert_splitter.setSizes([1, 0]) # hide info table
     
     def open_file_window(self):
-        path = "data/all/solo.torrent"
-        data = TorrentParser.parse_filepath(path)
-       
-        window = ViewWindow(self)
-        window.add_data.connect(self.appendRowEnd)
-        window.show(data)
+        dialog = FileDialog()
+        
+        if dialog.exec():
+            file_path = dialog.selectedFiles()[0]
+            data = TorrentParser.parse_filepath(file_path)
+            window = ViewWindow(self)
+            window.add_data.connect(self.appendRowEnd)
+            window.show(data)
     
-    def appendRowEnd(self, txt):
-        self.table_model.data.append([txt["name"], "hello2"])
+    def appendRowEnd(self, dt):
+        self.table_model.data.append([dt['files'].name, str(dt['files'].length)])
         self.table_model.updatedData.emit()
 
 if __name__ == "__main__":

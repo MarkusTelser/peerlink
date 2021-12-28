@@ -18,7 +18,9 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtCore import QSize, Qt
 from src.backend.metadata import TorrentParser
+from src.frontend.ApplicationWindow import ApplicationWindow
 from src.frontend.ViewWindow import ViewWindow
+from src.frontend.widgets.FileDialog import FileDialog
 from src.frontend.widgets.MagnetLinkDialog import MagnetLinkDialog
 from os.path import expanduser
 import sys
@@ -164,22 +166,21 @@ class StartWindow(QMainWindow):
         self.addWidgets()
     
     def open_filedialog(self):
-        dialog = QFileDialog(self, 'Open Torrent File')
-        dialog.setMinimumSize(1000, 700)
-        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        dialog.setNameFilter("Torrent files (*.torrent)")
-        dialog.setOption(QFileDialog.Option.DontUseNativeDialog)
-        dialog.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
-        dialog.setMimeTypeFilters(['application/x-bittorrent'])
-        dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        dialog.setDirectory(expanduser('~'))
+        dialog = FileDialog()
 
         if dialog.exec():
             file_path = dialog.selectedFiles()[0]
-            print(file_path)
             data = TorrentParser.parse_filepath(file_path)
             window = ViewWindow(self)
             window.show(data)
+            
+            #self.close()
+            #main_window = ApplicationWindow()
+            #main_window.show()
+            
+    def closed(self):
+        pass
+            
         
     def open_magnetlink(self):
         dialog = MagnetLinkDialog()

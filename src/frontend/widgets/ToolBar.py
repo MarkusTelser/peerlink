@@ -1,7 +1,5 @@
-from PyQt6.QtWidgets import QToolBar
-
-from PyQt6.QtWidgets import QToolBar
-from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QPushButton, QToolBar, QLabel
+from PyQt6.QtGui import QAction, QIcon
 
 class ToolBar(QToolBar):
     def __init__(self):
@@ -9,26 +7,42 @@ class ToolBar(QToolBar):
         
         self.setMovable(False)
         
-        self.open_file = QAction("Open file", self)
-        self.open_file.setToolTip("open torrent file to download")
-        self.addAction(self.open_file)
+        self.setStyleSheet("margin-left: 15px; margin: 7px; border: none")
+       
+        self.open_file = QPushButton(self)
+        self.open_file.setText("open file")
+        self.open_file.setStyleSheet("QPushButton{background: palette(window); border: palette(window)}QPushButton:hover{background: palette(button)}")
+        self.open_file.setIcon(QIcon('resources/file.svg'))
+        self.addWidget(self.open_file)
         
-        self.open_magnet_link = QAction("Open magnet link", self)
-        self.open_magnet_link.setToolTip("open magnet link")
-        self.addAction(self.open_magnet_link)
+        self.open_magnet_link = QPushButton(self)
+        self.open_magnet_link.setText("open magnet link")
+        self.open_magnet_link.setIcon(QIcon('resources/link.svg'))
+        self.open_magnet_link.setStyleSheet("QPushButton{background: palette(window); border: palette(window)}QPushButton:hover{background: palette(button)}")
+        self.addWidget(self.open_magnet_link)
         
-        self.resume = QAction("Resume", self)
-        self.resume.setToolTip("is resuming the current torrent")
-        self.addAction(self.resume)
+        self.addSeparator()
         
-        self.pause = QAction("Pause", self)
-        self.pause.setToolTip("is pausing the current torrent")
-        self.addAction(self.pause)
+        self.resume = QPushButton(self)
+        self.resume.setText("resume")
+        self.resume.setIcon(QIcon('resources/resume.svg'))
+        self.resume.setStyleSheet("QPushButton{background: palette(window); border: palette(window)}QPushButton:hover{background: palette(button)}")
+        self.addWidget(self.resume)
         
-        self.resume_all = QAction("Resume All", self)
-        self.resume_all.setToolTip("resuming all torrents")
-        self.addAction(self.resume_all)
+        self.pause = QPushButton(self)
+        self.pause.setText("pause")
+        self.pause.setIcon(QIcon('resources/pause.svg'))
+        self.pause.setStyleSheet("QPushButton{background: palette(window); border: palette(window)}QPushButton:hover{background: palette(button)}")
+        self.addWidget(self.pause)
         
-        self.pause_all = QAction("Pause All", self)
-        self.pause_all.setToolTip("pausing all torrents")
-        self.addAction(self.pause_all)
+        self.resume_all = QPushButton(self)
+        self.resume_all.setText("resume all")
+        self.resume_all.setIcon(QIcon('resources/resume.svg'))
+        self.resume_all.setStyleSheet("QPushButton{background: palette(window); border: palette(window)}QPushButton:hover{background: palette(button)}")
+        self.addWidget(self.resume_all)
+        
+        self.pause_all = QPushButton(self)
+        self.pause_all.setText("pause all")
+        self.pause_all.setIcon(QIcon('resources/pause.svg'))
+        self.pause_all.setStyleSheet("QPushButton{background: palette(window); border: palette(window)}QPushButton:hover{background: palette(button)}")
+        self.addWidget(self.pause_all)
