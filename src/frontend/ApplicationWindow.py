@@ -1,22 +1,16 @@
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QSizePolicy,
     QSplitter,
     QTabWidget,
     QHBoxLayout,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QVBoxLayout,
     QWidget
 )
 
 from PyQt6.QtGui import QGuiApplication
-import PyQt6
-import sys
 from PyQt6.QtCore import QSize, Qt
-import time
-from threading import Thread
+import sys
+
 from src.backend.metadata.TorrentParser import TorrentParser
 from src.frontend.widgets.MenuBar import MenuBar
 from src.frontend.widgets.SidePanel import SidePanel
@@ -53,13 +47,20 @@ class ApplicationWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self.addWidgets()
-        self.addBars()
-        
-        Thread(target=self.appendRowEnd).start()
         
         self.show()
     
     def addWidgets(self):
+        menuBar = MenuBar()
+        self.setMenuBar(menuBar)
+        
+        toolBar = ToolBar()
+        toolBar.open_file.triggered.connect(self.open_file_window)
+        self.addToolBar(toolBar)
+        
+        statusBar = StatusBar()
+        self.setStatusBar(statusBar)
+        
         # horizontal splitter for side panel, vertical splitter
         hori_splitter = QSplitter()
         hori_splitter.setOrientation(Qt.Orientation.Horizontal)
@@ -91,31 +92,18 @@ class ApplicationWindow(QMainWindow):
         panel2.setStyleSheet("background-color: blue;")
         vert_splitter.addWidget(panel2)
         vert_splitter.setSizes([1, 0]) # hide info table
-
-
-    def addBars(self):
-        menuBar = MenuBar()
-        self.setMenuBar(menuBar)
-        
-        toolBar = ToolBar()
-        toolBar.open_file.triggered.connect(self.open_file_window)
-        self.addToolBar(toolBar)
-        
-        statusBar = StatusBar()
-        self.setStatusBar(statusBar)
-        
-    def appendRowEnd(self):
-        time.sleep(3)
-        self.table_model.data.append(["hello1", "hello2"])
-        self.table_model.updatedData.emit()
     
     def open_file_window(self):
-        path = "data/all/test.torrent"
+        path = "data/all/solo.torrent"
         data = TorrentParser.parse_filepath(path)
        
         window = ViewWindow(self)
+        window.add_data.connect(self.appendRowEnd)
         window.show(data)
-        print("hello")
+    
+    def appendRowEnd(self, txt):
+        self.table_model.data.append([txt["name"], "hello2"])
+        self.table_model.updatedData.emit()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
