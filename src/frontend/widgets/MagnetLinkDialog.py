@@ -19,7 +19,7 @@ class MagnetLinkDialog(QDialog):
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-
+        
         self.setWindowTitle('Add Magnet Link')
         self.setWindowIcon(QIcon('resources/logo.png'))
         QApplication.clipboard().dataChanged.connect(self.insert_clipboard)
