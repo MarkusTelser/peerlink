@@ -161,6 +161,7 @@ class StartWindow(QMainWindow):
                 data = TorrentParser.parse_filepath(file_path)
                 
                 window = ViewWindow(self)
+                window.add_data.connect(self.open_mainwindow)
                 window.show(data)
 
         self.addWidgets()
@@ -171,6 +172,7 @@ class StartWindow(QMainWindow):
         if dialog.exec():
             file_path = dialog.selectedFiles()[0]
             data = TorrentParser.parse_filepath(file_path)
+            
             window = ViewWindow(self)
             window.add_data.connect(self.open_mainwindow)
             window.show(data)
