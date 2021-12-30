@@ -16,7 +16,7 @@ from PyQt6.QtGui import (
     QPixmap, 
     QDragEnterEvent
 )
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QEventLoop
 from src.backend.metadata import TorrentParser
 from src.frontend.ApplicationWindow import ApplicationWindow
 from src.frontend.ViewWindow import ViewWindow
@@ -172,15 +172,14 @@ class StartWindow(QMainWindow):
             file_path = dialog.selectedFiles()[0]
             data = TorrentParser.parse_filepath(file_path)
             window = ViewWindow(self)
+            window.add_data.connect(self.open_mainwindow)
             window.show(data)
             
-            #self.close()
-            #main_window = ApplicationWindow()
-            #main_window.show()
-            
-    def closed(self):
-        pass
-            
+    def open_mainwindow(self, data):
+        if data:
+            window = ApplicationWindow()
+            self.close()
+            window.show(data)
         
     def open_magnetlink(self):
         dialog = MagnetLinkDialog()
