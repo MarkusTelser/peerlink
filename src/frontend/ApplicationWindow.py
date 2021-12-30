@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
 )
 
 from PyQt6.QtGui import QGuiApplication
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QModelIndex
 import sys
 
 from src.backend.metadata.TorrentParser import TorrentParser
@@ -20,6 +20,7 @@ from src.frontend.widgets.ToolBar import ToolBar
 from src.frontend.ViewWindow import ViewWindow
 from src.frontend.models.TorrentListModel import TorrentListModel
 from src.frontend.views.TorrentListView import TorrentListView
+from src.frontend.views.TorrentDetailView import TorrentDetailView
 
 class ApplicationWindow(QMainWindow):
     def __init__(self):
@@ -47,16 +48,22 @@ class ApplicationWindow(QMainWindow):
         self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
 
+        self.torrent_list = list()
+
         self.addWidgets()
         
         self.show()
+    
+    def show(self, data=None):
+        if data:
+            self.appendRowEnd(data)
+        super().show()
     
     def addWidgets(self):
         menuBar = MenuBar()
         self.setMenuBar(menuBar)
         
         toolBar = ToolBar()
-        toolBar.open_file.clicked.connect(self.open_file_window)
         self.addToolBar(toolBar)
         
         statusBar = StatusBar()
@@ -72,27 +79,37 @@ class ApplicationWindow(QMainWindow):
         hori_splitter.setStretchFactor(0, 30)
         
         # vertical splitter for main table, info table
-        vert_splitter = QSplitter()
-        vert_splitter.setOrientation(Qt.Orientation.Vertical)
-        hori_splitter.addWidget(vert_splitter)
+        self.vert_splitter = QSplitter()
+        self.vert_splitter.setOrientation(Qt.Orientation.Vertical)
+        hori_splitter.addWidget(self.vert_splitter)
         hori_splitter.setCollapsible(1, False)
         hori_splitter.setStretchFactor(1, 70)
         
         # add main torrent table model / view
         self.table_model = TorrentListModel()
         self.table_view = TorrentListView(self.table_model, self)
-        vert_splitter.addWidget(self.table_view)
+        self.vert_splitter.addWidget(self.table_view)
         
         # bottom info panel
-        panel2 = QTabWidget()
+        self.detail_view = TorrentDetailView()
+        self.vert_splitter.addWidget(self.detail_view)
+        self.vert_splitter.setSizes([1, 0]) # hide info table
         
-        panel2.addTab(QWidget(), "General")
-        panel2.addTab(QWidget(), "Trackers")
-        panel2.addTab(QWidget(), "Peers")
+        toolBar.open_file.clicked.connect(self.open_file_window)
+        self.table_view.doubleClicked.connect(self.open_detail)
+        #self.table_view.selectionChanged.connect(self.open_detail2)
         
-        panel2.setStyleSheet("background-color: blue;")
-        vert_splitter.addWidget(panel2)
-        vert_splitter.setSizes([1, 0]) # hide info table
+    def open_detail(self, mi):
+        print(mi.row())
+        print(self.torrent_list[mi.row()]['files'].name)
+        if self.vert_splitter.sizes()[1] == 0:
+            fsize = self.vert_splitter.size().height()
+            self.vert_splitter.setSizes([int(fsize * 0.7),int(fsize * 0.3)])
+        else:
+            self.vert_splitter.setSizes([1,0])
+        
+    def open_detail2(self, old: QModelIndex, new: QModelIndex):
+        print(old.row(), new.row())
     
     def open_file_window(self):
         dialog = FileDialog()
@@ -105,6 +122,7 @@ class ApplicationWindow(QMainWindow):
             window.show(data)
     
     def appendRowEnd(self, dt):
+        self.torrent_list.append(dt)
         self.table_model.data.append([dt['files'].name, str(dt['files'].length)])
         self.table_model.updatedData.emit()
 

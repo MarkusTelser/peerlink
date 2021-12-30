@@ -8,11 +8,7 @@ class TorrentListModel(QStandardItemModel):
         super().__init__()
         
         self.setHorizontalHeaderLabels(["name", "size", "progress"])
-        
-        self.data = [
-            ["data1", "data1.1"],
-            ["data2", "data2.2"]
-        ]
+        self.data = list()
         self._update()
         
     @pyqtSlot()
