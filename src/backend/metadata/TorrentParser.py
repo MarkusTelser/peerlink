@@ -105,6 +105,7 @@ class TorrentParser:
                     add_node(root, file["path"], f)
                 
                 calc_folder_size(root)
+                calc_bitstart_fullpath(root)
             elif "length" in info:
                 if "name" not in info:
                     raise MissingRequiredField("Name not in torrent")

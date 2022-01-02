@@ -4,6 +4,7 @@ from urllib.parse import quote_plus
 from random import choice
 from string import ascii_letters
 from .Bencoder import encode
+from os.path import join
 
 class TorrentFile:
     def __init__(self, name="", length=0, encoding=None, checksum=None):
@@ -11,11 +12,16 @@ class TorrentFile:
         self.length = length
         self.encoding = encoding
         self.checksum = checksum
+        self.fullpath = ""
+        self.startbit = -1
         
         self.children = list()
         
     def add_children(self, children: list):
         self.children.append(children)
+        
+    def has_children(self):
+        return len(self.children) != 0 
 
 class TorrentData:
     def __init__(self):
@@ -95,7 +101,7 @@ def add_node(root_node: TorrentFile, path_list: list[str], end_node: TorrentFile
 
 # recursively calculate size for folder from children for all child nodes
 def calc_folder_size(root_node: TorrentFile):
-    if root_node.children:
+    if root_node.has_children():
         sum = 0
         for child in root_node.children:
             sum += calc_folder_size(child)
@@ -103,3 +109,14 @@ def calc_folder_size(root_node: TorrentFile):
         return sum
     else:
         return root_node.length
+    
+# recursively calculate bit start of file and full path relative to root node
+# could not be combined with calc_folder_size, because iterates from inside to outside
+def calc_bitstart_fullpath(root_node: TorrentFile, bitstart=0, fullpath=""):
+    root_node.fullpath = join(fullpath, root_node.name)
+    root_node.startbit = bitstart
+    
+    file_path = join(fullpath, root_node.name)
+    for child in root_node.children:
+        calc_bitstart_fullpath(child, bitstart, file_path)
+        bitstart += child.length
