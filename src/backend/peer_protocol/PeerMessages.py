@@ -3,6 +3,8 @@ from os import stat
 from struct import pack, unpack
 from collections import namedtuple
 
+from src.backend.metadata.Bencoder import encode
+
 class PeerMessageIDs:
     CHOKE = 0x0
     UNCHOKE = 0x1
@@ -223,3 +225,24 @@ class PeerMessages:
         listen_port = unpack("!I", recv[5:9])[0]
         ret = PeerMessageStructures.Port(listen_port)
         return ret
+    
+    # libtorrent extended protocol 
+    def bld_extension_handshake(self):
+        id = PeerMessageIDs.LTEPHANDSHAKE
+        extended_id = 0
+        payload = {
+            'm' : {
+                'ut_metadata': 1
+            },
+            'v' : 'qBitTorrent 1.0'
+        }
+        payload = encode(payload)
+        print(payload)
+        length = 2 + len(payload)
+        
+        msg = pack("!IB", length, id)
+        msg += pack("!B", extended_id)
+        msg += pack(f"!{len(payload)}s", payload)
+        
+        return msg
+        

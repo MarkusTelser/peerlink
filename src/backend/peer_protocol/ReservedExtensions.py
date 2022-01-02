@@ -33,7 +33,7 @@ extension_table = [
 
 def comp_bytes(byte_string, value):
     bits_string = "{0:b}".format(byte_string)
-    return int(bits_string) & value == value:
+    return int(bits_string) & value == value
 
 
 def get_extensions(reserved_bytes: bytes):

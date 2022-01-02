@@ -24,9 +24,16 @@ and then checks if it is in your object, peer_list
 class PieceManager:
     def __init__(self, pieces_count):
         self.lock = RLock()
-        self.pieces = list() # contains => [piece_id, how_many_peers_have_piece]
         self.pieces_count = pieces_count
-
+        self.pieces = list() # contains => [piece_id, how_many_peers_have_piece]
+        self.used_pieces = list()
+    
+    def get_piece(self):
+        piece = self.pieces[0]
+        self.used_pieces.append(piece)
+        del self.pieces[0]
+        return piece
+    
     def add_piece(self, id):
         if len(self.pieces) != 0:
             for piece in self.pieces:
@@ -60,10 +67,3 @@ class PieceManager:
 
     def sort_rarest(self):
         self.pieces.sort(key=lambda x: x[1])
-
-    
-                    
-        
-
-    
-    

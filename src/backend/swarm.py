@@ -71,7 +71,7 @@ class Swarm:
             item = self.finished_tracker.get()
             finished += 1
             
-            print(item)
+            print(item.error)
             if item:
                 if item.peers:
                     # iterate over returned peers
@@ -98,5 +98,3 @@ class Swarm:
                 print(address, "started")
                 
                 self.peer_list.append(p)
-            else:
-                print(len(self.peer_list))

@@ -2,6 +2,7 @@
 import sys
 import errno
 import socket
+import select
 from math import ceil
 from enum import Enum
 from struct import unpack
@@ -11,11 +12,11 @@ from .PeerMessages import PeerMessageLengths, PeerMessageStructures
 from .PeerStreamIterator import PeerStreamIterator
 from src.backend.exceptions import *
 from .PeerIDs import PeerIDs
+from src.backend.peer_protocol.ReservedExtensions import get_extensions, ReservedExtensions
 """
 set timeout new every time
 use sched library
 select should work, especially for client server model (maybe problems with win comptability)
-
 """
 
 """
@@ -23,6 +24,8 @@ implement peer protocol
 """
 class Peer(Thread):
     TIMEOUT = 10
+    BLOCK_SIZE = 2 ** 14
+    MAX_INCOMING_CON = 5
 
     def __init__(self, address, data, piece_manager, file_handler, peer_id=""):
         super().__init__()
@@ -44,66 +47,111 @@ class Peer(Thread):
         self.am_interested = False
         self.peer_choking = True
         self.peer_interested = False
+        
+        self.first_message = True
+        self.message_list = list()
 
     def run(self):
         try:
             self.create_con()   
             self.psiterator = PeerStreamIterator(self.sock) 
-        
-            # send and receive handshake
             msg = self.psiterator.bld_handshake(self.info_hash, self.peer_id)
             self.send_msg(msg, expected_len=68)
             peer_id, reserved = self.recv_handshake(self.info_hash, self.peer_id)
         except Exception as e:
-            print(e)
+            print(e, self.address)
             return
-        #print("success", self.address, reserved)
-
-        try:
-            self.recv_msg()
-        except Exception as e:
-            print(e)
         
-        msg = self.psiterator.bld_interested()
-        self.send_msg(msg)  
+        """
+        print("success handshake", self.address, reserved)
+        
+        if ReservedExtensions.LibtorrentExtensionProtocol in get_extensions(reserved):
+            print("supports extension")
+            msg = self.psiterator.bld_extension_handshake()
+            self.send_msg(msg)
+        """
+        self.sock.setblocking(0)
+        
+        rlist = [self.sock]
+        wlist = []
+        xlist = [self.sock] 
+        
+        while True:
+            timeout = 120
+            rrlist, wwlist, xxlist = select.select(rlist, wlist, xlist, timeout)
+            
+            if not rrlist and not wwlist and not xxlist:
+                raise Exception("timed out")
+                
+            print(rrlist, wwlist, xxlist)
+            
+            for readable in rrlist:
+                recv = self.recv_msg()
+                if isinstance(recv, PeerMessageStructures.Piece):
+                    print("data" * 100)
+                
+                # send an interested, if not already
+                if not self.am_interested:
+                    msg = self.psiterator.bld_interested()
+                    self.send_msg(msg)
+                    self.am_interested = True
+                # request data if unchoked, otherwise wait
+                elif not self.am_choking:
+                    print("able to request data", self.address)
+                    
+                    i = 0
+                    piece_size = self.data.piece_length
 
-        while self.am_choking:
-            r = self.recv_msg()
-            if r == None:
-                return
-            #print(type(r), r, self.am_choking)
+                    self.piece_manager.sort_rarest()
+                    print(self.piece_manager.pieces)
+                    while piece_size > 0 and i < 5:
+                        print("requesting part", i, self.address)
+                        size = Peer.BLOCK_SIZE
+                        if piece_size < Peer.BLOCK_SIZE:
+                            size = piece_size
 
-        print("success", self.address)
+                        msg = self.psiterator.bld_request(0, i * Peer.BLOCK_SIZE, size)
+                        self.send_msg(msg)
 
-
-        BLOCK_SIZE = 2 ** 16
+                        piece_size -= Peer.BLOCK_SIZE
+                        i += 1
+                    
+                
+                rrlist.remove(readable)
+            for writeable in wwlist:
+                wwlist.remove(writeable)
+            for exception in xxlist:
+                xxlist.remove(exception)
+            
+        """
         piece_size = self.data.piece_length
         i = 0
-        size = BLOCK_SIZE
 
         while piece_size > 0:
-            if piece_size < BLOCK_SIZE:
+            if piece_size < Peer.BLOCK_SIZE:
                 size = piece_size
 
-            msg = self.psiterator.bld_request(0, i * BLOCK_SIZE, size)
+            msg = self.psiterator.bld_request(0, i * Peer.BLOCK_SIZE, size)
             self.send_msg(msg)
 
             r = self.recv_msg()
 
-            piece_size -= size 
+            piece_size -= Peer.BLOCK_SIZE
             i += 1
             print("-- block",i , self.address)
         
         sys.exit()
         #listen_thread = Thread(target=self.recv_msg)
         #send_thread = Thread(target=self.send)
-
+        """
         # TODO thread listen on socket
         # TODO thread gets requests from piece manager
       
     def create_con(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(self.TIMEOUT)
+        sock.settimeout(Peer.TIMEOUT)
+        #self.sock.bind(('localhost', 50000))
+        #self.sock.listen(Peer.MAX_INCOMING_CON)
         self.sock = sock
         try:
             self.sock.connect(self.address)
@@ -144,7 +192,6 @@ class Peer(Thread):
             raise MessageExceptions("Error: Only BitTorrent protocol supported", pstrlen, pstr)
 
         reserved = unpack("!8s", recv[20:28])[0]
-        print(reserved)
 
         recv_info_hash = unpack("!20s", recv[28:48])[0]
         if recv_info_hash != info_hash:
@@ -159,10 +206,12 @@ class Peer(Thread):
     
     def recv_msg(self):
         recv = self.psiterator.recv()
-
+        
         if isinstance(recv, PeerMessageStructures.Choke):
+            print("choked", self.address)
             self.am_choking = True
         elif isinstance(recv, PeerMessageStructures.Unchoke):
+            print("unchoked", self.address)
             self.am_choking = False
         elif isinstance(recv, PeerMessageStructures.Interested):
             self.am_interested = True
@@ -173,13 +222,16 @@ class Peer(Thread):
             if recv.piece_index not in self.pieces:
                 self.pieces.append(int(recv.piece_index))
         elif isinstance(recv, PeerMessageStructures.Bitfield):
-            self.piece_manager.add_bitfield(recv.bitfield)
-            self.add_bitfield(recv.bitfield)
+            if self.first_message:
+                self.piece_manager.add_bitfield(recv.bitfield)
+                self.add_bitfield(recv.bitfield)
+            else:
+                raise Exception("bitfield is not first message after handshake", self.message_list)
         elif isinstance(recv, PeerMessageStructures.Request):
             # TODO implement with seeding
             pass
         elif isinstance(recv, PeerMessageStructures.Piece):
-            print(recv.index, recv.begin, len(recv.block), recv.block)
+            print("received piece", recv.index, recv.begin, self.data.piece_length)
             self.file_handler.write_block(recv.index, recv.begin, recv.block)
         elif isinstance(recv, PeerMessageStructures.Cancel):
             # TODO implement with EndGame Strategy
@@ -189,8 +241,10 @@ class Peer(Thread):
             # TODO implement with DHT
             pass
         else:
-            pass
-        print(recv)
+            print(recv)
+            
+        self.first_message = False
+        self.message_list.append(recv)
         return recv
         
     def add_bitfield(self, bitfield):

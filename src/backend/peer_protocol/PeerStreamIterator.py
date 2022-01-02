@@ -19,13 +19,14 @@ class PeerStreamIterator(PeerMessages):
                 parsed = self.parse()
                 if parsed != None:
                     return parsed
+            except BlockingIOError as e:
+                print("blocking io")
+                return None
             except Exception as e:
-                print(e)
                 return None
     
     def parse(self):
         HEADER_LENGTH = 4
-
         if len(self.data) > HEADER_LENGTH:
             length = unpack("!I", self.data[:4])[0]
             if length == 0:
@@ -35,7 +36,7 @@ class PeerStreamIterator(PeerMessages):
             if len(self.data) >= length + HEADER_LENGTH:
                 mid = unpack("!B", self.data[4:5])[0]
 
-                if 0 <= mid <= 9:
+                if 0 <= mid <= 9 or mid == 20:
                     ret = None
                     msg = self.data[:HEADER_LENGTH + length]
 
@@ -59,6 +60,9 @@ class PeerStreamIterator(PeerMessages):
                         ret = self.val_cancel(msg)
                     elif mid == 9:
                         ret = self.val_port(msg)
+                    # libtorrent extension protocol 
+                    elif mid == 20:
+                        ret = msg
                     
                     # clean up data and return parsed data
                     self.data = self.data[HEADER_LENGTH + length:]

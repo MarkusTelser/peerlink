@@ -71,7 +71,7 @@ class UDPTracker:
             except ConnectionRefusedError:
                 raise ConnectionRefused("Connection refused")
             except socket.timeout:
-                print(f"received timeout after {timeout}s")
+                #print(f"received timeout after {timeout}s")
                 self.n_cycles += 1
             except socket.error as e: # alias of OSError
                 raise NetworkExceptions(e)
