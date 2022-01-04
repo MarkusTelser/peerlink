@@ -112,7 +112,7 @@ class TorrentParser:
                 if "length" not in info:
                     raise MissingRequiredField("Length not in torrent")
                 torrent.has_multi_file = False
-                f = TorrentFile(info["name"], info["length"])
+                f = TorrentFile(info["name"], info["length"], info["name"], 0)
                 torrent.files = f
             else:
                 raise MissingRequiredField("Neither single or multiple file mode")

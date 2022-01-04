@@ -1,8 +1,8 @@
 from hashlib import sha1
 from threading import RLock
 from math import ceil
-from os.path import join, exists
-from os import mkdir
+from os.path import join, exists, dirname
+from os import mkdir, makedirs
 from shutil import copytree, rmtree
 
 class FileHandler:
@@ -10,7 +10,6 @@ class FileHandler:
         self.lock = RLock()
         
         self.data = data
-        self.multi_file = data.files.has_children()
         self._path = path
 
     
@@ -24,30 +23,34 @@ class FileHandler:
         if index < 0 or index >= self.data.pieces_count:
             raise Exception('wrong piece id')
         
-        file_list = self.get_files_bitrange(bit_start, bit_end)
+        if self.data.has_multi_file:
+            file_list = self.get_files_bitrange(bit_start, bit_end)
+        else:
+            file_list = [self.data.files]
         
-        with self.lock:
-            if len(file_list) == 1:
-                with open(join(self.path, file_list[0].fullpath), 'rb+') as f:
-                    write_start = max(0, bit_start - file_list[0].startbit)
+        with self.lock:    
+            full_length = len(data)
+            
+            for i, file in enumerate(file_list):
+                # create file and directorys, if don't exist
+                path = join(self.path, file.fullpath)
+                if not exists(path):
+                    makedirs(dirname(path), exist_ok=True)
+                    open(path, "w").close()
+                
+                with open(path, 'rb+') as f:
+                    write_start = max(0, bit_start - file.startbit) if i == 0 else 0
                     f.seek(write_start)
-                    f.write(data)
-            else:
-                full_length = len(data)
-                for i, file in enumerate(file_list):
-                    with open(join(self.path, file.fullpath), 'rb+') as f:
-                        write_start = max(0, bit_start - file.startbit) if i == 0 else 0
-                        f.seek(write_start)
-                        
-                        write_length = full_length
-                        if i == 0 and full_length > file.startbit + file.length - bit_start:
-                            write_length = file.startbit + file.length - bit_start
-                        elif i != 0 and full_length > file.length:
-                            write_length = file.length
-                        print(write_start, write_length)
-                        f.write(data[:write_length])
-                        data = data[write_length:]
-                        full_length -= write_length
+                    
+                    write_length = full_length
+                    if i == 0 and full_length > file.startbit + file.length - bit_start:
+                        write_length = file.startbit + file.length - bit_start
+                    elif i != 0 and full_length > file.length:
+                        write_length = file.length
+                    print(write_start, write_length)
+                    f.write(data[:write_length])
+                    data = data[write_length:]
+                    full_length -= write_length
     
     
     def verify_piece(self, index, data):

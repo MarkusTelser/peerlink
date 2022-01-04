@@ -7,13 +7,13 @@ from .Bencoder import encode
 from os.path import join
 
 class TorrentFile:
-    def __init__(self, name="", length=0, encoding=None, checksum=None):
+    def __init__(self, name="", length=0, fullpath="", startbit=-1, encoding=None, checksum=None):
         self.name = name
         self.length = length
         self.encoding = encoding
         self.checksum = checksum
-        self.fullpath = ""
-        self.startbit = -1
+        self.fullpath = fullpath
+        self.startbit = startbit
         
         self.children = list()
         
