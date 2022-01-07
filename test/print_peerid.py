@@ -6,7 +6,9 @@ from src.backend.swarm import Swarm
 #fp = "data/all/The Impossible (2012).torrent"
 #fp = "data/all/test12.torrent"
 #fp = "data/all/manjaro.torrent"
-fp = "data/all/ubuntu.torrent"
+#fp = "data/all/last.torrent"
+#fp = "data/all/testtest.torrent"
+fp = "data/all/folder.torrent"
 
 data = TorrentParser.parse_filepath(fp)
 

@@ -47,7 +47,6 @@ class FileHandler:
                         write_length = file.startbit + file.length - bit_start
                     elif i != 0 and full_length > file.length:
                         write_length = file.length
-                    print(write_start, write_length)
                     f.write(data[:write_length])
                     data = data[write_length:]
                     full_length -= write_length
@@ -102,11 +101,10 @@ class FileHandler:
                         print("here2", read_length)
                     data += f.read(read_length)
                     data_length -= read_length
-        print(len(data), data)
+        
         # check calculated hash with given hash from torrent file 
         piece_hash = sha1(data).digest()
         reference_hash = self.data.pieces[20 * index: 20 + 20 * index]
-        print(piece_hash, reference_hash)
         return piece_hash == reference_hash
     
     
