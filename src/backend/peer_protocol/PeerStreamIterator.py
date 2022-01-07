@@ -1,27 +1,34 @@
 from struct import unpack
-from .PeerMessages import *
-from ..exceptions import *
+from time import sleep
 import traceback
 
-BUFFER_SIZE = 10000
+from .PeerMessages import *
+from ..exceptions import *
 
 class PeerStreamIterator(PeerMessages):
+    BUFFER_SIZE = 10000
+    
     def __init__(self, socket):
         super().__init__()
         self.socket = socket
         self.data = b''
     
     def recv(self):
+        """
+        even though select was triggered and noted a new message, 
+        there is nothing to recv on socket, this is the way of the OS
+        to tell us, that we should wait because the socket is temporary unavailable
+        and we will try after a short delay again
+        """
         while True:
             try:
-                recv = self.socket.recv(BUFFER_SIZE)
+                recv = self.socket.recv(self.BUFFER_SIZE)
                 self.data += recv
                 parsed = self.parse()
                 if parsed != None:
                     return parsed
             except BlockingIOError as e:
-                print("blocking io")
-                return None
+                sleep(1)
             except Exception as e:
                 return None
     

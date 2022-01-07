@@ -40,7 +40,6 @@ def get_extensions(reserved_bytes: bytes):
     extensions = list()
     for ext in extension_table:
         byte, value, extension = ext
-        print(reserved_bytes[byte], value, comp_bytes(reserved_bytes[byte], value), extension)
         if comp_bytes(reserved_bytes[byte], value):
             if extension not in extensions: 
                 extensions.append(extension)

@@ -21,8 +21,7 @@ class Swarm:
         self.announces = data.announces
         self.info_hash = data.info_hash
         self.piece_manager = PieceManager(data.pieces_count)
-        self.file_handler = FileHandler(data, "downloaded.file")
-        
+        self.file_handler = FileHandler(data, "/home/carlos/Code/Python/peerlink")
         self.peer_limit = BoundedSemaphore(value=Swarm.MAX_PEERS)
         self.tracker_limit = BoundedSemaphore(value=Swarm.MAX_TRACKER)
         self.peer_list = list()

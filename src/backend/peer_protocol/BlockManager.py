@@ -31,32 +31,11 @@ class BlockManager:
         self.requests = list()
         self.outstanding = list()
         
-    def get_blocks(self):
-        # get piece from piece manager, calculate size
-        piece = self.piece_manager.get_piece()
-        piece_size = self.piece_size
-        if self.piece_manager.is_last_piece(piece):
-            piece_size = min(piece_size, self.full_size % piece_size) 
-        
-        # add to list of pieces
-        missing_blocks = [x for x in range(ceil(piece_size / self.BLOCK_SIZE))]
-        p = Piece(piece, missing_blocks, datetime.now())
-        self.pieces.append(p)
-        
-        remaining_size = piece_size
-        block_id = 0
-        while remaining_size > 0:
-            block_size = min(BlockManager.BLOCK_SIZE, remaining_size)
-            r = Request(piece, block_id, block_id * BlockManager.BLOCK_SIZE, block_size)
-            self.outstanding.append(r)
-            remaining_size -= BlockManager.BLOCK_SIZE
-            block_id += 1
-    
     def fill_request(self):
         if len(self.requests) < self.MAX_REQUESTS:
             missing = self.MAX_REQUESTS - len(self.requests)
             while len(self.outstanding) < missing:
-                self.get_blocks()
+                self._get_blocks()
             
             requests = self.outstanding[:missing]
             for request in requests:
@@ -81,13 +60,9 @@ class BlockManager:
         for piece in self.pieces:
             if piece.piece_id == piece_id:
                 block_id = int(startbit / self.BLOCK_SIZE)
-                print(piece_id, block_id, piece.missing_pieces)
                 if block_id in piece.missing_pieces:
                     piece.missing_pieces.remove(block_id)
                     piece.piece_data[block_id] = data
-                else:
-                    print("block not in missing blocks of piece", piece.missing_pieces)
-        
         return finished_piece
     
     def get_piece_data(self, index):
@@ -107,7 +82,29 @@ class BlockManager:
     
     def block_timeout(self):
         soonest = self.get_nearest_timeout()
-        self.requests.remove(soonest)
+        if soonest in self.requests:
+            self.requests.remove(soonest)
+    
+    def _get_blocks(self):
+        # get piece from piece manager, calculate size
+        piece = self.piece_manager.get_piece()
+        piece_size = self.piece_size
+        if self.piece_manager.is_last_piece(piece):
+            piece_size = min(piece_size, self.full_size % piece_size) 
+        
+        # add to list of pieces
+        missing_blocks = [x for x in range(ceil(piece_size / self.BLOCK_SIZE))]
+        p = Piece(piece, missing_blocks, datetime.now())
+        self.pieces.append(p)
+        
+        remaining_size = piece_size
+        block_id = 0
+        while remaining_size > 0:
+            block_size = min(BlockManager.BLOCK_SIZE, remaining_size)
+            r = Request(piece, block_id, block_id * BlockManager.BLOCK_SIZE, block_size)
+            self.outstanding.append(r)
+            remaining_size -= BlockManager.BLOCK_SIZE
+            block_id += 1
         
 
 if __name__ == "__main__":
