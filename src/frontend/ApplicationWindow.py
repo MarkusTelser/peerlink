@@ -7,11 +7,13 @@ from PyQt6.QtWidgets import (
     QWidget
 )
 
-from PyQt6.QtGui import QGuiApplication
+from PyQt6.QtGui import QGuiApplication, QCloseEvent
 from PyQt6.QtCore import QSize, Qt, QModelIndex
 import sys
+from threading import Thread
 
 from src.backend.metadata.TorrentParser import TorrentParser
+from src.backend.swarm import Swarm
 from src.frontend.widgets.FileDialog import FileDialog
 from src.frontend.widgets.MenuBar import MenuBar
 from src.frontend.widgets.SidePanel import SidePanel
@@ -22,9 +24,12 @@ from src.frontend.models.TorrentListModel import TorrentListModel
 from src.frontend.views.TorrentListView import TorrentListView
 from src.frontend.views.TorrentDetailView import TorrentDetailView
 
+
 class ApplicationWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super(ApplicationWindow, self).__init__(parent)
+        
+        self.current_torrent = None
         
         self.setWindowTitle("FastPeer - Application Window")
         
@@ -55,9 +60,10 @@ class ApplicationWindow(QMainWindow):
         self.show()
     
     def show(self, data=None):
+        super().show()
         if data:
             self.appendRowEnd(data)
-        super().show()
+        
     
     def addWidgets(self):
         menuBar = MenuBar()
@@ -96,18 +102,23 @@ class ApplicationWindow(QMainWindow):
         self.vert_splitter.setSizes([1, 0]) # hide info table
         
         toolBar.open_file.clicked.connect(self.open_file_window)
-        self.table_view.doubleClicked.connect(self.open_detail)
-        #self.table_view.selectionChanged.connect(self.open_detail2)
-        
-    def open_detail(self, mi):
-        print(mi.row())
-        print(self.torrent_list[mi.row()]['files'].name)
+        self.table_view.doubleClicked.connect(self.doubleclick_torrent)
+        self.table_view.clicked.connect(self.select_torrent)
+    
+    def select_torrent(self, mi):
+        data = self.torrent_list[mi.row()]
+        self.detail_view._update(data)
+    
+    def doubleclick_torrent(self, mi):
         if self.vert_splitter.sizes()[1] == 0:
+            data = self.torrent_list[mi.row()]
+            self.detail_view._update(data)
             fsize = self.vert_splitter.size().height()
             self.vert_splitter.setSizes([int(fsize * 0.7),int(fsize * 0.3)])
-        else:
+        elif self.current_torrent == mi.row():
             self.vert_splitter.setSizes([1,0])
-        
+        self.current_torrent = mi.row()
+    
     def open_detail2(self, old: QModelIndex, new: QModelIndex):
         print(old.row(), new.row())
     
@@ -122,10 +133,24 @@ class ApplicationWindow(QMainWindow):
             window.show(data)
     
     def appendRowEnd(self, dt):
-        self.torrent_list.append(dt)
-        self.table_model.data.append([dt['files'].name, str(dt['files'].length)])
+        #'strategy': strategy,
+        #'check_hash' : check_hash,
+        #'not_again' : not_again,
+        s = Swarm(dt['data'], dt['path'])
+        self.torrent_list.append(s)
+        
+        if dt['pad_files']:
+            print("padded torrent files")
+            Thread(target=s.file_handler.padd_files).start()
+        if dt['start']:
+            print('started torrent')
+            t = Thread(target=s.start)
+            t.start()
+        
+        self.table_model.data.append([dt['data'].files.name, str(dt['data'].files.length)])
         self.table_model.updatedData.emit()
-
+        
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 

@@ -90,6 +90,7 @@ class ViewWindow(QMainWindow):
 
         default_path = QCheckBox("use default path")
         default_path.stateChanged.connect(self.pressedDefaultPath)
+        default_path.setChecked(True)
         vbox.addWidget(default_path, 1, 0, 1, 0)
         
         option_box = QGroupBox("Options")
@@ -172,6 +173,7 @@ class ViewWindow(QMainWindow):
         super().show()
 
     def show(self, torrent_data: TorrentData):
+        self.torrent_data = torrent_data
         free_space = lambda: self.convert_bits(disk_usage('/').free)
         torrent_size = lambda: self.convert_bits(torrent_data.files.length)
         self.label1.setText(self.label1.text() + f"{torrent_size()} (of {free_space()} on local disk)")
@@ -259,7 +261,7 @@ class ViewWindow(QMainWindow):
             'check_hash' : check_hash,
             'pad_files' : pad_files,
             'not_again' : not_again,
-            'files' : self.model.file_data
+            'data' : self.torrent_data
         }
         self.add_data.emit(data)
         

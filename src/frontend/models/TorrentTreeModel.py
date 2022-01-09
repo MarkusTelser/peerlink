@@ -19,6 +19,7 @@ class TorrentTreeModel(QStandardItemModel):
         
     def update(self, data: TorrentFile):
         self.file_data = data
+        self.removeRow(0)
         self._update(self.file_data, self.root_node)
         self.update_data.emit()
         
