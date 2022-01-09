@@ -6,16 +6,14 @@ To keep track of all the BEPs I have already implemented and which will be imple
 - [x] [Explanation of Protocol (BEP 3)](http://bittorrent.org/beps/bep_0003.html)
 - [x] [Extension Protocol (BEP 10)](http://bittorrent.org/beps/bep_0010.html)
 - [ ] [Magnet Links (BEP 9)](http://bittorrent.org/beps/bep_0009.html)
-- [ ] [File indices Magnet Link (BEP 53)](http://bittorrent.org/beps/bep_0053.html)
 
 ## Near Future:
 - [ ] [DHT (BEP 5)](http://bittorrent.org/beps/bep_0005.html)
 - [ ] [PEX (BEP 11)](http://bittorrent.org/beps/bep_0011.html)
 - [ ] [LSD (BEP 14)](http://bittorrent.org/beps/bep_0014.html)
-- [ ] [HTTP Seeding (BEP 17)](http://bittorrent.org/beps/bep_0017.html)
 - [ ] [Webseeding over HTTP/FTP (BEP 19)](http://bittorrent.org/beps/bep_0019.html)
-- [ ] [Superseeding (BEP 16)](http://bittorrent.org/beps/bep_0016.html)
-- [ ] [Private Torrents (BEP 27)](http://bittorrent.org/beps/bep_0027.html)
+- [ ] [Fast Extension (BEP 6)](http://bittorrent.org/beps/bep_0006.html)
+- [ ] [uTorrent Transport Protocol (BEP 29)](http://bittorrent.org/beps/bep_0029.html)
 
 ## Finished:
 - [x] [Index of BEP (BEP 0)](http://bittorrent.org/beps/bep_0000.html)
@@ -32,19 +30,21 @@ To keep track of all the BEPs I have already implemented and which will be imple
 - [x] [Reserved MID and Fields (BEP 4)](http://bittorrent.org/beps/bep_0004.html)
 
 ## Review:
-- [ ] [Merkle Hash Tree (BEP 30)](http://bittorrent.org/beps/bep_0030.html)
-- [ ] [BitTorrent Protocol v2 (BEP 52)](http://bittorrent.org/beps/bep_0052.html)
+- [ ] [Superseeding (BEP 16)](http://bittorrent.org/beps/bep_0016.html)
+- [ ] [Private Torrents (BEP 27)](http://bittorrent.org/beps/bep_0027.html)
+- [ ] [HTTP Seeding (BEP 17)](http://bittorrent.org/beps/bep_0017.html)
+- [ ] [File indices Magnet Link (BEP 53)](http://bittorrent.org/beps/bep_0053.html)
 
 ## Refused:
-- [ ] [Fast Extension (BEP 6)](http://bittorrent.org/beps/bep_0006.html)
-- [ ] [uTorrent Transport Protocol (BEP 29)](http://bittorrent.org/beps/bep_0029.html)
+- [ ] [Merkle Hash Tree (BEP 30)](http://bittorrent.org/beps/bep_0030.html)
+- [ ] [BitTorrent Protocol v2 (BEP 52)](http://bittorrent.org/beps/bep_0052.html)
 - [ ] [Holepunch Extension (BEP 55)](http://bittorrent.org/beps/bep_0055.html)
 - [ ] [Search Engine (BEP 18)](http://bittorrent.org/beps/bep_0018.html)
 
 ## Missing:
+- [ ] [BitTorrent Local Tracker Discovery Protocol (BEP 22)](http://bittorrent.org/beps/bep_0022.html)
 - [ ] [Tracker Peer Obfuscation (BEP 8)](http://bittorrent.org/beps/bep_0008.html)
 - [ ] [Extension for partial seeds (BEP 21)](http://bittorrent.org/beps/bep_0021.html)
-- [ ] [BitTorrent Local Tracker Discovery Protocol (BEP 22)](http://bittorrent.org/beps/bep_0022.html)
 - [ ] [Tracker Returns External IP (BEP 24)](http://bittorrent.org/beps/bep_0024.html)
 - [ ] [Zeroconf Peer Advertising and Discovery (BEP 26)](http://bittorrent.org/beps/bep_0026.html)
 - [ ] [Tracker exchange extension (BEP 28)](http://bittorrent.org/beps/bep_0028.html)
