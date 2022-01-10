@@ -182,6 +182,7 @@ class ViewWindow(QMainWindow):
         self.label4.setText(self.label4.text() + torrent_data.comment)
         self.label5.setText(self.label5.text() + torrent_data.info_hash_hex)
         
+        self.setWindowTitle(torrent_data.files.name)
         self.model.update(torrent_data.files)
         super().show()
             

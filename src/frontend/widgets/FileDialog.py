@@ -9,10 +9,9 @@ class FileDialog(QFileDialog):
         self.setWindowTitle('Open Torrent File')
         self.setBaseSize(1000, 700)
         self.setMinimumSize(400, 400)
-        self
         self.setFileMode(QFileDialog.FileMode.ExistingFiles)
         self.setNameFilter("Torrent files (*.torrent)")
-        self.setOption(QFileDialog.Option.DontUseNativeDialog)
+        self.setOption(QFileDialog.Option.DontUseNativeDialog, False)
         self.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
         self.setMimeTypeFilters(['application/x-bittorrent'])
         self.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
