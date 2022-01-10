@@ -30,6 +30,7 @@ class StartWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        self.main_window = None
         self.setWindowTitle("FastPeer - Start Page")
         self.setObjectName("StartWindow")
         self.setAcceptDrops(True)
@@ -179,9 +180,12 @@ class StartWindow(QMainWindow):
             
     def open_mainwindow(self, data):
         if data:
-            self.window = ApplicationWindow()
-            self.window.show(data)
-            self.close()
+            if self.main_window == None:
+                self.main_window = ApplicationWindow()
+                self.main_window.show(data)
+                self.close()
+            else:
+                self.main_window.appendRowEnd(data)
     
     def open_magnetlink(self):
         dialog = MagnetLinkDialog()
