@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication
-from src.frontend import StartWindow
+from src.frontend.windows.StartWindow import StartWindow
 import sys
-
+ 
 app = QApplication(sys.argv)
 
 window = StartWindow()
