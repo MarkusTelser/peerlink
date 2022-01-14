@@ -7,12 +7,13 @@ from threading import Thread
 
 from src.backend.peer_protocol.BlockManager import BlockManager
 
-from .PeerMessages import PeerMessageLengths, PeerMessageStructures
+from .PeerMessages import *
 from .PeerStreamIterator import PeerStreamIterator
 from src.backend.FileHandler import FileHandler
 from src.backend.exceptions import *
 from .PeerIDs import PeerIDs
 from src.backend.peer_protocol.ReservedExtensions import get_extensions, ReservedExtensions
+from src.backend.peer_protocol.ExtensionProtocol import ExtensionProtocol
 """
 set timeout new every time
 use sched library
@@ -54,9 +55,11 @@ class Peer(Thread):
 
     def run(self):
         try:
-            self.create_con()   
-            self.psiterator = PeerStreamIterator(self.sock) 
-            msg = self.psiterator.bld_handshake(self.info_hash, self.peer_id)
+            self.create_con()
+            self.extension_protocol = ExtensionProtocol()
+            self.psiterator = PeerStreamIterator(self.sock, self.extension_protocol) 
+            
+            msg = bld_handshake(self.info_hash, self.peer_id)
             self.send_msg(msg, expected_len=68)
             peer_id, reserved = self.recv_handshake(self.info_hash, self.peer_id)
             self.peer_id = peer_id
@@ -66,9 +69,11 @@ class Peer(Thread):
             return
         
         if ReservedExtensions.LibtorrentExtensionProtocol in get_extensions(reserved):
+            print("-"*100)
             print("supports extension")
-            #msg = self.psiterator.bld_extension_handshake()
-            #self.send_msg(msg)
+            msg = self.extension_protocol.bld_handshake('qBitTorrent 1.0')
+            self.send_msg(msg)
+            print("-"*100)
         
         if ReservedExtensions.BitTorrentDHT in get_extensions(reserved):
             print("supports DHT")
@@ -91,14 +96,14 @@ class Peer(Thread):
                 
                 # send an interested, if not already
                 if not self.am_interested:
-                    msg = self.psiterator.bld_interested()
+                    msg = bld_interested()
                     self.send_msg(msg)
                     self.am_interested = True
                 # request data if unchoked, otherwise wait
                 elif not self.am_choking:
                     requests = self.block_manager.fill_request()
                     for request in requests:
-                        msg = self.psiterator.bld_request(request.piece_id, request.startbit, request.length)
+                        msg = bld_request(request.piece_id, request.startbit, request.length)
                         self.send_msg(msg)
                 rrlist.remove(readable)
             for writeable in wwlist:
@@ -130,6 +135,8 @@ class Peer(Thread):
             send_len = self.sock.send(msg)
         except socket.timeout:
             raise SendTimeout('Sending msg timed out')
+        except ConnectionResetError:
+            raise NetworkExceptions('connection reset by peer')
         
         if expected_len != -1 and expected_len != send_len:
             raise Exception("Error: Didn't send everything")
