@@ -14,21 +14,30 @@ class Swarm:
     MAX_TRACKER = 100
     MAX_PEERS = 70
     
-    def __init__(self, data) -> None:
-        self.peers = list()
-
+    def __init__(self, data, path) -> None:
         self.data = data
+        self.path = path
         self.announces = data.announces
         self.info_hash = data.info_hash
         self.piece_manager = PieceManager(data.pieces_count)
-        self.file_handler = FileHandler(data, "/home/carlos/Code/Python/peerlink")
+        self.file_handler = FileHandler(data, path)
+        
         self.peer_limit = BoundedSemaphore(value=Swarm.MAX_PEERS)
         self.tracker_limit = BoundedSemaphore(value=Swarm.MAX_TRACKER)
         self.peer_list = list()
         self.tracker_list = list()
         self.finished_tracker = Queue()
         
-
+        self.start_thread = None
+    
+    def start(self):
+        try:
+            self.init_tracker()
+            self.announce_tracker()
+            self.connect_peers()
+        except Exception:
+            raise Exception('crashed')
+    
     def init_tracker(self):
         print(self.announces)
         
@@ -45,26 +54,9 @@ class Swarm:
         for t in self.tracker_list:
             thread = Thread(target=t.announce)
             thread.start()
-        
-        """
-        finished = 0
-        while finished != len(self.tracker_list):
-            t = self.finished_tracker.get()
-            finished += 1
-        
-        print("-"*30)
-        for tracker in self.tracker_list:
-            if tracker.error == None:
-                if type(tracker) == HTTPTracker:
-                    print(tracker.url, tracker.peers)
-                else:
-                    print(tracker.host, tracker.port, tracker.peers)
-            else:
-                print(tracker.error)
-        """
             
 
-    def connect_peers(self, info_hash):
+    def connect_peers(self):
         finished = 0 
         while finished != len(self.tracker_list):
             item = self.finished_tracker.get()
