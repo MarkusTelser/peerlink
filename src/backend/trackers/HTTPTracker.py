@@ -3,7 +3,7 @@ import requests
 from socket import inet_ntoa, inet_ntop
 from socket import AF_INET6
 from struct import unpack
-
+from enum import Enum
 from ..metadata.Bencoder import decode
 from ..peer_protocol.PeerIDs import PeerIDs
 
@@ -19,26 +19,32 @@ class HTTPEvents:
     STOPPED = "stopped"
     COMPLETED = "completed"
 
+class TrackerStatus(Enum):
+    NOCONTACT = 0
+    CONNECTING = 1
+    FINISHED = 2
+    ERROR = 3
+
 class HTTPTracker:
     TIMEOUT = 3
 
-
-    def __init__(self, url, info_hash, semaphore, result_queue):
-        self.url = url
+    def __init__(self, address, info_hash, semaphore, result_queue):
+        self.address = address
         self.info_hash = info_hash
         
         self.interval = 0
         self.min_interval = 0
         self.min_request_interval = 0 # min scrape interval
-        self.complete = 0
-        self.incomplete = 0
+        self.leechers = 0
+        self.seeders = 0
         self.peers = list()
         self.trackerid = ""
         
         self.semaphore = semaphore
         self.result_queue = result_queue
+        
+        self.status = TrackerStatus.NOCONTACT
         self.error = None
-
 
     def announce(self):
         event = HTTPEvents.STARTED
@@ -60,12 +66,16 @@ class HTTPTracker:
         
         with self.semaphore:
             try:
+                self.status = TrackerStatus.CONNECTING
                 recv = self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
                 self.peers = recv
             except Exception as e:
                 self.error = str(e)
+                self.status = TrackerStatus.ERROR
             finally:
                 self.result_queue.put(self)
+                if not self.error:
+                    self.status = TrackerStatus.FINISHED
         
     def scrape(self):
         with self.semaphore:
@@ -141,7 +151,7 @@ class HTTPTracker:
             params['trackerid'] = trackerid 
 
         try:
-            recv = requests.get(self.url, params=params, timeout=HTTPTracker.TIMEOUT)
+            recv = requests.get(self.address, params=params, timeout=HTTPTracker.TIMEOUT)
         except HTTPError as e:
             raise NetworkExceptions("1" + str(e))
             # unsuccessful status code
@@ -152,7 +162,7 @@ class HTTPTracker:
             raise NetworkExceptions("3" +str(e))
             # exceeds number of max redirect
         except ConnectionError as e:
-            raise NetworkExceptions("4 Network problem" + self.url)
+            raise NetworkExceptions("4 Network problem" + self.address)
             # the event of a network problem (e.g. DNS failure, refused connection, etc)
         except RequestException as e:
             raise NetworkExceptions("5" + str(e))
@@ -218,9 +228,9 @@ class HTTPTracker:
         if "tracker id" in answer:
             self.trackerid = answer["tracker id"]
         if "complete" in answer:
-            self.complete = answer["complete"]
+            self.seeders = answer["complete"]
         if "incomplete" in answer:
-            self.incomplete = answer["incomplete"]
+            self.leechers = answer["incomplete"]
 
         # list of all ipv6 address currently monitored by tracker
         # peers_ipv6 should be same as peers6, but in earlier extension (may be depreciated)
@@ -246,9 +256,9 @@ class HTTPTracker:
     in a swarm.
     """
     def _scrape(self, info_hashes=None): 
-        if not "announce" in self.url:
-            raise WrongFormat(f"Url contains no announce {self.url}")
-        link = self.url.replace("announce","scrape")
+        if not "announce" in self.address:
+            raise WrongFormat(f"Url contains no announce {self.address}")
+        link = self.address.replace("announce","scrape")
 
         params = {}
 
@@ -271,7 +281,7 @@ class HTTPTracker:
             raise NetworkExceptions("3" +str(e))
             # exceeds number of max redirect
         except ConnectionError as e:
-            raise NetworkExceptions("4 Network problem" + self.url)
+            raise NetworkExceptions("4 Network problem" + self.address)
             # the event of a network problem (e.g. DNS failure, refused connection, etc)
         except RequestException as e:
             raise NetworkExceptions("5" + str(e))

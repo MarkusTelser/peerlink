@@ -47,7 +47,8 @@ def give_object(announce_url: str, info_hash: bytes, start_queue, result_queue):
         tracker = HTTPTracker(address, info_hash, start_queue, result_queue)
     elif typ == TrackerType.UDP:
         host, port, extension = address
-        tracker = UDPTracker(host, port, extension, info_hash, start_queue, result_queue)
+        addr = host, port
+        tracker = UDPTracker(addr, extension, info_hash, start_queue, result_queue)
     elif typ == TrackerType.UNSUPPORTED:
         # TODO tracker type not recognized
         pass

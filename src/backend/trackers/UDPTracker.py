@@ -10,7 +10,6 @@ from ipaddress import IPv6Address, ip_address
 from src.backend.exceptions import *
 from src.backend.peer_protocol.PeerIDs import PeerIDs
 
-
 class Actions(Enum):
     CONNECT = 0x0
     ANNOUNCE = 0x1
@@ -22,6 +21,12 @@ class UDPEvents(Enum):
     COMPLETED = 0x1
     STARTED = 0x2
     STOPPED = 0x3
+
+class TrackerStatus(Enum):
+    NOCONTACT = 0
+    CONNECTING = 1
+    FINISHED = 2
+    ERROR = 3
 
 # UDP Tracker Extension (BEP 41)
 class UDPExtensionTypes(Enum):
@@ -36,9 +41,8 @@ class UDPTracker:
     BUFFER_SIZE = 2048
     TIMEOUT = 5
 
-    def __init__(self, host, port, extension, info_hash, semaphore, result_queue):
-        self.host = host
-        self.port = port 
+    def __init__(self, address, extension, info_hash, semaphore, result_queue):
+        self.address = address
         self.extension = extension
         self.info_hash = info_hash
         self.sock = None
@@ -47,9 +51,15 @@ class UDPTracker:
         self.result_queue = result_queue
         
         self.peers = list()
-        self.error = None
+        self.leechers = 0
+        self.seeders = 0
+        
+        
         self.n_cycles = 0
         self.cid_expiry_date = 0
+        
+        self.status = TrackerStatus.NOCONTACT
+        self.error = None
 
     def _send(self, msg):
         try:
@@ -89,7 +99,7 @@ class UDPTracker:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(UDPTracker.TIMEOUT)
         try:
-            sock.connect((self.host, self.port))
+            sock.connect((self.address))
         except socket.gaierror as e:
             raise UnknownHost("Couldn't resolve host name")
         self.sock = sock
@@ -115,15 +125,19 @@ class UDPTracker:
         
         with self.semaphore:
             try:
+                self.status = TrackerStatus.CONNECTING
                 self.create_con()
                 peers = self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want, self.extension)
                 self.peers = peers
             except Exception as e:
                 self.error = str(e)
+                self.status = TrackerStatus.ERROR
             finally:
                 if self.sock is not None:
                     self.close_con()
                 self.result_queue.put(self)
+                if not self.error:
+                    self.status = TrackerStatus.FINISHED
             
         
     def scrape(self):
@@ -247,7 +261,9 @@ class UDPTracker:
             return None
 
         interval, leechers, seeders = unpack('!III', recv[8:20])
-
+        self.leechers = leechers
+        self.seeders = seeders
+        
         # unpack data
         results = []
         count_addr = int((len(recv) - 20) / 6)
