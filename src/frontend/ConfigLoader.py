@@ -1,11 +1,15 @@
-from appdirs import AppDirs
+from PyQt6.QtCore import QStandardPaths, QSettings
 
-dirs = AppDirs("peerlink", "Markus Telser")
+class ConfigLoader():
+    def __init__(self): 
+        settings = QSettings()
 
-print(dirs.user_data_dir)
-print(dirs.user_config_dir)
-
-print("-")
-print(dirs.user_cache_dir)
-print(dirs.user_log_dir)
-print(dirs.user_state_dir)
+        settings.beginGroup('General')
+        settings.setValue('default_path', 'penis')
+        settings.endGroup()
+        
+    def loadSettings(self):
+        pass
+    
+    def saveSettings(self):
+        pass
