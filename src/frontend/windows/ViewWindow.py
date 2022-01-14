@@ -264,9 +264,9 @@ class ViewWindow(QMainWindow):
             'not_again' : not_again,
             'data' : self.torrent_data
         }
+        self.close()
         self.add_data.emit(data)
         
-        self.close()
     
     def reject(self):
         self.close()

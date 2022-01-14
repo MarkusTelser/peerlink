@@ -16,14 +16,13 @@ from PyQt6.QtGui import (
     QPixmap, 
     QDragEnterEvent
 )
-from PyQt6.QtCore import QSize, Qt, QEventLoop
-from src.backend.metadata import TorrentParser
-from src.frontend.ApplicationWindow import ApplicationWindow
-from src.frontend.ViewWindow import ViewWindow
-from src.frontend.widgets.FileDialog import FileDialog
-from src.frontend.widgets.MagnetLinkDialog import MagnetLinkDialog
-from os.path import expanduser
+from PyQt6.QtCore import QSize, Qt
 import sys
+
+from src.backend.metadata import TorrentParser
+from src.frontend.windows.ApplicationWindow import ApplicationWindow
+from src.frontend.windows.ViewWindow import ViewWindow
+from src.frontend.widgets.dialogs import FileDialog, MagnetLinkDialog
 
 
 class StartWindow(QMainWindow):
