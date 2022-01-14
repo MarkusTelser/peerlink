@@ -13,4 +13,4 @@ class TorrentTreeView(QTreeView):
         self.expandAll()
         for i in range(self.model.columnCount()):        
             self.resizeColumnToContents(i)
-        self.setWindowTitle(self.model.item(0, 0).data())
+       
