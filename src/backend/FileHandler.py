@@ -2,7 +2,7 @@ from hashlib import sha1
 from threading import RLock
 from math import ceil
 from os.path import join, exists, dirname
-from os import mkdir, makedirs
+from os import mkdir, makedirs, remove
 from shutil import copytree, rmtree
 
 class FileHandler:
@@ -141,22 +141,23 @@ class FileHandler:
         return file_list
     
     def padd_files(self, current_node=None):
-        if current_node == None:
-            current_node = self.data.files
-        
-        if current_node.has_children():
-            if not exists(join(self.path, current_node.fullpath)):
-                mkdir(join(self.path, current_node.fullpath))
-            for file in current_node.children:
-                self.padd_files(file)
-        elif not exists(join(self.path, current_node.fullpath)):
-            with open(join(self.path, current_node.fullpath), 'wb+') as f:
-                # padd file in chunks, otherwise high cpu, ram usage
-                BLOCK_SIZE = 2 ** 27
-                write_size = current_node.length
-                for _ in range(ceil(current_node.length / BLOCK_SIZE)):
-                    f.write(b'\x00' * min(write_size, BLOCK_SIZE))
-                    write_size -= BLOCK_SIZE
+        with self.lock:
+            if current_node == None:
+                current_node = self.data.files
+            print("padding files")
+            if current_node.has_children():
+                if not exists(join(self.path, current_node.fullpath)):
+                    mkdir(join(self.path, current_node.fullpath))
+                for file in current_node.children:
+                    self.padd_files(file)
+            elif not exists(join(self.path, current_node.fullpath)):
+                with open(join(self.path, current_node.fullpath), 'wb+') as f:
+                    # padd file in chunks, otherwise high cpu, ram usage
+                    BLOCK_SIZE = 2 ** 27
+                    write_size = current_node.length
+                    for _ in range(ceil(current_node.length / BLOCK_SIZE)):
+                        f.write(b'\x00' * min(write_size, BLOCK_SIZE))
+                        write_size -= BLOCK_SIZE
                     
     @property 
     def path(self):
@@ -179,6 +180,14 @@ class FileHandler:
         
         self._path = new_path
     
+    def remove_files(self):
+        try:
+            if not self.data.has_multi_file and exists(join(self._path, self.data.files.name)):
+                remove(join(self._path, self.data.files.name))
+            if self.data.has_multi_file and exists(join(self._path, self.data.files.name)):
+                rmtree(join(self._path, self.data.files.name))
+        except PermissionError:
+            raise Exception("don't hae the rights to delete folder")
     # TODO check errors, exceptions throw
     # TODO add ignoring of files that are not selected
 
