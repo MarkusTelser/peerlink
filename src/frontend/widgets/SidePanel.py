@@ -1,27 +1,95 @@
-from PyQt6 import QtCore
-from PyQt6.QtCore import QModelIndex
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
+from PyQt6.QtCore import pyqtSignal, pyqtSlot
+from PyQt6.QtGui import QIcon, QMouseEvent
+from PyQt6.QtWidgets import QTabWidget, QVBoxLayout, QWidget, QTreeWidget, QTreeWidgetItem, QFrame, QSizePolicy
 
-
-from PyQt6.QtWidgets import QTabWidget, QSizePolicy, QTreeWidget, QTreeWidgetItem, QFrame
-
-class OtherTab(QWidget):
+class LogTab(QWidget):
     def __init__(self):
         super().__init__()
 
-class FilterTab(QWidget):
-    changed_item = QtCore.pyqtSignal(str)
+class FilterTree(QTreeWidget):
+    changed_item = pyqtSignal(list)
     
+    def __init__(self, data):
+        super().__init__()
+        self.setStyleSheet("""                  
+        QTreeView{
+            border: 0px solid white;
+            show-decoration-selected: 0;
+        }
+        QTreeWidget::item:selected {
+            background-color: blue;
+        }
+        QTreeWidget::branch:has-children:!has-siblings:closed,
+        QTreeWidget::branch:closed:has-children:has-siblings {
+                border-image: none;
+                image: url(resources/branch-closed.png);
+        }
+
+        QTreeWidget::branch:open:has-children:!has-siblings,
+        QTreeWidget::branch:open:has-children:has-siblings  {
+                border-image: none;
+                image: url(resources/branch-open.png);
+        }
+        """)
+
+        for key in data.keys(): 
+            category = QTreeWidgetItem(self)
+            category.setText(0, key)
+            
+            for item in data[key]:
+                name, icon = item
+                child = QTreeWidgetItem()
+                child.setText(0, name)
+                child.setIcon(0, QIcon(icon))
+                category.addChild(child)
+    
+        self.expandAll()
+        self.header().hide()
+        self.setFrameShadow(QFrame.Shadow.Raised)
+        self.setSelectionMode(QTreeWidget.SelectionMode.MultiSelection)
+       
+
+        self.itemSelectionChanged.connect(self.item_selected)
+        self.itemDoubleClicked.connect(self.item_doubleclick)
+        self.doubleClicked.connect(self.item_selected)
+
+    @pyqtSlot()
+    def item_selected(self):
+        filters = []
+        for item in self.selectedItems():
+            if item.parent() != None:
+                filter = item.parent().text(0)
+                filter += f"/{item.text(0)}"
+                if filter not in filters:
+                    filters.append(filter)
+                    self.changed_item.emit(filters)
+            else:
+                self.currentItem().setSelected(False)
+                self.clearFocus()
+    
+    @pyqtSlot(QTreeWidgetItem, int)
+    def item_doubleclick(self, item: QTreeWidgetItem, column: int):
+        # if is a top level category
+        if self.currentItem().childCount() != 0:
+            self.currentItem().setSelected(False)
+            self.clearFocus()
+    
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        if self.indexAt(event.pos()).data() == None:
+            self.clearSelection()
+            self.clearFocus()
+        return super().mouseDoubleClickEvent(event)
+    
+
+class FilterTab(QWidget):    
     def __init__(self):
         super().__init__()
         
-        layout = QVBoxLayout()
+        layout  = QVBoxLayout()
         self.setLayout(layout)
         
         data = {
             'Torrents' : [
-                ('All', 'resources/all.svg'),
                 ('Active', 'resources/active.svg'),
                 ('Inactive', 'resources/inactive.svg'),
                 ('Downloading', 'resources/downloading.svg'),
@@ -37,63 +105,21 @@ class FilterTab(QWidget):
                 ('Unreachable', 'resources/unreachable.svg'),
                 ('Error', 'resources/error.svg'),
                 ('Warning', 'resources/warning.svg')
+            ],
+            'Files': [
+                ('Single File', 'resources/file.svg'),
+                ('Multi File', 'resources/multifile.svg')
             ]
         }
-        
-        self.tab_tree = QTreeWidget()
-        self.tab_tree.itemSelectionChanged.connect(self.item_selected)
-        self.tab_tree.setStyleSheet("""                  
-        QTreeView{
-            border: 0px solid white;
-            show-decoration-selected: 0;
-        }
-        QTreeView::item:selected {
-            border: 1px solid green;
-            background: rgb(0,77,0);
-        }
-
-        QTreeView::branch:has-children:!has-siblings:closed,
-        QTreeView::branch:closed:has-children:has-siblings {
-                border-image: none;
-                image: url(resources/branch-closed.png);
-        }
-
-        QTreeView::branch:open:has-children:!has-siblings,
-        QTreeView::branch:open:has-children:has-siblings  {
-                border-image: none;
-                image: url(resources/branch-open.png);
-        }
-        """)
-        self.tab_tree.setFrameShadow(QFrame.Shadow.Raised)
-        self.tab_tree.header().hide()
-        
-        for key in data.keys(): 
-            category = QTreeWidgetItem(self.tab_tree)
-            category.setText(0, key)
-            
-            for item in data[key]:
-                name, icon = item
-                child = QTreeWidgetItem()
-                child.setText(0, name)
-                child.setIcon(0, QIcon(icon))
-                category.addChild(child)
-        
-        self.tab_tree.expandAll()
-        layout.addWidget(self.tab_tree)
-        
-    def item_selected(self):
-        filter_string = ""
-        for item in self.tab_tree.selectedItems():
-            if item.parent() != None:
-                filter_string += item.parent().text(0)
-                filter_string += f"/{item.text(0)}"
-            else:
-                item.setSelected(False)
-                filter_string += item.text(0)
-        self.changed_item.emit(filter_string)
+        self.filter_tree = FilterTree(data)
+        self.filter_tree.topLevelItem(2).setExpanded(False)
+        layout.addWidget(self.filter_tree)
     
-    def mouse_pressed():
-        pass
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        if self.filter_tree.itemAt(event.pos()) == None:
+            self.filter_tree.clearSelection()
+            self.filter_tree.clearFocus()
+        return super().mouseDoubleClickEvent(event)
         
 
 class SidePanel(QTabWidget):
@@ -101,11 +127,11 @@ class SidePanel(QTabWidget):
         super().__init__()
         
         # generic settings
+        self.setMovable(True)
         self.setStyleSheet("background-color: green;")
-        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
-        tab1 = FilterTab()
-        tab2 = OtherTab()
+        self.tab1 = FilterTab()
+        self.tab2 = LogTab()
         
-        self.addTab(tab1, "Filter")
-        self.addTab(tab2, "Others")
+        self.addTab(self.tab1, "Filter")
+        self.addTab(self.tab2, "Log")
