@@ -14,7 +14,7 @@ class TorrentTreeModel(QStandardItemModel):
         self.file_data = data
         self.root_node = self.invisibleRootItem()
         
-        headers = ["Name", "Size"]
+        headers = ["name", "size"]
         self.setHorizontalHeaderLabels(headers)
         
     def update(self, data: TorrentFile):
@@ -22,7 +22,7 @@ class TorrentTreeModel(QStandardItemModel):
         self.removeRow(0)
         self._update(self.file_data, self.root_node)
         self.update_data.emit()
-        
+    
     def _update(self, file_data: TorrentFile, parent_node: QStandardItem):
         name = QStandardItem(file_data.name)
         name.setEditable(False)
