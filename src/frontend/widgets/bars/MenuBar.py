@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QMenuBar, QMenu
-from PyQt6.QtGui import QIcon, QKeySequence, QActionGroup
+from PyQt6.QtGui import QIcon, QKeySequence, QAction
 
 class MenuBar(QMenuBar):
     def __init__(self):
@@ -22,7 +22,6 @@ class MenuBar(QMenuBar):
         action_name = "Create Torrent File"
         action_shortcut = QKeySequence("Ctrl+N")
         self.create_torrent = fileMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
-        
         fileMenu.addSeparator()
         
         action_icon = QIcon("resources/quit.svg")
@@ -79,26 +78,30 @@ class MenuBar(QMenuBar):
         # settings menu
         self.view_menu = QMenu("&View", self)
         
-        self.show_toolbar = self.view_menu.addAction("Show ToolBar")
+        self.show_toolbar = QAction("Show ToolBar")
+        self.show_statusbar = QAction("Show StatusBar")
         self.show_toolbar.setCheckable(True)
-        
-        self.show_statusbar = self.view_menu.addAction("Show StatusBar")
         self.show_statusbar.setCheckable(True)
+        self.view_menu.addAction(self.show_toolbar)
+        self.view_menu.addAction(self.show_statusbar)
         self.view_menu.addSeparator()
         
-        self.show_panel = self.view_menu.addAction("Show Side Panel")
+        self.show_panel = QAction("Show Side Panel")
+        self.panel_tabs = QMenu("Select Side Panel Tabs")
         self.show_panel.setCheckable(True)
-        
-        self.panel_tabs = self.view_menu.addMenu("Select Side Panel Tabs")
+        self.view_menu.addAction(self.show_panel)
+        self.view_menu.addMenu(self.panel_tabs)
         self.view_menu.addSeparator()
         
-        self.show_detail = self.view_menu.addAction("Show Detail Panel")
+        self.detail_tabs = QMenu("Select Detail Panel Tabs")
+        self.show_detail = QAction("Show Detail Panel")
         self.show_detail.setCheckable(True)
+        self.view_menu.addAction(self.show_detail)
+        self.view_menu.addMenu(self.detail_tabs)
+        self.view_menu.addSeparator()
         
-        self.detail_tabs = self.view_menu.addMenu("Select Detail Panel Tabs")
-        #self.view_menu.setStyleSheet("background: white")
         self.addMenu(self.view_menu)
-        
+
         # settings menu
         settingsMenu = QMenu("&Settings", self)
         self.addMenu(settingsMenu)
@@ -106,6 +109,3 @@ class MenuBar(QMenuBar):
         # help menu
         helpMenu = QMenu("&Help", self)
         self.addMenu(helpMenu)
-    
-    def pressed(self):
-        print("pressed")

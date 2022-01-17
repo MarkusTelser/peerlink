@@ -11,6 +11,7 @@ class FilterTree(QTreeWidget):
     
     def __init__(self, data):
         super().__init__()
+
         self.setStyleSheet("""                  
         QTreeView{
             border: 0px solid white;
@@ -129,9 +130,23 @@ class SidePanel(QTabWidget):
         # generic settings
         self.setMovable(True)
         self.setStyleSheet("background-color: green;")
+        self.setUpdatesEnabled(True)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
-        self.tab1 = FilterTab()
-        self.tab2 = LogTab()
+        tab1 = FilterTab()
+        tab2 = LogTab()
         
-        self.addTab(self.tab1, "Filter")
-        self.addTab(self.tab2, "Log")
+        self.tabs = list()
+        self.tabs.append([tab1, "Filter"])
+        self.tabs.append([tab2, "Log"])
+        
+        
+    def tabspos(self):
+        return [self.indexOf(tab[0]) for tab in self.tabs]
+    
+    def set_tabspos(self, pos):
+        if len(pos) == 0:
+            pos = [x for x in range(len(self.tabs))]
+        for p in pos:
+            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1])
+        

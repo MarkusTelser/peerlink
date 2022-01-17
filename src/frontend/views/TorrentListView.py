@@ -67,6 +67,12 @@ class TorrentListView(QTableView):
         
         self.setModel(model)
     
+    def columnpos(self):
+        return [self.horizontalHeader().visualIndex(x) for x in range(self.horizontalHeader().count())]
+    
+    def set_columnpos(self):
+        pass
+    
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.RightButton:
             if self.rowAt(event.pos().y()) == -1 or len(self.selectedIndexes()) == 0:

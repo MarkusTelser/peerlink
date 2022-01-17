@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QPalette, QColor
 from src.frontend.windows.StartWindow import StartWindow
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
 from src.frontend.ConfigLoader import ConfigLoader
@@ -13,7 +14,7 @@ app.setApplicationVersion('0.1')
 conf = ConfigLoader()
 
 # decide which window to load depending on settings
-window = StartWindow()
+window = ApplicationWindow(conf)
 window.show()
 
 sys.exit(app.exec())

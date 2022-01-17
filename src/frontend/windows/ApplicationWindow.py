@@ -7,19 +7,19 @@ from PyQt6.QtWidgets import (
     QWidget,
     QStackedLayout
 )
-from PyQt6.QtGui import QGuiApplication, QIcon, QAction
-from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QStandardPaths
+from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent
+from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot
 from os.path import join, exists, dirname, isdir, expanduser
 from threading import Thread
 from time import sleep
 import subprocess
 import sys
-from src.frontend.widgets.StatisticsPanel import StatisticsPanel
 
+from src.frontend.ConfigLoader import ConfigLoader
+from src.frontend.widgets.StatisticsPanel import StatisticsPanel
 from src.frontend.widgets.dialogs import DeleteDialog, FileDialog, MagnetLinkDialog
 from src.frontend.widgets.bars import MenuBar, StatusBar, ToolBar
 from src.frontend.models.SortFilterProcxyModel import SortFilterProxyModel
-from src.backend.swarm import Swarm
 from src.frontend.widgets.SidePanel import SidePanel
 from src.frontend.windows.ViewWindow import ViewWindow
 
@@ -27,12 +27,13 @@ from src.backend.metadata.TorrentParser import TorrentParser
 from src.frontend.models.TorrentListModel import TorrentListModel
 from src.frontend.views.TorrentListView import TorrentListView
 from src.frontend.views.TorrentDetailView import TorrentDetailView
-
+from src.backend.swarm import Swarm
 
 class ApplicationWindow(QMainWindow):
-    def __init__(self, parent=None):
-        super(ApplicationWindow, self).__init__(parent)
+    def __init__(self, config_loader):
+        super(ApplicationWindow, self).__init__()
         
+        self.config_loader = config_loader
         self.current_torrent = None
         self.default_path = join(expanduser('~'), 'Downloads')
         
@@ -40,16 +41,18 @@ class ApplicationWindow(QMainWindow):
         self.setWindowIcon(QIcon('resources/logo.png'))
         
         # set screen size
-        width, height = 900, 700
-        min_width, min_height = 750, 550
-        self.resize(width, height)
-        self.setMinimumSize(QSize(min_width, min_height))
+        min_size = QSize(750, 550)
+        self.resize(config_loader.win_size)
+        self.setMinimumSize(QSize(min_size))
         
         # center in the middle of screen
-        qtRectangle = self.frameGeometry()
-        centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
-        qtRectangle.moveCenter(centerPoint)
-        self.move(qtRectangle.topLeft())
+        if config_loader.win_loc != None:
+            self.move(config_loader.win_loc)
+        else:
+            qtRectangle = self.frameGeometry()
+            centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
+            qtRectangle.moveCenter(centerPoint)
+            self.move(qtRectangle.topLeft())
         
         self.central_widget = QWidget()
         self.central_widget.setStyleSheet("background-color: red;")
@@ -59,8 +62,10 @@ class ApplicationWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self.addWidgets()
+        
         self.update_thread = Thread(target=self._update).start()
         self.show()
+        self.load_settings()
     
     def show(self, data=None):
         super().show()
@@ -87,10 +92,9 @@ class ApplicationWindow(QMainWindow):
         self.stacked_layout.insertWidget(0, self.hori_splitter)
         self.main_layout.addWidget(self.main_widget)
         
-        
         self.side_panel = SidePanel()
         self.hori_splitter.addWidget(self.side_panel)
-        self.hori_splitter.setStretchFactor(0, 30)
+        self.side_panel.set_tabspos(self.config_loader.side_tabs)
         
         # vertical splitter for main table, info table
         self.vert_splitter = QSplitter()
@@ -98,7 +102,6 @@ class ApplicationWindow(QMainWindow):
         
         self.hori_splitter.addWidget(self.vert_splitter)
         self.hori_splitter.setCollapsible(1, False)
-        self.hori_splitter.setStretchFactor(1, 70)
         
         # add main torrent table model / view
         self.table_model = TorrentListModel()
@@ -109,11 +112,13 @@ class ApplicationWindow(QMainWindow):
         # bottom info panel
         self.detail_view = TorrentDetailView()
         self.vert_splitter.addWidget(self.detail_view)
-        self.vert_splitter.setSizes([1, 0]) # hide info table
         
         # general statistics
         self.statistics = StatisticsPanel()
         self.stacked_layout.insertWidget(1, self.statistics)
+        
+        self.hori_splitter.setSizes(self.config_loader.hori_splitter)
+        self.vert_splitter.setSizes(self.config_loader.vert_splitter)
         
         # connect signals to controller slots
         self.menuBar.open_file.triggered.connect(self.open_file)
@@ -148,7 +153,7 @@ class ApplicationWindow(QMainWindow):
         self.table_view.menu_open.triggered.connect(self.open_explorer)
         self.table_view.menu_delete.triggered.connect(self.delete_torrent)
         
-        self.side_panel.tab1.filter_tree.changed_item.connect(self.filter_torrents)
+        self.side_panel.tabs[0][0].filter_tree.changed_item.connect(self.filter_torrents)
         self.statusBar.speed.clicked.connect(self.open_statistics)
     
     def appendRowEnd(self, dt):
@@ -191,6 +196,25 @@ class ApplicationWindow(QMainWindow):
             return f"{round(bits / (1024 ** 4), 2)} TiB"
         elif bits / (1024 ** 5) < 1000:
             return f"{round(bits / (1024 ** 5), 3)} PiB"    
+    
+    def load_settings(self):
+        self.toolBar.setVisible(self.config_loader.show_toolbar)
+        self.statusBar.setVisible(self.config_loader.show_statusbar)
+    
+    def closeEvent(self, event: QCloseEvent):
+        # general
+        self.config_loader.settings.setValue('win_size', self.size())
+        self.config_loader.settings.setValue('win_loc', self.pos())
+        self.config_loader.settings.setValue('hori_splitter', self.hori_splitter.sizes())
+        self.config_loader.settings.setValue('vert_splitter', self.vert_splitter.sizes())
+        self.config_loader.settings.setValue('show_toolbar', str(self.toolBar.isVisible()))
+        self.config_loader.settings.setValue('show_statusbar', str(self.statusBar.isVisible()))
+        
+        # tabs
+        self.config_loader.settings.setValue('side_tabs', self.side_panel.tabspos())
+        print(self.table_view.columnpos())
+        
+        event.accept()
     
     def show_errorwin(self, error_txt):
         error_msg = QMessageBox(self)
@@ -243,8 +267,10 @@ class ApplicationWindow(QMainWindow):
         if not checked:
             self.hori_splitter.setSizes([0, -1])
         elif self.hori_splitter.sizes()[0] == 0:
+            print('update panel')
             min_width = self.side_panel.sizeHint().width()
             fwidth = self.hori_splitter.width()
+            print(self.hori_splitter.sizes())
             self.hori_splitter.setSizes([min_width, fwidth - min_width])
     
     @pyqtSlot(bool)
@@ -430,8 +456,10 @@ class ApplicationWindow(QMainWindow):
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    window = ApplicationWindow()
+    
+    conf = ConfigLoader()
+    
+    window = ApplicationWindow(conf)
     window.show()
 
     sys.exit(app.exec())

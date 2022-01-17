@@ -162,12 +162,12 @@ class TorrentDetailView(QTabWidget):
         self.files_tab = FilesTab()
         
         self.addTab(self.general_tab, QIcon('resources/general.svg'), "General")
-        self.addTab(self.chart_tab, QIcon('resources/chart.svg'), "Chart")
         self.addTab(self.trackers_tab, QIcon('resources/trackers.svg'), "Trackers")
         self.addTab(self.peers_tab, QIcon('resources/peer.svg'), "Peers")
+        self.addTab(self.chart_tab, QIcon('resources/chart.svg'), "Chart")
         self.addTab(self.files_tab, QIcon('resources/files.svg'), "Files")
         
-        self.setMovable(True)
+        
         self.setStyleSheet("background-color: blue;")
     
     def _update(self, dt: Swarm):
