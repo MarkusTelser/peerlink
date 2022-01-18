@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
     QApplication,
     QErrorMessage
 )
-from PyQt6.QtGui import QGuiApplication, QIcon
+from PyQt6.QtGui import QGuiApplication, QIcon, QCloseEvent
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtCore import QSize, Qt
 from os.path import expanduser, join
@@ -30,11 +30,11 @@ from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 
-class ViewWindow(QMainWindow):
+class PreviewWindow(QMainWindow):
     add_data = pyqtSignal(dict)
     
     def __init__(self, parent=None):
-        super(ViewWindow, self).__init__(parent)
+        super(PreviewWindow, self).__init__(parent)
         self.setWindowTitle("FastPeer - View Torrent")
         self.torrent_data = None
 
@@ -266,7 +266,6 @@ class ViewWindow(QMainWindow):
         }
         self.close()
         self.add_data.emit(data)
-        
     
     def reject(self):
         self.close()
@@ -277,7 +276,7 @@ if __name__ == "__main__":
 
     path = "data/all/test.torrent"
     data = TorrentParser.parse_filepath(path)
-    window = ViewWindow()
+    window = PreviewWindow()
     window.show(data)
 
     app.exec()

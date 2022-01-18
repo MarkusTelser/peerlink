@@ -21,7 +21,7 @@ from src.frontend.widgets.dialogs import DeleteDialog, FileDialog, MagnetLinkDia
 from src.frontend.widgets.bars import MenuBar, StatusBar, ToolBar
 from src.frontend.models.SortFilterProcxyModel import SortFilterProxyModel
 from src.frontend.widgets.SidePanel import SidePanel
-from src.frontend.windows.ViewWindow import ViewWindow
+from src.frontend.windows.PreviewWindow import PreviewWindow
 
 from src.backend.metadata.TorrentParser import TorrentParser
 from src.frontend.models.TorrentListModel import TorrentListModel
@@ -129,6 +129,7 @@ class ApplicationWindow(QMainWindow):
         self.menuBar.view_menu.aboutToShow.connect(self.update_viewmenu)
         self.menuBar.show_toolbar.triggered.connect(lambda b: self.toolBar.setVisible(b))
         self.menuBar.show_statusbar.triggered.connect(lambda b: self.statusBar.setVisible(b))
+        self.menuBar.show_preview.triggered.connect(self.set_open_view)
         self.menuBar.show_panel.triggered.connect(self.show_sidepanel)
         self.menuBar.show_detail.triggered.connect(self.show_detailpanel)
         self.menuBar.panel_tabs.triggered.connect(self.update_paneltabs)
@@ -165,7 +166,6 @@ class ApplicationWindow(QMainWindow):
         
         #'strategy': strategy,
         #'check_hash' : check_hash,
-        #'not_again' : not_again,
         
         if dt['pad_files']:
             Thread(target=s.file_handler.padd_files).start()
@@ -174,6 +174,7 @@ class ApplicationWindow(QMainWindow):
             s.start_thread = Thread(target=s.start)
             s.start_thread.start()
         
+        self.open_view = not dt['not_again']
         
         torrent_name = dt['data'].files.name
         readable_len = self.convert_bits(dt['data'].files.length)
@@ -196,6 +197,7 @@ class ApplicationWindow(QMainWindow):
             return f"{round(bits / (1024 ** 5), 3)} PiB"    
     
     def load_settings(self):
+        self.open_view = self.config_loader.open_view
         self.toolBar.setVisible(self.config_loader.show_toolbar)
         self.statusBar.setVisible(self.config_loader.show_statusbar)
     
@@ -210,7 +212,7 @@ class ApplicationWindow(QMainWindow):
         
         # tabs
         self.config_loader.settings.setValue('side_tabs', self.side_panel.tabspos())
-        print(self.table_view.columnpos())
+        self.config_loader.settings.setValue('open_view', self.open_view)
         
         event.accept()
     
@@ -234,17 +236,34 @@ class ApplicationWindow(QMainWindow):
     def pause_torrent(self):
         pass
     
+    @pyqtSlot(bool)
+    def set_open_view(self, status: bool):
+        self.open_view = status
+    
     @pyqtSlot()
     def open_file(self):
         dialog = FileDialog()
         
+        print(self.open_view)
         if dialog.exec():
             file_paths = dialog.selectedFiles()
             for file_path in file_paths:
                 data = TorrentParser.parse_filepath(file_path)
-                window = ViewWindow(self)
-                window.add_data.connect(self.appendRowEnd)
-                window.show(data)
+                if self.open_view:
+                    window = PreviewWindow(self)
+                    window.add_data.connect(self.appendRowEnd)
+                    window.show(data)
+                else:
+                    data = {
+                        'path': self.default_path,
+                        'strategy': 'rarest-first',
+                        'start': False,
+                        'check_hash' : True,
+                        'pad_files' : False,
+                        'not_again' : True,
+                        'data' : data
+                    }
+                    self.appendRowEnd(data)
     
     @pyqtSlot()
     def open_link(self):
@@ -281,10 +300,9 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot()
     def update_viewmenu(self):
-        toolbar_vis = self.toolBar.isVisible()
-        self.menuBar.show_toolbar.setChecked(toolbar_vis)
-        statusbar_vis = self.statusBar.isVisible()
-        self.menuBar.show_statusbar.setChecked(statusbar_vis)
+        self.menuBar.show_toolbar.setChecked(self.toolBar.isVisible())
+        self.menuBar.show_statusbar.setChecked(self.statusBar.isVisible())
+        self.menuBar.show_preview.setChecked(self.open_view)
         
         panel_state = self.hori_splitter.sizes()[0] != 0
         self.menuBar.show_panel.setChecked(panel_state)

@@ -80,10 +80,13 @@ class MenuBar(QMenuBar):
         
         self.show_toolbar = QAction("Show ToolBar")
         self.show_statusbar = QAction("Show StatusBar")
+        self.show_preview = QAction("Show Torrent Preview")
         self.show_toolbar.setCheckable(True)
         self.show_statusbar.setCheckable(True)
+        self.show_preview.setCheckable(True)
         self.view_menu.addAction(self.show_toolbar)
         self.view_menu.addAction(self.show_statusbar)
+        self.view_menu.addAction(self.show_preview)
         self.view_menu.addSeparator()
         
         self.show_panel = QAction("Show Side Panel")

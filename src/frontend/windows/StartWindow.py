@@ -21,7 +21,7 @@ import sys
 
 from src.backend.metadata import TorrentParser
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
-from src.frontend.windows.ViewWindow import ViewWindow
+from src.frontend.windows.PreviewWindow import PreviewWindow
 from src.frontend.widgets.dialogs import FileDialog, MagnetLinkDialog
 
 
@@ -160,7 +160,7 @@ class StartWindow(QMainWindow):
                 file_path = event.mimeData().urls()[0].path()
                 data = TorrentParser.parse_filepath(file_path)
                 
-                window = ViewWindow(self)
+                window = PreviewWindow(self)
                 window.add_data.connect(self.open_mainwindow)
                 window.show(data)
 
@@ -173,7 +173,7 @@ class StartWindow(QMainWindow):
             print(dialog.selectedFiles())
             for file_path in dialog.selectedFiles():
                 data = TorrentParser.parse_filepath(file_path)
-                window = ViewWindow(self)
+                window = PreviewWindow(self)
                 window.add_data.connect(self.open_mainwindow)
                 window.show(data)
             
@@ -193,7 +193,7 @@ class StartWindow(QMainWindow):
             magnet_link = dialog.text_box.text()
             # TODO implement when Magnet Link is ready
             #data = TorrentParser.parse_magnet_link(magnet_link)
-            #window = ViewWindow(self)
+            #window = PreviewWindow(self)
             #window.show(data)
 
             

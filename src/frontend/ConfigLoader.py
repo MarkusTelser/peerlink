@@ -13,6 +13,7 @@ class ConfigLoader():
         
         self.side_tabs = self.settings.value('side_tabs', [], list)
         self.detail_tabs = self.settings.value('detail_tabs', [], list)
+        self.open_view = self.settings.value('open_view', True, bool)
         
         
     def loadSettings(self):
