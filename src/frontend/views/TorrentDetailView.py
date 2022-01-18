@@ -66,9 +66,7 @@ class TrackersTab(QWidget):
         self.table_widget.setSortingEnabled(True)
         self.table_widget.horizontalHeader().setStretchLastSection(True)
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.table_widget.setStyleSheet("background: black")
         main_layout.addWidget(self.table_widget)
-        self.setStyleSheet("background: green")
         
         self._clear()
     
@@ -107,9 +105,7 @@ class PeersTab(QWidget):
         self.table_widget.verticalHeader().hide()
         self.table_widget.horizontalHeader().setStretchLastSection(True)
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.table_widget.setStyleSheet("background: green;")
         main_layout.addWidget(self.table_widget)
-        self.setStyleSheet("background: purple")
         
         self._clear()
     
@@ -141,7 +137,6 @@ class FilesTab(QWidget):
         self.model = TorrentTreeModel()
         self.tree_view = TorrentTreeView(self.model)
         self.tree_view.setModel(self.model)
-        self.tree_view.setStyleSheet("background: green;")
         main_layout.addWidget(self.tree_view)
         
     def _update(self, data: TorrentFile = None):
@@ -166,9 +161,6 @@ class TorrentDetailView(QTabWidget):
         self.addTab(self.peers_tab, QIcon('resources/peer.svg'), "Peers")
         self.addTab(self.chart_tab, QIcon('resources/chart.svg'), "Chart")
         self.addTab(self.files_tab, QIcon('resources/files.svg'), "Files")
-        
-        
-        self.setStyleSheet("background-color: blue;")
     
     def _update(self, dt: Swarm):
         self.trackers_tab._update(dt.tracker_list)

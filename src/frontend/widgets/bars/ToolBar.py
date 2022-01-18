@@ -53,7 +53,6 @@ class ToolBar(QToolBar):
         self.remove_all = QPushButton(self)
         self.remove_all.setText("remove all")
         self.remove_all.setIcon(QIcon('resources/remove.svg'))
-        self.remove_all.setStyleSheet("")
         self.addWidget(self.remove_all)
         
         self.addSeparator()

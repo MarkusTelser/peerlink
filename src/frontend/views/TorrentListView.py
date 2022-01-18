@@ -17,7 +17,6 @@ class TorrentListView(QTableView):
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.setStyleSheet("background-color: yellow;")
         
         # vertical & horizontal header settings
         self.horizontalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -56,14 +55,12 @@ class TorrentListView(QTableView):
         self.menu_delete.setIcon(QIcon('resources/remove.svg'))
         self.menu.addAction(self.menu_open)
         self.menu.addAction(self.menu_delete)
-        self.menu.setStyleSheet("background-color: gray")
         
         # create select column menu
         self.select_menu = QMenu(self)
         menu_layout = QVBoxLayout()
         menu_layout.setSpacing(0)
         self.select_menu.setLayout(menu_layout)
-        self.select_menu.setStyleSheet("background-color: gray")
         
         self.setModel(model)
     

@@ -55,7 +55,6 @@ class ApplicationWindow(QMainWindow):
             self.move(qtRectangle.topLeft())
         
         self.central_widget = QWidget()
-        self.central_widget.setStyleSheet("background-color: red;")
         self.main_layout = QHBoxLayout()
         
         self.central_widget.setLayout(self.main_layout)
@@ -71,7 +70,6 @@ class ApplicationWindow(QMainWindow):
         super().show()
         if data:
             self.appendRowEnd(data)
-        
     
     def addWidgets(self):
         self.menuBar = MenuBar()

@@ -129,7 +129,6 @@ class SidePanel(QTabWidget):
         
         # generic settings
         self.setMovable(True)
-        self.setStyleSheet("background-color: green;")
         self.setUpdatesEnabled(True)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
@@ -140,6 +139,7 @@ class SidePanel(QTabWidget):
         self.tabs.append([tab1, "Filter"])
         self.tabs.append([tab2, "Log"])
         
+        self.setObjectName('sidepanel')
         
     def tabspos(self):
         return [self.indexOf(tab[0]) for tab in self.tabs]
