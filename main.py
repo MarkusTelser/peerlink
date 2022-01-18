@@ -1,10 +1,4 @@
-from PyQt6.QtWidgets import QApplication
-from src.frontend.windows.StartWindow import StartWindow
-import sys
- 
-app = QApplication(sys.argv)
+from src.frontend import BootstrapLoader
 
-window = StartWindow()
-window.show()
-
-sys.exit(app.exec())
+if __name__ == "__main__":
+    BootstrapLoader.run()
