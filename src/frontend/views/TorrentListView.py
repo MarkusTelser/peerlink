@@ -36,8 +36,11 @@ class TorrentListView(QTableView):
         self.menu_resume.setIcon(QIcon('resources/resume.svg'))
         self.menu_pause = QAction('Pause')
         self.menu_pause.setIcon(QIcon('resources/pause.svg'))
+        self.menu_move = QAction('Move')
+        self.menu_move.setIcon(QIcon('resources/move.svg'))
         self.menu.addAction(self.menu_resume)
         self.menu.addAction(self.menu_pause)
+        self.menu.addAction(self.menu_move)
         self.menu.addSeparator()
         self.menu_copyname = QAction('Copy name')
         self.menu_copyname.setIcon(QIcon('resources/copy.svg'))
@@ -75,6 +78,7 @@ class TorrentListView(QTableView):
             if self.rowAt(event.pos().y()) == -1 or len(self.selectedIndexes()) == 0:
                 self.menu_pause.setDisabled(True)
                 self.menu_resume.setDisabled(True)
+                self.menu_move.setDisabled(True)
                 self.menu_copyname.setDisabled(True)
                 self.menu_copyhash.setDisabled(True)
                 self.menu_copypath.setDisabled(True)
@@ -82,6 +86,7 @@ class TorrentListView(QTableView):
             else:
                 self.menu_pause.setEnabled(True)
                 self.menu_resume.setEnabled(True)
+                self.menu_move.setEnabled(True)
                 self.menu_copyname.setEnabled(True)
                 self.menu_copyhash.setEnabled(True)
                 self.menu_copypath.setEnabled(True)

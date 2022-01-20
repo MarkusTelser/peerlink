@@ -7,7 +7,7 @@ class DeleteDialog(QDialog):
         super().__init__()
         
         self.setWindowTitle('Delete Torrent')
-        self.setWindowIcon(QIcon('resources/logo.png'))
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         self.setBaseSize(300, 300)
         
         main_layout = QVBoxLayout()

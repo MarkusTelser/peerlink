@@ -7,8 +7,8 @@ from PyQt6.QtWidgets import (
     QWidget,
     QStackedLayout
 )
-from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent
-from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot
+from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent, QDesktopServices
+from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl
 from os.path import join, exists, dirname, isdir, expanduser
 from threading import Thread
 from time import sleep
@@ -30,6 +30,9 @@ from src.frontend.views.TorrentDetailView import TorrentDetailView
 from src.backend.swarm import Swarm
 
 class ApplicationWindow(QMainWindow):
+    DONATE_LINK = "www.google.com"
+    BUG_LINK = "www.google.com"
+    
     def __init__(self, config_loader):
         super(ApplicationWindow, self).__init__()
         
@@ -38,7 +41,7 @@ class ApplicationWindow(QMainWindow):
         self.default_path = join(expanduser('~'), 'Downloads')
         
         self.setWindowTitle("FastPeer - Application Window")
-        self.setWindowIcon(QIcon('resources/logo.png'))
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         
         # set screen size
         min_size = QSize(750, 550)
@@ -120,10 +123,13 @@ class ApplicationWindow(QMainWindow):
         
         # connect signals to controller slots
         self.menuBar.open_file.triggered.connect(self.open_file)
-        self.menuBar.open_link.triggered.connect(self.open_link)
+        self.menuBar.open_link.triggered.connect(self.open_magnetlink)
+        self.menuBar.create_torrent.triggered.connect(self.create_torrent)
+        self.menuBar.import_torrent.triggered.connect(self.import_torrent)
         self.menuBar.exit.triggered.connect(self.close)
         self.menuBar.resume.triggered.connect(self.start_torrent)
         self.menuBar.pause.triggered.connect(self.pause_torrent)
+        self.menuBar.move_torrent.triggered.connect(self.move_torrent)
         self.menuBar.open_explorer.triggered.connect(self.open_explorer)
         self.menuBar.remove.triggered.connect(self.delete_torrent)
         self.menuBar.view_menu.aboutToShow.connect(self.update_viewmenu)
@@ -134,9 +140,11 @@ class ApplicationWindow(QMainWindow):
         self.menuBar.show_detail.triggered.connect(self.show_detailpanel)
         self.menuBar.panel_tabs.triggered.connect(self.update_paneltabs)
         self.menuBar.detail_tabs.triggered.connect(self.update_detailtabs)
+        self.menuBar.help_donate.triggered.connect(lambda: self.open_link(self.DONATE_LINK))
+        self.menuBar.help_bug.triggered.connect(lambda: self.open_link(self.BUG_LINK))
         
         self.toolBar.open_file.clicked.connect(self.open_file)
-        self.toolBar.open_link.clicked.connect(self.open_link)
+        self.toolBar.open_link.clicked.connect(self.open_magnetlink)
         self.toolBar.resume.clicked.connect(self.start_torrent)
         self.toolBar.remove.clicked.connect(self.delete_torrent)
         self.toolBar.remove_all.clicked.connect(self.delete_alltorrents)
@@ -146,6 +154,7 @@ class ApplicationWindow(QMainWindow):
         self.table_view.doubleClicked.connect(self.doubleclick_torrent)
         self.table_view.menu_resume.triggered.connect(self.start_torrent)
         self.table_view.menu_pause.triggered.connect(self.pause_torrent)
+        self.table_view.menu_move.triggered.connect(self.move_torrent)
         self.table_view.menu_copyname.triggered.connect(self.copy_name)
         self.table_view.menu_copyhash.triggered.connect(self.copy_hash)
         self.table_view.menu_copypath.triggered.connect(self.copy_path)
@@ -236,6 +245,14 @@ class ApplicationWindow(QMainWindow):
     def pause_torrent(self):
         pass
     
+    @pyqtSlot()
+    def move_torrent(self):
+        pass
+    
+    @pyqtSlot()
+    def open_link(self, link):
+        QDesktopServices.openUrl(QUrl(link))
+    
     @pyqtSlot(bool)
     def set_open_view(self, status: bool):
         self.open_view = status
@@ -266,12 +283,20 @@ class ApplicationWindow(QMainWindow):
                     self.appendRowEnd(data)
     
     @pyqtSlot()
-    def open_link(self):
+    def open_magnetlink(self):
         dialog = MagnetLinkDialog()
         
         if dialog.exec():
             magnet_link = dialog.text_box.text()
-            
+    
+    @pyqtSlot()
+    def create_torrent(self):
+        pass
+    
+    @pyqtSlot()
+    def import_torrent(self):
+        pass
+    
     @pyqtSlot()
     def open_statistics(self):
         if self.stacked_layout.currentIndex() == 0:

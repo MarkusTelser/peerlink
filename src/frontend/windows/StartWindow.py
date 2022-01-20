@@ -14,9 +14,11 @@ from PyQt6.QtGui import (
     QGuiApplication, 
     QIcon, 
     QPixmap, 
-    QDragEnterEvent
+    QDragEnterEvent, 
+    QImage
 )
 from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtSvg import QSvgRenderer
 import sys
 
 from src.backend.metadata import TorrentParser
@@ -47,15 +49,30 @@ class StartWindow(QMainWindow):
         self.move(qtRectangle.topLeft())
 
         # set icon to window
-        icon = QIcon('resources/logo.png')
+        icon = QIcon('resources/logo.svg')
         self.setWindowIcon(icon)
         self.setWindowIconText("logo")      
 
         # set background gradient
         self.setStyleSheet("""QMainWindow#StartWindow{
-            background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1,
-            stop:0 rgba(255, 0, 0, 255), stop:1 rgba(0, 42, 255, 255));
-        }""")
+            background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:1,
+            stop:0 #051937, stop:0.25 #004f85,stop:0.5 #008dac, stop:0.75 #00c98d,stop:1 #32ff12);
+        }
+        QPushButton{
+            background-color: #97AFB9;
+            color: #00263F;
+            border-radius: 5px;
+        }
+        QLabel#title{
+            color:#E6F4F1;
+        }
+        QLabel#support{
+            color:#00263F;
+        }
+        QLabel#extra{
+            color:#334A52;
+        }
+        """)
 
         self.addWidgets()
 
@@ -73,14 +90,16 @@ class StartWindow(QMainWindow):
 
         # add title of window
         title = QLabel("BitTorrent Client")
+        title.setObjectName('title')
         title.setFont(title_font)
         title.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         self.layout.addWidget(title)
         
         # add image of logo
         wrapper_label = QLabel()
-        pixmap = QPixmap('resources/logo.png')
-        pixmap = pixmap.scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio)
+        pixmap = QPixmap('resources/logo.svg')
+
+        pixmap = pixmap.scaled(200, 200, transformMode=Qt.TransformationMode.SmoothTransformation)
         wrapper_label.setPixmap(pixmap)
         self.layout.addWidget(wrapper_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -111,12 +130,14 @@ class StartWindow(QMainWindow):
 
         # other ways of dropping/adding torrent
         support = QLabel("+ drag and drop support")
+        support.setObjectName('support')
         support.setFont(default_font)
         support.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         mid_layout.addWidget(support)
         
         # license, author, year, link to github page, etc
         extra_info = QLabel("@CopyRight 2021 by Markus Telser")
+        extra_info.setObjectName('extra')
         extra_info.setFont(small_font)
         extra_info.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
         self.layout.addWidget(extra_info)

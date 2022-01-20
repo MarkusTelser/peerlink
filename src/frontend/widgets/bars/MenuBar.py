@@ -15,13 +15,19 @@ class MenuBar(QMenuBar):
         
         action_icon = QIcon("resources/link.svg")
         action_name = "Open Magnet Link"
-        action_shortcut = QKeySequence("Ctrl+M")
+        action_shortcut = QKeySequence("Ctrl+L")
         self.open_link = fileMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        fileMenu.addSeparator()
         
         action_icon = QIcon("resources/new.svg")
         action_name = "Create Torrent File"
         action_shortcut = QKeySequence("Ctrl+N")
         self.create_torrent = fileMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        
+        action_icon = QIcon("resources/import.svg")
+        action_name = "Import Torrent"
+        action_shortcut = QKeySequence("Ctrl+I")
+        self.import_torrent = fileMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         fileMenu.addSeparator()
         
         action_icon = QIcon("resources/quit.svg")
@@ -43,6 +49,11 @@ class MenuBar(QMenuBar):
         action_name = "Pause"
         action_shortcut = QKeySequence("Ctrl+P")
         self.pause = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        
+        action_icon = QIcon("resources/move.svg")
+        action_name = "Move"
+        action_shortcut = QKeySequence("Ctrl+M")
+        self.move_torrent = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         editMenu.addSeparator()
         
@@ -111,4 +122,14 @@ class MenuBar(QMenuBar):
         
         # help menu
         helpMenu = QMenu("&Help", self)
+        
+        action_icon = QIcon("resources/donate.svg")
+        self.help_donate = helpMenu.addAction(action_icon,  "Donate")
+        
+        action_icon = QIcon("resources/bug.svg")
+        self.help_bug = helpMenu.addAction(action_icon, "Report Bug")
+        
+        action_icon = QIcon("resources/about.svg")
+        self.help_about = helpMenu.addAction(action_icon, "About peerlink")
+        
         self.addMenu(helpMenu)

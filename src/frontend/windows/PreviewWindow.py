@@ -16,7 +16,9 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QApplication,
-    QErrorMessage
+    QErrorMessage,
+    QScrollArea,
+    QSizePolicy
 )
 from PyQt6.QtGui import QGuiApplication, QIcon, QCloseEvent
 from PyQt6.QtCore import pyqtSignal
@@ -39,10 +41,10 @@ class PreviewWindow(QMainWindow):
         self.torrent_data = None
 
         # set minimum and standard window size
-        width, height = 1000, 700
+        width, height = 1000, 750
         min_width, min_height = 300, 300
         self.resize(width, height)
-        self.setMinimumSize(QSize(min_width, min_height))
+        #self.setMinimumSize(QSize(min_width, min_height))
 
         # center in the middle of screen
         qtRectangle = self.frameGeometry()
@@ -51,10 +53,11 @@ class PreviewWindow(QMainWindow):
         self.move(qtRectangle.topLeft())
 
         # set icon to window
-        icon = QIcon('resources/logo.png')
+        icon = QIcon('resources/logo.svg')
         self.setWindowIcon(icon)
 
         self.addWidgets()
+        print(self.sizeHint())
     
     def addWidgets(self):
         # set layout and create central widget
@@ -99,13 +102,20 @@ class PreviewWindow(QMainWindow):
         group_layout.addWidget(option_box)
         option_box.setStyleSheet("QGroupBox { font-weight: bold; color: red;} ")
         
+        # add combo box for category
+        category_label = QLabel('Category')
+        category = QComboBox()
+        category.setEditable(True)
+        option_layout.addWidget(category_label, 2, 0)
+        option_layout.addWidget(category, 2, 1)
+        
         # add combo box for download strategys
         strategy_label = QLabel('Download Strategy:')
         self.download_strategy = QComboBox()
         items = ['rarest first (default)', 'sequential', 'random']
         self.download_strategy.addItems(items)
-        option_layout.addWidget(strategy_label, 2, 0)
-        option_layout.addWidget(self.download_strategy, 2, 1)
+        option_layout.addWidget(strategy_label, 3, 0)
+        option_layout.addWidget(self.download_strategy, 3, 1)
 
         # add extra checkbox options
         self.start_box = QCheckBox("start immediately")
@@ -113,16 +123,18 @@ class PreviewWindow(QMainWindow):
         self.pad_box = QCheckBox("pre pad empty files")
         self.start_box.toggle()
         self.checkhash_box.toggle()
-        option_layout.addWidget(self.start_box, 3, 0, 1, 0)
-        option_layout.addWidget(self.checkhash_box, 4, 0, 1, 0)
-        option_layout.addWidget(self.pad_box, 5, 0, 1, 0)
+        option_layout.addWidget(self.start_box, 4, 0, 1, 0)
+        option_layout.addWidget(self.checkhash_box, 5, 0, 1, 0)
+        option_layout.addWidget(self.pad_box, 6, 0, 1, 0)
 
         # add info about torrent
         
         info_box = QGroupBox("Torrent Information")
-        info_layout = QVBoxLayout()
+        info_layout = QGridLayout()
         info_box.setLayout(info_layout)
-        group_layout.addWidget(info_box)
+        info_box.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
         bold = lambda txt: f"<b>{txt}</b>"  
         info_box.setStyleSheet("QGroupBox { font-weight: bold; color: red;} ")
@@ -135,13 +147,15 @@ class PreviewWindow(QMainWindow):
         self.label2.setWordWrap(True)
         self.label3.setWordWrap(True)
         self.label4.setWordWrap(True)
-        info_layout.addWidget(self.label1)
-        info_layout.addWidget(self.label2)
-        info_layout.addWidget(self.label3)
-        info_layout.addWidget(self.label4)
+        info_layout.addWidget(self.label1, 0, 0)
+        info_layout.addWidget(self.label2, 1, 0)
+        info_layout.addWidget(self.label3, 2, 0)
+        info_layout.addWidget(self.label4, 3, 0)
         info_layout.setContentsMargins(10, 10, 0, 10)
-        info_layout.insertStretch(-1, 1)
-
+        #info_layout.insertStretch(-1, 1)
+        
+        group_layout.addWidget(info_box)
+        
         # checkbox don't show again
         self.not_again = QCheckBox("don't show again")
         group_layout.addWidget(self.not_again)

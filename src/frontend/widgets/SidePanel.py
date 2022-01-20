@@ -1,6 +1,10 @@
-from PyQt6.QtCore import pyqtSignal, pyqtSlot
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt6.QtGui import QIcon, QMouseEvent
 from PyQt6.QtWidgets import QTabWidget, QVBoxLayout, QWidget, QTreeWidget, QTreeWidgetItem, QFrame, QSizePolicy
+
+class CategoryTab(QWidget):
+    def __init__(self):
+        super().__init__()
 
 class LogTab(QWidget):
     def __init__(self):
@@ -133,12 +137,14 @@ class SidePanel(QTabWidget):
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
         tab1 = FilterTab()
-        tab2 = LogTab()
+        tab2 = CategoryTab()
+        tab3 = LogTab()
         
         self.tabs = list()
-        self.tabs.append([tab1, "Filter"])
-        self.tabs.append([tab2, "Log"])
-        
+        self.tabs.append([tab1, "Filters"])
+        self.tabs.append([tab2, "Categorys"])
+        self.tabs.append([tab3, "Logs"])
+        self.setUsesScrollButtons(False)
         self.setObjectName('sidepanel')
         
     def tabspos(self):
