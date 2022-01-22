@@ -1,4 +1,7 @@
 from src.frontend import BootstrapLoader
 
-if __name__ == "__main__":
+def start():
     BootstrapLoader.run()
+
+if __name__ == "__main__":
+    start()
