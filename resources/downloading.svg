@@ -1,9 +1,75 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="298.949 152.289 273.889 373.667" xmlns="http://www.w3.org/2000/svg">
-  <g stroke="null" id="g-3" transform="matrix(1, 0, 0, 1, 232.097321, 135.660034)">
-    <path stroke="#000" opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="path-5" stroke-width="0" style="fill: rgb(43, 255, 0);"/>
-    <path stroke="#000" opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="path-6" stroke-width="0" style="fill: rgb(43, 255, 0);"/>
-    <path stroke="#000" opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="path-7" stroke-width="0" style="fill: rgb(43, 255, 0);"/>
-    <path stroke="#000" opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="path-8" stroke-width="0" style="fill: rgb(43, 255, 0);"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="298.949 152.289 273.889 373.667"
+   version="1.1"
+   id="svg97"
+   sodipodi:docname="downloading.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs101" />
+  <sodipodi:namedview
+     id="namedview99"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="2.1141819"
+     inkscape:cx="136.9324"
+     inkscape:cy="186.8335"
+     inkscape:window-width="1920"
+     inkscape:window-height="1032"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g-3" />
+  <g
+     stroke="null"
+     id="g-3"
+     transform="matrix(1, 0, 0, 1, 232.097321, 135.660034)">
+    <path
+       stroke="#000"
+       opacity="undefined"
+       d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z"
+       id="path-5"
+       stroke-width="0"
+       style="fill: rgb(43, 255, 0);" />
+    <path
+       stroke="#000"
+       opacity="undefined"
+       d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z"
+       id="path-6"
+       stroke-width="0"
+       style="fill: rgb(43, 255, 0);" />
+    <path
+       stroke="#000"
+       opacity="undefined"
+       d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z"
+       id="path-7"
+       stroke-width="0"
+       style="fill: rgb(43, 255, 0);" />
+    <path
+       stroke="#000"
+       opacity="undefined"
+       d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z"
+       id="path-8"
+       stroke-width="0"
+       style="fill: rgb(43, 255, 0);" />
+    <path
+       style="fill:#000000;stroke-width:0.472996"
+       d="M 120.05135,353.19377 C 110.89684,342.2114 80.302088,305.55555 52.063014,271.73632 l -51.3437729,-61.48951 30.5033819,-0.1217 30.503381,-0.1217 V 105.00171 0 h 74.023906 74.02391 v 105.00183 105.00182 l 31.69906,0.12158 31.69907,0.12158 -67.92738,81.35535 c -37.36006,44.74544 -68.06717,81.40129 -68.23802,81.45745 -0.17086,0.0562 -7.8007,-8.88347 -16.9552,-19.86584 z"
+       id="path238"
+       transform="translate(66.851679,16.628966)" />
+    <path
+       style="fill:#000000;stroke-width:0.472996"
+       d="M 129.00145,363.37933 C 124.87642,358.50156 101.51861,330.56522 77.095198,301.29858 52.671788,272.03194 25.706458,239.73965 17.172242,229.53793 8.6380265,219.33621 1.6554867,210.87549 1.6554867,210.73633 c 0,-0.13916 11.5675333,-0.25302 25.7056293,-0.25302 14.138096,0 27.653962,-0.13829 30.035261,-0.30732 l 4.329627,-0.30733 V 104.93433 0 h 74.023906 74.02391 v 104.93433 104.93433 l 4.32962,0.30733 c 2.3813,0.16903 16.42929,0.30732 31.21775,0.30732 14.78847,0 26.88812,0.11439 26.88812,0.25421 0,0.23751 -21.6822,26.26487 -82.73188,99.31149 -39.85667,47.68895 -52.11878,62.199 -52.56296,62.199 -0.22714,0 -3.788,-3.9909 -7.91302,-8.86868 z"
+       id="path277"
+       transform="translate(66.851679,16.628966)" />
   </g>
 </svg>

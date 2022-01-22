@@ -15,7 +15,7 @@ def run():
     
     args = args_parser()
     
-    app.setStyleSheet(open('resources/themes/gradienttheme.qss').read())
+    app.setStyleSheet(open('resources/themes/custom.qss').read())
     
     if args['p'] != None or args['m'] != None:
         # received file-path in args, open MainWindow

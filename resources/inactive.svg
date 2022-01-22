@@ -1,19 +1,77 @@
-<?xml version="1.0"?>
-<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:svg="http://www.w3.org/2000/svg" id="svg2" viewBox="0 0 84.853 84.853" version="1.0">
-  <g id="layer1" transform="translate(-153.29 -132.79)">
-    <g id="g2762" transform="matrix(.70711 -.70711 .70711 .70711 -66.575 189.71)" fill="red">
-      <rect id="rect1872" y="165.22" width="100" x="145.71" height="20"/>
-      <rect id="rect1874" transform="rotate(90)" height="20" width="100" y="-205.71" x="125.22"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="svg2"
+   viewBox="0 0 84.853206 84.853206"
+   version="1.0"
+   sodipodi:docname="inactive.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20, custom)"
+   width="84.853203"
+   height="84.853203"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs2965" />
+  <sodipodi:namedview
+     id="namedview2963"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="4.4988764"
+     inkscape:cx="38.565185"
+     inkscape:cy="40.454545"
+     inkscape:window-width="1920"
+     inkscape:window-height="1032"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g2762" />
+  <g
+     id="layer1"
+     transform="translate(-153.28672,-132.79471)"
+     style="fill:#000000">
+    <g
+       id="g2762"
+       transform="matrix(0.70711,-0.70711,0.70711,0.70711,-66.575,189.71)"
+       fill="red"
+       style="fill:#000000">
+      <rect
+         id="rect1872"
+         y="168.33577"
+         width="83.450256"
+         x="153.35619"
+         height="16.690052"
+         style="fill:#000000;stroke-width:0.834502" />
+      <rect
+         id="rect1874"
+         transform="rotate(90)"
+         height="16.690052"
+         width="83.450256"
+         y="-203.42635"
+         x="134.95567"
+         style="fill:#000000;stroke-width:0.834502" />
     </g>
   </g>
-  <metadata>
+  <metadata
+     id="metadata2960">
     <rdf:RDF>
       <cc:Work>
         <dc:format>image/svg+xml</dc:format>
-        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-        <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/publicdomain/" />
         <dc:publisher>
-          <cc:Agent rdf:about="http://openclipart.org/">
+          <cc:Agent
+             rdf:about="http://openclipart.org/">
             <dc:title>Openclipart</dc:title>
           </cc:Agent>
         </dc:publisher>
@@ -40,10 +98,14 @@
           </rdf:Bag>
         </dc:subject>
       </cc:Work>
-      <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
-        <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
-        <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
-        <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
       </cc:License>
     </rdf:RDF>
   </metadata>

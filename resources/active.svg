@@ -1,8 +1,59 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="218.983 156.303 433.821 365.64" xmlns="http://www.w3.org/2000/svg">
-  <g transform="matrix(1, 0, 0, 1, 209.048096, 135.506134)">
-    <title>Layer 1</title>
-    <path transform="rotate(40 134 271)" stroke-width="0" id="path-5" d="m14,221l240,0l0,100l-240,0l0,-100z" opacity="undefined" stroke="#000" style="fill: rgb(43, 255, 0);"/>
-    <rect transform="rotate(-50 280 201.5)" stroke-width="0" opacity="undefined" id="rect-1" height="107" width="382" y="148" x="89" stroke="#000" style="fill: rgb(43, 255, 0);"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="218.983 156.303 433.82052 365.64033"
+   version="1.1"
+   id="svg1891"
+   sodipodi:docname="active.svg"
+   width="433.82053"
+   height="365.64035"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1895" />
+  <sodipodi:namedview
+     id="namedview1893"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="0.99264507"
+     inkscape:cx="0"
+     inkscape:cy="161.18551"
+     inkscape:window-width="1920"
+     inkscape:window-height="1032"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g1889" />
+  <g
+     transform="translate(209.04771,135.50663)"
+     id="g1889">
+    <title
+       id="title1885">Layer 1</title>
+    <path
+       transform="rotate(40,134,271)"
+       stroke-width="0"
+       id="path-5"
+       d="M 14,221 H 254 V 321 H 14 Z"
+       opacity="undefined"
+       stroke="#000000"
+       style="fill:#000000" />
+    <rect
+       transform="rotate(-50,280,201.5)"
+       stroke-width="0"
+       opacity="undefined"
+       id="rect-1"
+       height="107"
+       width="382"
+       y="148"
+       x="89"
+       stroke="#000000"
+       style="fill:#000000" />
   </g>
 </svg>

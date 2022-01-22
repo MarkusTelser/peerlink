@@ -1,18 +1,112 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="45.108 89.172 494.92 360.005" xmlns="http://www.w3.org/2000/svg">
-  <g id="Layer_1" transform="matrix(-1, 0, 0, -1, 384.194885, 503.92627)">
-    <title>Layer 1</title>
-    <g transform="matrix(-0.94929, -0.000016, 0.00419, -0.94929, 400.913055, 425.259064)" stroke="null" id="svg_5" style="">
-      <path opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="svg_1" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px; fill: rgb(43, 255, 0);"/>
-      <path opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="svg_2" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px; fill: rgb(43, 255, 0);"/>
-      <path opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="svg_3" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px; fill: rgb(43, 255, 0);"/>
-      <path opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="svg_4" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px; fill: rgb(43, 255, 0);"/>
-    </g>
-    <g transform="matrix(0.94929, 0.000016, -0.00419, 0.94929, -217.659592, 44.24437)" stroke="null" id="g-1" style="">
-      <path opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="path-1" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px;"/>
-      <path opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="path-2" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px;"/>
-      <path opacity="undefined" d="m276.58659,16.62896l0,221l-148.04806,0l0,-221l148.04806,0z" id="path-3" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px;"/>
-      <path opacity="undefined" d="m340.74075,226.2963l-136.94444,164l-136.94444,-164l273.88889,0z" id="path-4" style="stroke: rgb(0, 0, 0); paint-order: fill; stroke-width: 0px;"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="188.434 82.101 484.96804 483.37174"
+   version="1.1"
+   id="svg113"
+   sodipodi:docname="leeching.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20, custom)"
+   width="484.96805"
+   height="483.37173"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs117" />
+  <sodipodi:namedview
+     id="namedview115"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:snap-midpoints="true"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-center="true"
+     inkscape:snap-text-baseline="true"
+     inkscape:snap-page="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-paths="true"
+     inkscape:bbox-nodes="true"
+     inkscape:snap-bbox-edge-midpoints="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:zoom="0.55981979"
+     inkscape:cx="372.44128"
+     inkscape:cy="419.77794"
+     inkscape:window-width="1920"
+     inkscape:window-height="1032"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g372" />
+  <g
+     id="Layer_1"
+     transform="rotate(180,132.25558,313.64577)">
+    <title
+       id="title92">Layer 1</title>
+    <g
+       id="g-2"
+       transform="rotate(180,76.048779,184.13311)">
+      <title
+         id="title94">Layer 1</title>
+      <g
+         id="g-4"
+         transform="rotate(180,147.71152,180.59773)">
+        <title
+           id="title96">Layer 1</title>
+        <g
+           transform="matrix(0.94929,1.6e-5,-0.00419,0.94929,-217.65959,44.24437)"
+           stroke="null"
+           id="g-6">
+          <g
+             id="g372">
+            <g
+               transform="matrix(0.99999985,-3.3709401e-5,-0.00882765,-0.99999985,122.43922,401.36244)"
+               stroke="null"
+               id="g-5">
+              <path
+                 opacity="undefined"
+                 d="m 340.74075,226.2963 -136.94444,164 -136.94444,-164 h 273.88889 z"
+                 id="path-10"
+                 style="stroke:#000000;stroke-width:0px;paint-order:fill" />
+              <path
+                 opacity="undefined"
+                 d="m 340.74075,226.2963 -136.94444,164 -136.94444,-164 h 273.88889 z"
+                 id="path-12"
+                 style="stroke:#000000;stroke-width:0px;paint-order:fill" />
+            </g>
+            <path
+               opacity="undefined"
+               d="m 265.49192,396.06262 -0.19363,-221.00001 118.66095,5e-4 0.19362,221.00001 z"
+               id="path-15-6"
+               style="stroke:#000000;stroke-width:0px;paint-order:fill" />
+            <g
+               transform="matrix(0.99999985,-3.3709401e-5,-0.00882765,-0.99999985,-113.9982,525.55808)"
+               stroke="null"
+               id="g-5-7">
+              <path
+                 opacity="undefined"
+                 d="m 340.74075,226.2963 -136.94444,164 -136.94444,-164 h 273.88889 z"
+                 id="path-10-5"
+                 style="stroke:#000000;stroke-width:0px;paint-order:fill" />
+              <path
+                 opacity="undefined"
+                 d="m 340.74075,226.2963 -136.94444,164 -136.94444,-164 h 273.88889 z"
+                 id="path-12-3"
+                 style="stroke:#000000;stroke-width:0px;paint-order:fill" />
+            </g>
+            <path
+               opacity="undefined"
+               d="m 28.663573,520.2547 -0.19363,-221.00001 118.660957,5e-4 0.19362,221.00001 z"
+               id="path-15-6-5"
+               style="stroke:#000000;stroke-width:0px;paint-order:fill" />
+          </g>
+        </g>
+      </g>
     </g>
   </g>
 </svg>

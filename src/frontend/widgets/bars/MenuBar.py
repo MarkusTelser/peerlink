@@ -129,6 +129,9 @@ class MenuBar(QMenuBar):
         action_icon = QIcon("resources/bug.svg")
         self.help_bug = helpMenu.addAction(action_icon, "Report Bug")
         
+        action_icon = QIcon("resources/thanks.svg")
+        self.help_thanks = helpMenu.addAction(action_icon, "Say Thanks")
+        
         action_icon = QIcon("resources/about.svg")
         self.help_about = helpMenu.addAction(action_icon, "About peerlink")
         

@@ -11,7 +11,6 @@ class TorrentListView(QTableView):
         self.model = model
         
          # generic settings
-        self.setMinimumWidth(200)
         self.setSortingEnabled(True)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)

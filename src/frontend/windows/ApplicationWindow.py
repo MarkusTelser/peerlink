@@ -30,8 +30,9 @@ from src.frontend.views.TorrentDetailView import TorrentDetailView
 from src.backend.swarm import Swarm
 
 class ApplicationWindow(QMainWindow):
-    DONATE_LINK = "www.google.com"
-    BUG_LINK = "www.google.com"
+    DONATE_LINK = 'www.google.com'
+    BUG_LINK = 'www.google.com'
+    THANKS_LINK = 'https://saythanks.io/to/MarkusTelser'
     
     def __init__(self, config_loader):
         super(ApplicationWindow, self).__init__()
@@ -42,6 +43,7 @@ class ApplicationWindow(QMainWindow):
         
         self.setWindowTitle("FastPeer - Application Window")
         self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setObjectName('window')
         
         # set screen size
         min_size = QSize(750, 550)
@@ -142,6 +144,7 @@ class ApplicationWindow(QMainWindow):
         self.menuBar.detail_tabs.triggered.connect(self.update_detailtabs)
         self.menuBar.help_donate.triggered.connect(lambda: self.open_link(self.DONATE_LINK))
         self.menuBar.help_bug.triggered.connect(lambda: self.open_link(self.BUG_LINK))
+        self.menuBar.help_thanks.triggered.connect(lambda: self.open_link(self.THANKS_LINK))
         
         self.toolBar.open_file.clicked.connect(self.open_file)
         self.toolBar.open_link.clicked.connect(self.open_magnetlink)

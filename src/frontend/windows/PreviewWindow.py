@@ -83,6 +83,8 @@ class PreviewWindow(QMainWindow):
 
         # add download path input
         self.download_path = QLineEdit()
+        download_path = join(expanduser('~'), 'Downloads')
+        self.download_path.setText(download_path)
         self.download_path.setPlaceholderText('Enter download path')
         vbox.addWidget(self.download_path, 0, 0)
 
@@ -91,9 +93,7 @@ class PreviewWindow(QMainWindow):
         self.path_select.clicked.connect(self.pressedPathSelect)
         vbox.addWidget(self.path_select, 0, 1)
 
-        default_path = QCheckBox("use default path")
-        default_path.stateChanged.connect(self.pressedDefaultPath)
-        default_path.setChecked(True)
+        default_path = QCheckBox("set as default path")
         vbox.addWidget(default_path, 1, 0, 1, 0)
         
         option_box = QGroupBox("Options")
@@ -158,7 +158,9 @@ class PreviewWindow(QMainWindow):
         
         # checkbox don't show again
         self.not_again = QCheckBox("don't show again")
+        group_layout.addStretch()
         group_layout.addWidget(self.not_again)
+       
         
         # add cancel and ok button
         button_box = QDialogButtonBox()
@@ -227,17 +229,6 @@ class PreviewWindow(QMainWindow):
         if file_dialog.exec():
             file_path = file_dialog.selectedFiles()[0]
             self.download_path.setText(file_path)
-        
-    def pressedDefaultPath(self):
-        if self.sender().isChecked():
-            download_path = join(expanduser('~'), 'Downloads')
-            self.download_path.setText(download_path)
-            self.download_path.setDisabled(True)
-            self.path_select.setDisabled(True)
-        else:
-            self.download_path.setText('')
-            self.download_path.setEnabled(True)
-            self.path_select.setEnabled(True)
     
     def accept(self):        
         # check if path is not empty, correct and a directory

@@ -16,27 +16,6 @@ class FilterTree(QTreeWidget):
     def __init__(self, data):
         super().__init__()
 
-        self.setStyleSheet("""                  
-        QTreeView{
-            border: 0px solid white;
-            show-decoration-selected: 0;
-        }
-        QTreeWidget::item:selected {
-            background-color: blue;
-        }
-        QTreeWidget::branch:has-children:!has-siblings:closed,
-        QTreeWidget::branch:closed:has-children:has-siblings {
-                border-image: none;
-                image: url(resources/branch-closed.png);
-        }
-
-        QTreeWidget::branch:open:has-children:!has-siblings,
-        QTreeWidget::branch:open:has-children:has-siblings  {
-                border-image: none;
-                image: url(resources/branch-open.png);
-        }
-        """)
-
         for key in data.keys(): 
             category = QTreeWidgetItem(self)
             category.setText(0, key)
@@ -70,7 +49,7 @@ class FilterTree(QTreeWidget):
                     self.changed_item.emit(filters)
             else:
                 self.currentItem().setSelected(False)
-                self.clearFocus()
+        self.clearFocus()
     
     @pyqtSlot(QTreeWidgetItem, int)
     def item_doubleclick(self, item: QTreeWidgetItem, column: int):
@@ -82,7 +61,7 @@ class FilterTree(QTreeWidget):
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         if self.indexAt(event.pos()).data() == None:
             self.clearSelection()
-            self.clearFocus()
+        self.clearFocus()
         return super().mouseDoubleClickEvent(event)
     
 
@@ -141,9 +120,9 @@ class SidePanel(QTabWidget):
         tab3 = LogTab()
         
         self.tabs = list()
-        self.tabs.append([tab1, "Filters"])
-        self.tabs.append([tab2, "Categorys"])
-        self.tabs.append([tab3, "Logs"])
+        self.tabs.append([tab1, QIcon('resources/filter.svg'), "Filters"])
+        self.tabs.append([tab2, QIcon('resources/category.svg'), "Categorys"])
+        self.tabs.append([tab3, QIcon('resources/log.svg'), "Logs"])
         self.setUsesScrollButtons(False)
         self.setObjectName('sidepanel')
         
@@ -154,5 +133,4 @@ class SidePanel(QTabWidget):
         if len(pos) == 0:
             pos = [x for x in range(len(self.tabs))]
         for p in pos:
-            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1])
-        
+            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1], self.tabs[int(p)][2])

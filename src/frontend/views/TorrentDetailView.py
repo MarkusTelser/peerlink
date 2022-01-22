@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHeaderView, QTabWidget, QTableView, QWidget, QVBoxLayout
-from PyQt6.QtGui import QColor, QIcon, QPainter, QStandardItem, QStandardItemModel
+from PyQt6.QtWidgets import QHeaderView, QTabWidget, QTableView, QWidget, QVBoxLayout, QSizePolicy
+from PyQt6.QtGui import QColor, QIcon, QPainter, QStandardItem, QStandardItemModel, QBrush
 from PyQt6.QtCharts import QChart, QChartView, QSplineSeries, QValueAxis
 from src.backend.metadata.TorrentData import TorrentFile
 from src.backend.swarm import Swarm
@@ -29,7 +29,7 @@ class ChartTab(QWidget):
         chart.legend().hide()
         chart.createDefaultAxes()
         chart.layout().setContentsMargins(0, 0, 0, 0)
-        chart.setTheme(QChart.ChartTheme.ChartThemeBlueIcy)
+        chart.setTheme(QChart.ChartTheme.ChartThemeDark)
         chart.setBackgroundRoundness(0)
         chart.addSeries(series)
         
@@ -46,7 +46,7 @@ class ChartTab(QWidget):
         chart.addAxis(time_axis, Qt.AlignmentFlag.AlignBottom)
         
         chart_view = QChartView(chart)
-        chart_view.setBackgroundBrush(QColor("red"))
+        chart_view.chart().setBackgroundBrush(QBrush(QColor("transparent")))
         chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         main_layout.addWidget(chart_view)
@@ -161,6 +161,11 @@ class TorrentDetailView(QTabWidget):
         self.addTab(self.peers_tab, QIcon('resources/peer.svg'), "Peers")
         self.addTab(self.chart_tab, QIcon('resources/chart.svg'), "Chart")
         self.addTab(self.files_tab, QIcon('resources/files.svg'), "Files")
+        
+        self.setMinimumWidth(self.tabBar().sizeHint().width() + 30)
+        #self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        self.tabBar().setUsesScrollButtons(False)
+        
     
     def _update(self, dt: Swarm):
         self.trackers_tab._update(dt.tracker_list)
