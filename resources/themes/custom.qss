@@ -844,3 +844,7 @@ QMenu::indicator:non-exclusive:checked, QCheckBox::indicator:checked {
 	width: 16px;
 	height: 16px;
 }
+
+QPlainTextEdit, QTextEdit{
+	border: 0px solid black;
+}

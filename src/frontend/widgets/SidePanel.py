@@ -90,13 +90,19 @@ class FilterTab(QWidget):
                 ('Error', 'resources/error.svg'),
                 ('Warning', 'resources/warning.svg')
             ],
-            'Files': [
+            'File Mode': [
                 ('Single File', 'resources/file.svg'),
                 ('Multi File', 'resources/multifile.svg')
+            ],
+            'Peer Discovery': [
+                ('Centralized', 'resources/centralized.svg'),
+                ('Decentralized', 'resources/decentralized.svg'),
+                ('Mixed', 'resources/mixed.svg')
             ]
         }
         self.filter_tree = FilterTree(data)
         self.filter_tree.topLevelItem(2).setExpanded(False)
+        self.filter_tree.topLevelItem(3).setExpanded(False)
         layout.addWidget(self.filter_tree)
     
     def mouseDoubleClickEvent(self, event: QMouseEvent):

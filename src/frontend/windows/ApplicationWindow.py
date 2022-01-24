@@ -21,6 +21,7 @@ from src.frontend.widgets.dialogs import DeleteDialog, FileDialog, MagnetLinkDia
 from src.frontend.widgets.bars import MenuBar, StatusBar, ToolBar
 from src.frontend.models.SortFilterProcxyModel import SortFilterProxyModel
 from src.frontend.widgets.SidePanel import SidePanel
+from src.frontend.widgets.dialogs.AboutDialog import AboutDialog
 from src.frontend.windows.PreviewWindow import PreviewWindow
 
 from src.backend.metadata.TorrentParser import TorrentParser
@@ -145,6 +146,7 @@ class ApplicationWindow(QMainWindow):
         self.menuBar.help_donate.triggered.connect(lambda: self.open_link(self.DONATE_LINK))
         self.menuBar.help_bug.triggered.connect(lambda: self.open_link(self.BUG_LINK))
         self.menuBar.help_thanks.triggered.connect(lambda: self.open_link(self.THANKS_LINK))
+        self.menuBar.help_about.triggered.connect(self.open_aboutdialog)
         
         self.toolBar.open_file.clicked.connect(self.open_file)
         self.toolBar.open_link.clicked.connect(self.open_magnetlink)
@@ -291,6 +293,11 @@ class ApplicationWindow(QMainWindow):
         
         if dialog.exec():
             magnet_link = dialog.text_box.text()
+    
+    @pyqtSlot()
+    def open_aboutdialog(self):
+        dialog = AboutDialog()
+        dialog.exec()
     
     @pyqtSlot()
     def create_torrent(self):
