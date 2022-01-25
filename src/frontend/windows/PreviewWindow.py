@@ -29,35 +29,39 @@ from os.path import exists, isdir
 import sys
 
 from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
+from src.frontend.ConfigLoader import ConfigLoader
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 
 class PreviewWindow(QMainWindow):
     add_data = pyqtSignal(dict)
     
-    def __init__(self, parent=None):
-        super(PreviewWindow, self).__init__(parent)
+    def __init__(self, conf: ConfigLoader, parent=None):
+        super(PreviewWindow, self).__init__(parent=parent)
         self.setWindowTitle("FastPeer - View Torrent")
         self.torrent_data = None
+        self.conf = conf
 
         # set minimum and standard window size
-        width, height = 1000, 750
         min_width, min_height = 300, 300
-        self.resize(width, height)
-        #self.setMinimumSize(QSize(min_width, min_height))
+        self.setMinimumSize(QSize(min_width, min_height))
+        self.resize(self.conf.preview_size)
 
         # center in the middle of screen
-        qtRectangle = self.frameGeometry()
-        centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
-        qtRectangle.moveCenter(centerPoint)
-        self.move(qtRectangle.topLeft())
+        print(self.conf.preview_location)
+        if not self.conf.preview_location.isNull():
+            self.move(self.conf.preview_location)
+        else:
+            qtRectangle = self.frameGeometry()
+            centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
+            qtRectangle.moveCenter(centerPoint)
+            self.move(qtRectangle.topLeft())
 
         # set icon to window
         icon = QIcon('resources/logo.svg')
         self.setWindowIcon(icon)
 
         self.addWidgets()
-        print(self.sizeHint())
     
     def addWidgets(self):
         # set layout and create central widget
@@ -83,8 +87,7 @@ class PreviewWindow(QMainWindow):
 
         # add download path input
         self.download_path = QLineEdit()
-        download_path = join(expanduser('~'), 'Downloads')
-        self.download_path.setText(download_path)
+        self.download_path.setText(self.conf.default_path)
         self.download_path.setPlaceholderText('Enter download path')
         vbox.addWidget(self.download_path, 0, 0)
 
@@ -93,8 +96,19 @@ class PreviewWindow(QMainWindow):
         self.path_select.clicked.connect(self.pressedPathSelect)
         vbox.addWidget(self.path_select, 0, 1)
 
-        default_path = QCheckBox("set as default path")
-        vbox.addWidget(default_path, 1, 0, 1, 0)
+        self.default_path = QCheckBox("set as default path")
+        vbox.addWidget(self.default_path, 1, 0, 1, 0)
+        
+        category_box = QGroupBox("Category")
+        category_layout = QVBoxLayout()
+        category_box.setLayout(category_layout)
+        group_layout.addWidget(category_box)
+        self.category = QComboBox()
+        self.category.setEditable(True)
+        self.category.lineEdit().setPlaceholderText('Enter new/existing category')
+        self.default_category = QCheckBox('set as default category')
+        category_layout.addWidget(self.category)
+        category_layout.addWidget(self.default_category)
         
         option_box = QGroupBox("Options")
         option_layout = QGridLayout()
@@ -103,11 +117,7 @@ class PreviewWindow(QMainWindow):
         option_box.setStyleSheet("QGroupBox { font-weight: bold; color: red;} ")
         
         # add combo box for category
-        category_label = QLabel('Category')
-        category = QComboBox()
-        category.setEditable(True)
-        option_layout.addWidget(category_label, 2, 0)
-        option_layout.addWidget(category, 2, 1)
+        
         
         # add combo box for download strategys
         strategy_label = QLabel('Download Strategy:')
@@ -121,14 +131,14 @@ class PreviewWindow(QMainWindow):
         self.start_box = QCheckBox("start immediately")
         self.checkhash_box = QCheckBox("check hashes")
         self.pad_box = QCheckBox("pre pad empty files")
-        self.start_box.toggle()
-        self.checkhash_box.toggle()
+        self.start_box.setChecked(self.conf.auto_start)
+        self.checkhash_box.setChecked(self.conf.check_hashes)
+        self.pad_box.setChecked(self.conf.padd_files)
         option_layout.addWidget(self.start_box, 4, 0, 1, 0)
         option_layout.addWidget(self.checkhash_box, 5, 0, 1, 0)
         option_layout.addWidget(self.pad_box, 6, 0, 1, 0)
 
         # add info about torrent
-        
         info_box = QGroupBox("Torrent Information")
         info_layout = QGridLayout()
         info_box.setLayout(info_layout)
@@ -223,6 +233,7 @@ class PreviewWindow(QMainWindow):
         file_dialog.setFileMode(QFileDialog.FileMode.Directory)
         file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog)
         file_dialog.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
+        file_dialog.setOption(QFileDialog.Option.ShowDirsOnly)
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         file_dialog.setDirectory(expanduser('~'))
 
@@ -232,6 +243,7 @@ class PreviewWindow(QMainWindow):
     
     def accept(self):        
         # check if path is not empty, correct and a directory
+        default_path = self.default_path.isChecked()
         path = self.download_path.text().strip()
         if not path:
             error_msg = QMessageBox(self)
@@ -249,19 +261,25 @@ class PreviewWindow(QMainWindow):
             error_msg.showMessage("download path is not a directory")
             return
         
+        category = self.category.currentText()
+        default_category = self.default_category.isChecked()
+        
         # check which options are selected
         strategy = self.download_strategy.currentText().replace(' (default)', '')
         start = self.start_box.isChecked()
         check_hash = self.checkhash_box.isChecked()
         pad_files = self.pad_box.isChecked()
-        
-        # check if option dont show again enabled
-        not_again = self.not_again.isChecked()
+        not_again = not self.not_again.isChecked()
         
         # TODO if implemeted, check which files are checked and set in model data
         
         data = {
+            'size': self.size(),
+            'location': self.pos(),
             'path': path,
+            'default_path': default_path,
+            'category': category,
+            'default_category': default_category,
             'strategy': strategy,
             'start': start,
             'check_hash' : check_hash,
@@ -281,7 +299,10 @@ if __name__ == "__main__":
 
     path = "data/all/test.torrent"
     data = TorrentParser.parse_filepath(path)
-    window = PreviewWindow()
+    
+    conf = ConfigLoader()
+    
+    window = PreviewWindow(conf)
     window.show(data)
 
     app.exec()

@@ -13,11 +13,7 @@ QTreeWidget::item:selected {
 	color: #3a856b;
 }
 
-QComboBox{
-	color: #474747;
-}
-
-QLineEdit, QDialog QPushButton, QDialog QPushButton:hover{
+QLineEdit, QComboBox, QDialog QPushButton, QDialog QPushButton:hover{
 	color: #2a2a2a;
 }
 
@@ -35,7 +31,7 @@ QStatusBar{
 	background-color: #334B49;
 }
 
-QLineEdit, QGroupBox{
+QLineEdit, QGroupBox, QComboBox{
 	background-color: #4b4b4a;
 }
 
@@ -292,7 +288,7 @@ QDateTimeEdit::up-arrow
 
 
 /*-----QLineEdit-----*/
-QLineEdit
+QLineEdit, QComboBox:editable
 {
 	border-width: 1px;
 	border-radius: 0px;
@@ -653,16 +649,18 @@ QScrollBar:horizontal
 
 QScrollBar::handle:horizontal
 {
-    background-color: #41cd52;
+    background-color: #515051;
     min-height: 20px;
 
 }
 
+QScrollBar::add-line{
+	background-color: #333333;
+}
 
 QScrollBar::add-line:horizontal
 {
     border: 1px solid #1b1b19;
-    background-color: #41cd52;
     width: 14px;
     subcontrol-position: right;
     subcontrol-origin: margin;
@@ -673,29 +671,25 @@ QScrollBar::add-line:horizontal
 QScrollBar::sub-line:horizontal
 {
     border: 1px solid #1b1b19;
-    background-color: #41cd52;
     width: 14px;
     subcontrol-position: left;
     subcontrol-origin: margin;
-
 }
 
 
 QScrollBar::right-arrow:horizontal
 {
-    image: url(://arrow-right.png);
+    image: url(resources/arrow-right.png);
     width: 6px;
     height: 6px;
-
 }
 
 
 QScrollBar::left-arrow:horizontal
 {
-    image: url(://arrow-left.png);
+    image: url(resources/arrow-left.png);
     width: 6px;
     height: 6px;
-
 }
 
 
@@ -712,62 +706,53 @@ QScrollBar:vertical
     width: 13px;
     margin: 16px 0 16px 0;
     border: 1px solid #222222;
-
 }
 
 
 QScrollBar::handle:vertical
 {
-    background-color: #41cd52;
+    background-color: #515051;
     min-height: 20px;
-
 }
 
 
 QScrollBar::add-line:vertical
 {
     border: 1px solid #1b1b19;
-    background-color: #41cd52;
     height: 14px;
     subcontrol-position: bottom;
     subcontrol-origin: margin;
-
 }
 
 
 QScrollBar::sub-line:vertical
 {
-    border: 1px solid #41cd52;
-    background-color: #41cd52;
+    border: 1px solid #1b1b19;
     height: 14px;
     subcontrol-position: top;
     subcontrol-origin: margin;
-
 }
 
 
 QScrollBar::up-arrow:vertical
 {
-    image: url(://arrow-up.png);
+    image: url(resources/arrow-up.png);
     width: 6px;
     height: 6px;
-
 }
 
 
 QScrollBar::down-arrow:vertical
 {
-    image: url(://arrow-down.png);
+    image: url(resources/arrow-down.png);
     width: 6px;
     height: 6px;
-
 }
 
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
 {
     background: none;
-
 }
 
 

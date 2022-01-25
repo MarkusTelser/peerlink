@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QStackedLayout
 )
 from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent, QDesktopServices
-from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl, QTimer
+from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl, QTimer, QSettings
 from os.path import join, exists, dirname, isdir, expanduser
 from threading import Thread
 from time import sleep
@@ -40,20 +40,19 @@ class ApplicationWindow(QMainWindow):
         
         self.config_loader = config_loader
         self.current_torrent = None
-        self.default_path = join(expanduser('~'), 'Downloads')
-        self.open_view = self.config_loader.open_view
+        self.open_preview = self.config_loader.open_preview
         
         self.setWindowTitle("FastPeer - Application Window")
         self.setWindowIcon(QIcon('resources/logo.svg'))
         self.setObjectName('window')
         
         # set screen size
-        min_size = QSize(750, 550)
+        min_size = QSize(800, 600)
         self.resize(config_loader.win_size)
         self.setMinimumSize(QSize(min_size))
         
         # center in the middle of screen
-        if config_loader.win_loc != None:
+        if not config_loader.win_loc.isNull():
             self.move(config_loader.win_loc)
         else:
             qtRectangle = self.frameGeometry()
@@ -75,20 +74,21 @@ class ApplicationWindow(QMainWindow):
         
         super().show()
     
-    def show(self, data):
-        self.appendRowEnd(data)
+    def show(self, data=None):
+        if data:
+            self.appendRowEnd(data)
     
     def addWidgets(self):
-        self.menuBar = MenuBar()
-        self.setMenuBar(self.menuBar)
+        self.menu_bar = MenuBar()
+        self.setMenuBar(self.menu_bar)
         
-        self.toolBar = ToolBar()
-        self.toolBar.setVisible(self.config_loader.show_toolbar)
-        self.addToolBar(self.toolBar)
+        self.tool_bar = ToolBar()
+        self.tool_bar.setVisible(self.config_loader.show_toolbar)
+        self.addToolBar(self.tool_bar)
         
-        self.statusBar = StatusBar()
-        self.statusBar.setVisible(self.config_loader.show_statusbar)
-        self.setStatusBar(self.statusBar)
+        self.status_bar = StatusBar()
+        self.status_bar.setVisible(self.config_loader.show_statusbar)
+        self.setStatusBar(self.status_bar)
         
         self.hori_splitter = QSplitter()
         self.hori_splitter.setOrientation(Qt.Orientation.Horizontal)
@@ -128,35 +128,35 @@ class ApplicationWindow(QMainWindow):
         self.vert_splitter.setSizes(self.config_loader.vert_splitter)
         
         # connect signals to controller slots
-        self.menuBar.open_file.triggered.connect(self.open_file)
-        self.menuBar.open_link.triggered.connect(self.open_magnetlink)
-        self.menuBar.create_torrent.triggered.connect(self.create_torrent)
-        self.menuBar.import_torrent.triggered.connect(self.import_torrent)
-        self.menuBar.exit.triggered.connect(self.close)
-        self.menuBar.resume.triggered.connect(self.start_torrent)
-        self.menuBar.pause.triggered.connect(self.pause_torrent)
-        self.menuBar.move_torrent.triggered.connect(self.move_torrent)
-        self.menuBar.open_explorer.triggered.connect(self.open_explorer)
-        self.menuBar.remove.triggered.connect(self.delete_torrent)
-        self.menuBar.view_menu.aboutToShow.connect(self.update_viewmenu)
-        self.menuBar.show_toolbar.triggered.connect(lambda b: self.toolBar.setVisible(b))
-        self.menuBar.show_statusbar.triggered.connect(lambda b: self.statusBar.setVisible(b))
-        self.menuBar.show_preview.triggered.connect(self.set_open_view)
-        self.menuBar.show_panel.triggered.connect(self.show_sidepanel)
-        self.menuBar.show_detail.triggered.connect(self.show_detailpanel)
-        self.menuBar.panel_tabs.triggered.connect(self.update_paneltabs)
-        self.menuBar.detail_tabs.triggered.connect(self.update_detailtabs)
-        self.menuBar.help_donate.triggered.connect(lambda: self.open_link(self.DONATE_LINK))
-        self.menuBar.help_bug.triggered.connect(lambda: self.open_link(self.BUG_LINK))
-        self.menuBar.help_thanks.triggered.connect(lambda: self.open_link(self.THANKS_LINK))
-        self.menuBar.help_about.triggered.connect(self.open_aboutdialog)
+        self.menu_bar.open_file.triggered.connect(self.open_file)
+        self.menu_bar.open_link.triggered.connect(self.open_magnetlink)
+        self.menu_bar.create_torrent.triggered.connect(self.create_torrent)
+        self.menu_bar.import_torrent.triggered.connect(self.import_torrent)
+        self.menu_bar.exit.triggered.connect(self.close)
+        self.menu_bar.resume.triggered.connect(self.start_torrent)
+        self.menu_bar.pause.triggered.connect(self.pause_torrent)
+        self.menu_bar.move_torrent.triggered.connect(self.move_torrent)
+        self.menu_bar.open_explorer.triggered.connect(self.open_explorer)
+        self.menu_bar.remove.triggered.connect(self.delete_torrent)
+        self.menu_bar.view_menu.aboutToShow.connect(self.update_viewmenu)
+        self.menu_bar.show_toolbar.triggered.connect(lambda b: self.tool_bar.setVisible(b))
+        self.menu_bar.show_statusbar.triggered.connect(lambda b: self.status_bar.setVisible(b))
+        self.menu_bar.show_preview.triggered.connect(lambda b: self.set_openpreview(b))
+        self.menu_bar.show_panel.triggered.connect(self.show_sidepanel)
+        self.menu_bar.show_detail.triggered.connect(self.show_detailpanel)
+        self.menu_bar.panel_tabs.triggered.connect(self.update_paneltabs)
+        self.menu_bar.detail_tabs.triggered.connect(self.update_detailtabs)
+        self.menu_bar.help_donate.triggered.connect(lambda: self.open_link(self.DONATE_LINK))
+        self.menu_bar.help_bug.triggered.connect(lambda: self.open_link(self.BUG_LINK))
+        self.menu_bar.help_thanks.triggered.connect(lambda: self.open_link(self.THANKS_LINK))
+        self.menu_bar.help_about.triggered.connect(self.open_aboutdialog)
         
-        self.toolBar.open_file.clicked.connect(self.open_file)
-        self.toolBar.open_link.clicked.connect(self.open_magnetlink)
-        self.toolBar.resume.clicked.connect(self.start_torrent)
-        self.toolBar.remove.clicked.connect(self.delete_torrent)
-        self.toolBar.remove_all.clicked.connect(self.delete_alltorrents)
-        self.toolBar.search_bar.textChanged.connect(self.search_torrents)
+        self.tool_bar.open_file.clicked.connect(self.open_file)
+        self.tool_bar.open_link.clicked.connect(self.open_magnetlink)
+        self.tool_bar.resume.clicked.connect(self.start_torrent)
+        self.tool_bar.remove.clicked.connect(self.delete_torrent)
+        self.tool_bar.remove_all.clicked.connect(self.delete_alltorrents)
+        self.tool_bar.search_bar.textChanged.connect(self.search_torrents)
         
         self.table_view.clicked.connect(self.select_torrent)
         self.table_view.doubleClicked.connect(self.doubleclick_torrent)
@@ -170,7 +170,7 @@ class ApplicationWindow(QMainWindow):
         self.table_view.menu_delete.triggered.connect(self.delete_torrent)
         
         self.side_panel.tabs[0][0].filter_tree.changed_item.connect(self.filter_torrents)
-        self.statusBar.speed.clicked.connect(self.open_statistics)
+        self.status_bar.speed.clicked.connect(self.open_statistics)
     
     def appendRowEnd(self, dt):
         # dont't add if info_hash is same as in list
@@ -183,15 +183,30 @@ class ApplicationWindow(QMainWindow):
         
         #'strategy': strategy,
         #'check_hash' : check_hash,
+        # category, default_cateogry
         
+        self.config_loader.auto_start = dt['start']
+        self.config_loader.check_hashes = dt['check_hash']
+        self.config_loader.padd_files = dt['pad_files']
+        
+        if 'size' in dt:
+            self.config_loader.preview_size = dt['size']
+        if 'location' in dt:
+            self.config_loader.preview_location = dt['location']
+        if 'category' in dt:
+            pass
+        if 'default_category' in dt:
+            pass
+        
+        if dt['default_path']:
+            self.config_loader.default_path = dt['path']
         if dt['pad_files']:
             Thread(target=s.file_handler.padd_files).start()
         if dt['start']:
-            print('started torrent')
             s.start_thread = Thread(target=s.start)
             s.start_thread.start()
         
-        self.open_view = not dt['not_again']
+        self.open_preview = dt['not_again']
         
         torrent_name = dt['data'].files.name
         readable_len = self.convert_bits(dt['data'].files.length)
@@ -220,12 +235,20 @@ class ApplicationWindow(QMainWindow):
         self.config_loader.settings.setValue('win_loc', self.pos())
         self.config_loader.settings.setValue('hori_splitter', self.hori_splitter.sizes())
         self.config_loader.settings.setValue('vert_splitter', self.vert_splitter.sizes())
-        self.config_loader.settings.setValue('show_toolbar', str(self.toolBar.isVisible()))
-        self.config_loader.settings.setValue('show_statusbar', str(self.statusBar.isVisible()))
-        
-        # tabs
+        self.config_loader.settings.setValue('show_toolbar', self.tool_bar.isVisible())
+        self.config_loader.settings.setValue('show_statusbar', self.status_bar.isVisible())
         self.config_loader.settings.setValue('side_tabs', self.side_panel.tabspos())
-        self.config_loader.settings.setValue('open_view', self.open_view)
+        
+        # Preview Window
+        self.config_loader.settings.beginGroup('PreviewWindow')
+        self.config_loader.settings.setValue('preview_size', self.config_loader.preview_size)
+        self.config_loader.settings.setValue('preview_location', self.config_loader.preview_location)
+        self.config_loader.settings.setValue('open_preview', self.open_preview)
+        self.config_loader.settings.setValue('default_path', self.config_loader.default_path)
+        self.config_loader.settings.setValue('auto_start', self.config_loader.auto_start)
+        self.config_loader.settings.setValue('check_hashes', self.config_loader.check_hashes)
+        self.config_loader.settings.setValue('padd_files', self.config_loader.padd_files)
+        self.config_loader.settings.endGroup()
         
         event.accept()
     
@@ -258,8 +281,8 @@ class ApplicationWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl(link))
     
     @pyqtSlot(bool)
-    def set_open_view(self, status: bool):
-        self.open_view = status
+    def set_openpreview(self, b):
+        self.open_preview = b
     
     @pyqtSlot()
     def open_file(self):
@@ -269,18 +292,19 @@ class ApplicationWindow(QMainWindow):
             file_paths = dialog.selectedFiles()
             for file_path in file_paths:
                 data = TorrentParser.parse_filepath(file_path)
-                if self.open_view:
-                    window = PreviewWindow(self)
+                if self.open_preview:
+                    window = PreviewWindow(self.config_loader, self)
                     window.add_data.connect(self.appendRowEnd)
                     window.show(data)
                 else:
                     data = {
-                        'path': self.default_path,
+                        'path': self.config_loader.default_path,
+                        'default_path': False,
                         'strategy': 'rarest-first',
                         'start': False,
                         'check_hash' : True,
                         'pad_files' : False,
-                        'not_again' : True,
+                        'not_again' : False,
                         'data' : data
                     }
                     self.appendRowEnd(data)
@@ -317,10 +341,8 @@ class ApplicationWindow(QMainWindow):
         if not checked:
             self.hori_splitter.setSizes([0, -1])
         elif self.hori_splitter.sizes()[0] == 0:
-            print('update panel')
             min_width = self.side_panel.sizeHint().width()
             fwidth = self.hori_splitter.width()
-            print(self.hori_splitter.sizes())
             self.hori_splitter.setSizes([min_width, fwidth - min_width])
     
     @pyqtSlot(bool)
@@ -333,28 +355,28 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot()
     def update_viewmenu(self):
-        self.menuBar.show_toolbar.setChecked(self.toolBar.isVisible())
-        self.menuBar.show_statusbar.setChecked(self.statusBar.isVisible())
-        self.menuBar.show_preview.setChecked(self.open_view)
+        self.menu_bar.show_toolbar.setChecked(self.tool_bar.isVisible())
+        self.menu_bar.show_statusbar.setChecked(self.status_bar.isVisible())
+        self.menu_bar.show_preview.setChecked(self.open_preview)
         
         panel_state = self.hori_splitter.sizes()[0] != 0
-        self.menuBar.show_panel.setChecked(panel_state)
+        self.menu_bar.show_panel.setChecked(panel_state)
         detail_state = self.vert_splitter.sizes()[1] != 0 
-        self.menuBar.show_detail.setChecked(detail_state)
+        self.menu_bar.show_detail.setChecked(detail_state)
         
-        self.menuBar.panel_tabs.clear()
+        self.menu_bar.panel_tabs.clear()
         for i in range(self.side_panel.count()):
-            action = self.menuBar.panel_tabs.addAction(self.side_panel.tabText(i))
+            action = self.menu_bar.panel_tabs.addAction(self.side_panel.tabText(i))
             action.setCheckable(True)
             action.setChecked(self.side_panel.isTabVisible(i))
         
-        self.menuBar.detail_tabs.clear()
+        self.menu_bar.detail_tabs.clear()
         for i in range(self.detail_view.count()):
-            action = self.menuBar.detail_tabs.addAction(self.detail_view.tabText(i))
+            action = self.menu_bar.detail_tabs.addAction(self.detail_view.tabText(i))
             action.setCheckable(True)
             action.setChecked(self.detail_view.isTabVisible(i))
         
-        self.menuBar.repaint()
+        self.menu_bar.repaint()
     
     @pyqtSlot(QAction)
     def update_paneltabs(self, action: QAction):
@@ -420,7 +442,7 @@ class ApplicationWindow(QMainWindow):
     def open_explorer(self):
         indexes = self.table_view.selectedIndexes()
         if len(indexes) == 0:
-            full_path = self.default_path
+            full_path = self.config_loader.default_path
         else:
             index = indexes[0].row()
             rel_path = self.table_model.torrent_list[index].data.files.name

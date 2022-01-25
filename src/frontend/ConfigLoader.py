@@ -1,4 +1,5 @@
 from PyQt6.QtCore import QSettings, QSize, QPoint
+from os.path import join, expanduser
 
 class ConfigLoader():
     def __init__(self): 
@@ -13,11 +14,18 @@ class ConfigLoader():
         
         self.side_tabs = self.settings.value('side_tabs', [], list)
         self.detail_tabs = self.settings.value('detail_tabs', [], list)
-        self.open_view = self.settings.value('open_view', True, bool)
         
+        # Preview Window
+        self.settings.beginGroup('PreviewWindow')
+        self.preview_size = self.settings.value('preview_size', QSize(900, 700), QSize)
+        self.preview_location = self.settings.value('preview_location', None, QPoint)
+        self.open_preview = self.settings.value('open_preview', True, bool)
+        self.default_path = self.settings.value('default_path', join(expanduser('~'), 'Downloads'), str)
+        self.auto_start = self.settings.value('auto_start', True, bool)
+        self.check_hashes = self.settings.value('check_hashes', True, bool)
+        self.padd_files = self.settings.value('padd_files', False, bool)
         
-    def loadSettings(self):
-        pass
+        self.settings.endGroup()
     
     def saveSettings(self):
         pass
