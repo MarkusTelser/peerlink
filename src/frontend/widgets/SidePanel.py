@@ -113,12 +113,13 @@ class FilterTab(QWidget):
         
 
 class SidePanel(QTabWidget):
-    def __init__(self):
+    def __init__(self, tabs_pos):
         super().__init__()
         
         # generic settings
         self.setMovable(True)
         self.setUpdatesEnabled(True)
+        self.setObjectName('sidepanel')
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
         tab1 = FilterTab()
@@ -130,13 +131,18 @@ class SidePanel(QTabWidget):
         self.tabs.append([tab2, QIcon('resources/category.svg'), "Categorys"])
         self.tabs.append([tab3, QIcon('resources/log.svg'), "Logs"])
         self.setUsesScrollButtons(False)
-        self.setObjectName('sidepanel')
+        
+        # arrange in right order 
+        if len(tabs_pos) == 0:
+            tabs_pos = [x for x in range(len(self.tabs))]
+        for p in tabs_pos:
+            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1], self.tabs[int(p)][2])
+        
+        # add hidden ones
+        for p in set([x for x in range(len(self.tabs))]) - set([int(x) for x in tabs_pos]):
+            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1], self.tabs[int(p)][2])
+            self.setTabVisible(self.count()-1, False)
         
     def tabspos(self):
-        return [self.indexOf(tab[0]) for tab in self.tabs]
-    
-    def set_tabspos(self, pos):
-        if len(pos) == 0:
-            pos = [x for x in range(len(self.tabs))]
-        for p in pos:
-            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1], self.tabs[int(p)][2])
+        tab_texts = [x[2] for x in self.tabs]
+        return [tab_texts.index(self.tabText(i)) for i in range(len(self.tabs)) if self.isTabVisible(i)]

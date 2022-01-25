@@ -147,8 +147,10 @@ class FilesTab(QWidget):
         self.tree_view.reevaluate()
 
 class TorrentDetailView(QTabWidget):
-    def __init__(self):
+    def __init__(self, tabs_pos):
         super().__init__()
+        
+        self.tabs = list()
         
         self.general_tab = GeneralTab()
         self.chart_tab = ChartTab()
@@ -156,15 +158,31 @@ class TorrentDetailView(QTabWidget):
         self.peers_tab = PeersTab()
         self.files_tab = FilesTab()
         
-        self.addTab(self.general_tab, QIcon('resources/general.svg'), "General")
-        self.addTab(self.trackers_tab, QIcon('resources/trackers.svg'), "Trackers")
-        self.addTab(self.peers_tab, QIcon('resources/peer.svg'), "Peers")
-        self.addTab(self.chart_tab, QIcon('resources/chart.svg'), "Chart")
-        self.addTab(self.files_tab, QIcon('resources/files.svg'), "Files")
+        self.tabs.append([self.general_tab, QIcon('resources/general.svg'), "General"])
+        self.tabs.append([self.trackers_tab, QIcon('resources/trackers.svg'), "Trackers"])
+        self.tabs.append([self.peers_tab, QIcon('resources/peer.svg'), "Peers"])
+        self.tabs.append([self.chart_tab, QIcon('resources/chart.svg'), "Chart"])
+        self.tabs.append([self.files_tab, QIcon('resources/files.svg'), "Files"])
         
+        self.setMovable(True)
+        self.setTabsClosable(True)
         self.setMinimumWidth(self.tabBar().sizeHint().width() + 30)
         self.tabBar().setUsesScrollButtons(False)
         
+        # arrange in right order 
+        if len(tabs_pos) == 0:
+            tabs_pos = [x for x in range(len(self.tabs))]
+        for p in tabs_pos:
+            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1], self.tabs[int(p)][2])
+        
+        # add hidden ones
+        for p in set([x for x in range(len(self.tabs))]) - set([int(x) for x in tabs_pos]):
+            self.addTab(self.tabs[int(p)][0], self.tabs[int(p)][1], self.tabs[int(p)][2])
+            self.setTabVisible(self.count()-1, False)
+    
+    def tabspos(self):
+        tab_texts = [x[2] for x in self.tabs]
+        return [tab_texts.index(self.tabText(i)) for i in range(len(self.tabs)) if self.isTabVisible(i)]    
     
     def _update(self, dt: Swarm):
         self.trackers_tab._update(dt.tracker_list)

@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QSettings, QSize, QPoint
+from PyQt6.QtCore import QSettings, QSize, QPoint, QByteArray
 from os.path import join, expanduser
 
 class ConfigLoader():
@@ -9,11 +9,14 @@ class ConfigLoader():
         self.win_loc = self.settings.value('win_loc', None, QPoint)
         self.show_toolbar = self.settings.value('show_toolbar', True, bool)
         self.show_statusbar = self.settings.value('show_statusbar', True, bool)
-        self.hori_splitter = [int(x) for x in self.settings.value('hori_splitter', [30, 70], list)]
+        self.hori_splitter = [int(x) for x in self.settings.value('hori_splitter', [1, 100], list)]
         self.vert_splitter = [int(x) for x in self.settings.value('vert_splitter', [1, 0], list)]
         
+        self.side_current = self.settings.value('side_current', 0, int)
         self.side_tabs = self.settings.value('side_tabs', [], list)
+        self.detail_current = self.settings.value('detail_current', 0, int)
         self.detail_tabs = self.settings.value('detail_tabs', [], list)
+        self.table_tabs = self.settings.value('table_tabs', QByteArray(), QByteArray)
         
         # Preview Window
         self.settings.beginGroup('PreviewWindow')

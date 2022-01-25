@@ -99,9 +99,10 @@ class ApplicationWindow(QMainWindow):
         self.stacked_layout.insertWidget(0, self.hori_splitter)
         self.main_layout.addWidget(self.main_widget)
         
-        self.side_panel = SidePanel()
+        self.side_panel = SidePanel(self.config_loader.side_tabs)
+        if self.side_panel.count() > 0:
+            self.side_panel.setCurrentIndex(self.config_loader.side_current)
         self.hori_splitter.addWidget(self.side_panel)
-        self.side_panel.set_tabspos(self.config_loader.side_tabs)
         
         # vertical splitter for main table, info table
         self.vert_splitter = QSplitter()
@@ -113,19 +114,22 @@ class ApplicationWindow(QMainWindow):
         # add main torrent table model / view
         self.table_model = TorrentListModel()
         self.filter_model = SortFilterProxyModel(self.table_model)
-        self.table_view = TorrentListView(self.filter_model)
+        self.table_view = TorrentListView(self.filter_model, self.config_loader.table_tabs)
         self.vert_splitter.addWidget(self.table_view)
         
         # bottom info panel
-        self.detail_view = TorrentDetailView()
+        self.detail_view = TorrentDetailView(self.config_loader.detail_tabs)
+        if self.detail_view.count() > 0:
+            self.detail_view.setCurrentIndex(self.config_loader.detail_current)
         self.vert_splitter.addWidget(self.detail_view)
         
         # general statistics
         self.statistics = StatisticsPanel()
         self.stacked_layout.insertWidget(1, self.statistics)
         
-        self.hori_splitter.setSizes(self.config_loader.hori_splitter)
+        print(self.config_loader.hori_splitter, self.hori_splitter.size())
         self.vert_splitter.setSizes(self.config_loader.vert_splitter)
+        self.hori_splitter.setSizes(self.config_loader.hori_splitter)
         
         # connect signals to controller slots
         self.menu_bar.open_file.triggered.connect(self.open_file)
@@ -237,7 +241,11 @@ class ApplicationWindow(QMainWindow):
         self.config_loader.settings.setValue('vert_splitter', self.vert_splitter.sizes())
         self.config_loader.settings.setValue('show_toolbar', self.tool_bar.isVisible())
         self.config_loader.settings.setValue('show_statusbar', self.status_bar.isVisible())
+        self.config_loader.settings.setValue('side_current', self.side_panel.currentIndex())
         self.config_loader.settings.setValue('side_tabs', self.side_panel.tabspos())
+        self.config_loader.settings.setValue('detail_current', self.detail_view.currentIndex())
+        self.config_loader.settings.setValue('detail_tabs', self.detail_view.tabspos())
+        self.config_loader.settings.setValue('table_tabs', self.table_view.horizontalHeader().saveState())
         
         # Preview Window
         self.config_loader.settings.beginGroup('PreviewWindow')

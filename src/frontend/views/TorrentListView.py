@@ -1,23 +1,26 @@
 from PyQt6.QtGui import QAction, QMouseEvent, QIcon
-from PyQt6.QtWidgets import QCheckBox, QHeaderView, QTableView, QAbstractItemView, QMenu, QVBoxLayout
+from PyQt6.QtWidgets import QCheckBox, QHeaderView, QTableView, QAbstractItemView, QMenu, QVBoxLayout, QSizePolicy
 from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtCore import pyqtSlot
 
 
 class TorrentListView(QTableView):
-    def __init__(self, model):
+    def __init__(self, model, column_state):
         super().__init__()
         
         self.model = model
+        self.setModel(model)
         
-         # generic settings
+        # generic settings
         self.setSortingEnabled(True)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         
         # vertical & horizontal header settings
+        self.horizontalHeader().restoreState(column_state)
         self.horizontalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.horizontalHeader().setSectionsClickable(True)
@@ -64,13 +67,7 @@ class TorrentListView(QTableView):
         menu_layout.setSpacing(0)
         self.select_menu.setLayout(menu_layout)
         
-        self.setModel(model)
-    
-    def columnpos(self):
-        return [self.horizontalHeader().visualIndex(x) for x in range(self.horizontalHeader().count())]
-    
-    def set_columnpos(self):
-        pass
+        
     
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.RightButton:
