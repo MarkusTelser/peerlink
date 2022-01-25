@@ -12,10 +12,9 @@ def run():
     app.setApplicationName('peerlink')
     app.setOrganizationName('peerlink')
     app.setApplicationVersion('0.1')
+    app.setStyleSheet(open('resources/themes/custom.qss').read())
     
     args = args_parser()
-    
-    app.setStyleSheet(open('resources/themes/custom.qss').read())
     
     if args['p'] != None or args['m'] != None:
         # received file-path in args, open MainWindow
@@ -35,3 +34,6 @@ def run():
     window.show()
 
     sys.exit(app.exec())
+    
+if __name__ == '__main__':
+    run()

@@ -3,9 +3,9 @@ from PyQt6.QtWidgets import QFileDialog
 from os.path import expanduser
 
 class FileDialog(QFileDialog):
-    def __init__(self):
-        super(FileDialog, self).__init__()
-        
+    def __init__(self, parent=None):
+        super(FileDialog, self).__init__(parent=parent)
+
         self.setWindowIcon(QIcon('resources/logo.png'))
         self.setWindowTitle('Open Torrent File')
         self.setBaseSize(1000, 700)

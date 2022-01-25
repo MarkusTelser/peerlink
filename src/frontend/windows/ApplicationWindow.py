@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QStackedLayout
 )
 from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent, QDesktopServices
-from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl
+from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl, QTimer
 from os.path import join, exists, dirname, isdir, expanduser
 from threading import Thread
 from time import sleep
@@ -41,6 +41,7 @@ class ApplicationWindow(QMainWindow):
         self.config_loader = config_loader
         self.current_torrent = None
         self.default_path = join(expanduser('~'), 'Downloads')
+        self.open_view = self.config_loader.open_view
         
         self.setWindowTitle("FastPeer - Application Window")
         self.setWindowIcon(QIcon('resources/logo.svg'))
@@ -68,23 +69,25 @@ class ApplicationWindow(QMainWindow):
 
         self.addWidgets()
         
-        self.update_thread = Thread(target=self._update).start()
-        self.show()
-        self.load_settings()
-    
-    def show(self, data=None):
+        timer = QTimer(self)
+        timer.timeout.connect(self._update)
+        timer.start(1500)
+        
         super().show()
-        if data:
-            self.appendRowEnd(data)
+    
+    def show(self, data):
+        self.appendRowEnd(data)
     
     def addWidgets(self):
         self.menuBar = MenuBar()
         self.setMenuBar(self.menuBar)
         
         self.toolBar = ToolBar()
+        self.toolBar.setVisible(self.config_loader.show_toolbar)
         self.addToolBar(self.toolBar)
         
         self.statusBar = StatusBar()
+        self.statusBar.setVisible(self.config_loader.show_statusbar)
         self.setStatusBar(self.statusBar)
         
         self.hori_splitter = QSplitter()
@@ -210,10 +213,6 @@ class ApplicationWindow(QMainWindow):
         elif bits / (1024 ** 5) < 1000:
             return f"{round(bits / (1024 ** 5), 3)} PiB"    
     
-    def load_settings(self):
-        self.open_view = self.config_loader.open_view
-        self.toolBar.setVisible(self.config_loader.show_toolbar)
-        self.statusBar.setVisible(self.config_loader.show_statusbar)
     
     def closeEvent(self, event: QCloseEvent):
         # general
@@ -264,9 +263,8 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot()
     def open_file(self):
-        dialog = FileDialog()
+        dialog = FileDialog(self)
         
-        print(self.open_view)
         if dialog.exec():
             file_paths = dialog.selectedFiles()
             for file_path in file_paths:
@@ -500,10 +498,8 @@ class ApplicationWindow(QMainWindow):
             if len(indexes) == 0:
                 self.detail_view._clear()
             else:
-                data = self.table_model.torrent_list[indexes[0]]
+                data = self.table_model.torrent_list[indexes[0].row()]
                 self.detail_view._update(data)
-        
-        sleep(1)
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)

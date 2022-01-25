@@ -163,7 +163,6 @@ class TorrentDetailView(QTabWidget):
         self.addTab(self.files_tab, QIcon('resources/files.svg'), "Files")
         
         self.setMinimumWidth(self.tabBar().sizeHint().width() + 30)
-        #self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.tabBar().setUsesScrollButtons(False)
         
     
