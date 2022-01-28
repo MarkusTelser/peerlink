@@ -1,10 +1,12 @@
-from PyQt6.QtCore import QSettings, QSize, QPoint, QByteArray
+from PyQt6.QtCore import QSettings, QSize, QPoint, QByteArray, QStandardPaths
+from PyQt6.QtWidgets import QApplication
 from os.path import join, expanduser
 
 class ConfigLoader():
-    def __init__(self): 
-        self.settings = QSettings()
+    def __init__(self):
+        self.settings = QSettings(QApplication.applicationName(), QApplication.applicationName())
         
+        print(self.settings.fileName())
         self.win_size = self.settings.value('win_size', QSize(900, 700), QSize)
         self.win_loc = self.settings.value('win_loc', None, QPoint)
         self.show_toolbar = self.settings.value('show_toolbar', True, bool)
