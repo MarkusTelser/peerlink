@@ -25,6 +25,7 @@ class TorrentFile:
 
 class TorrentData:
     def __init__(self):
+        self.raw_data = bytes()
         self.announces = [[]]
         self.created_by = ""
         self.creation_date = ""

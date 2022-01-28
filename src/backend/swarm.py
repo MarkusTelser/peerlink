@@ -17,6 +17,7 @@ class Swarm:
     def __init__(self, data, path) -> None:
         self.data = data
         self.path = path
+        self.backup_name = ""
         self.announces = data.announces
         self.info_hash = data.info_hash
         self.piece_manager = PieceManager(data.pieces_count)

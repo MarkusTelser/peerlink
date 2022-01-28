@@ -19,17 +19,18 @@ class TorrentParser:
             with open(filepath, "rb") as f:
                 encry = f.read()
             data = decode(encry)
-            return TorrentParser.parse(data)
+            return TorrentParser.parse(data, encry)
         else:
             print("Error: File doesnt exist")
 
     @staticmethod
-    def parse(data):
+    def parse(data, bdata):
         if data == None:
             raise Exception("Error: no file data")
 
         # create torrent object to save torrent
-        torrent = TorrentData()    
+        torrent = TorrentData()  
+        torrent.raw_data = bdata
         
         # check if contains tracker, in announce/announce-list otherwise error
         if "announce" in data:
