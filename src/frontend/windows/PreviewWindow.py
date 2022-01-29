@@ -29,9 +29,10 @@ from os.path import exists, isdir
 import sys
 
 from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
-from src.frontend.ConfigLoader import ConfigLoader
+from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
+from src.frontend.utils.utils import convert_bits
 
 class PreviewWindow(QMainWindow):
     add_data = pyqtSignal(dict)
@@ -200,8 +201,8 @@ class PreviewWindow(QMainWindow):
 
     def show(self, torrent_data: TorrentData):
         self.torrent_data = torrent_data
-        free_space = lambda: self.convert_bits(disk_usage('/').free)
-        torrent_size = lambda: self.convert_bits(torrent_data.files.length)
+        free_space = lambda: convert_bits(disk_usage('/').free)
+        torrent_size = lambda: convert_bits(torrent_data.files.length)
         self.label1.setText(self.label1.text() + f"{torrent_size()} (of {free_space()} on local disk)")
         self.label2.setText(self.label2.text() + torrent_data.creation_date)
         self.label3.setText(self.label3.text() + torrent_data.created_by)
@@ -211,20 +212,6 @@ class PreviewWindow(QMainWindow):
         self.setWindowTitle(torrent_data.files.name)
         self.model.update(torrent_data.files)
         super().show()
-            
-    def convert_bits(self, bits: int):
-        if bits < 1000:
-            return f"{bits} B"
-        if bits / 1024 < 1000:
-            return f"{int(round(bits / 1024, 0))} KiB"
-        elif bits / (1024 ** 2) < 1000:
-            return f"{round(bits / (1024 ** 2), 1)} MiB"
-        elif bits  / (1024 ** 3) < 1000:
-            return f"{round(bits / (1024 ** 3), 2)} GiB"
-        elif bits / (1024 ** 4) < 1000: 
-            return f"{round(bits / (1024 ** 4), 2)} TiB"
-        elif bits / (1024 ** 5) < 1000:
-            return f"{round(bits / (1024 ** 5), 3)} PiB"
    
     
     """ the following methods are all slots """

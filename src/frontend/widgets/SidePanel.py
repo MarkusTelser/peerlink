@@ -35,20 +35,19 @@ class FilterTree(QTreeWidget):
 
         self.itemSelectionChanged.connect(self.item_selected)
         self.itemDoubleClicked.connect(self.item_doubleclick)
-        self.doubleClicked.connect(self.item_selected)
+        self.doubleClicked.connect(lambda: self.clearFocus())
 
     @pyqtSlot()
     def item_selected(self):
         filters = []
         for item in self.selectedItems():
             if item.parent() != None:
-                filter = item.parent().text(0)
-                filter += f"/{item.text(0)}"
-                if filter not in filters:
-                    filters.append(filter)
-                    self.changed_item.emit(filters)
+                filter = f"{item.parent().text(0)}/{item.text(0)}"
+                filters.append(filter)
             else:
                 self.currentItem().setSelected(False)
+            
+        self.changed_item.emit(filters)
         self.clearFocus()
     
     @pyqtSlot(QTreeWidgetItem, int)
@@ -87,8 +86,8 @@ class FilterTab(QWidget):
             'Trackers': [
                 ('Working', 'resources/working.svg'),
                 ('Unreachable', 'resources/unreachable.svg'),
-                ('Error', 'resources/error.svg'),
-                ('Warning', 'resources/warning.svg')
+                ('Warning', 'resources/warning.svg'),
+                ('Error', 'resources/error.svg')
             ],
             'File Mode': [
                 ('Single File', 'resources/file.svg'),

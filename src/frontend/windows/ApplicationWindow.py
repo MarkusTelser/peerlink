@@ -7,15 +7,15 @@ from PyQt6.QtWidgets import (
     QWidget,
     QStackedLayout
 )
-from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent, QDesktopServices
-from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl, QTimer, QSettings
-from os.path import join, exists, dirname, isdir, expanduser
+from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent, QDesktopServices, QDragEnterEvent, QDropEvent
+from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl, QTimer
+from os.path import join, exists, dirname, isdir
 from threading import Thread
-from time import sleep
 import subprocess
 import sys
+from src.frontend.utils.AppDataLoader import AppDataLoader
 
-from src.frontend.ConfigLoader import ConfigLoader
+from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.widgets.StatisticsPanel import StatisticsPanel
 from src.frontend.widgets.dialogs import DeleteDialog, FileDialog, MagnetLinkDialog
 from src.frontend.widgets.bars import MenuBar, StatusBar, ToolBar
@@ -39,9 +39,11 @@ class ApplicationWindow(QMainWindow):
         super(ApplicationWindow, self).__init__()
         
         self.config_loader = config_loader
-        self.current_torrent = None
+        self.appdata_loader = AppDataLoader()
         self.open_preview = self.config_loader.open_preview
+        self.current_torrent = None
         
+        self.setAcceptDrops(True)
         self.setWindowTitle("FastPeer - Application Window")
         self.setWindowIcon(QIcon('resources/logo.svg'))
         self.setObjectName('window')
@@ -73,10 +75,6 @@ class ApplicationWindow(QMainWindow):
         timer.start(1500)
         
         super().show()
-    
-    def show(self, data=None):
-        if data:
-            self.appendRowEnd(data)
     
     def addWidgets(self):
         self.menu_bar = MenuBar()
@@ -176,96 +174,9 @@ class ApplicationWindow(QMainWindow):
         self.side_panel.tabs[0][0].filter_tree.changed_item.connect(self.filter_torrents)
         self.status_bar.speed.clicked.connect(self.open_statistics)
     
-    def appendRowEnd(self, dt):
-        # dont't add if info_hash is same as in list
-        if dt['data'].info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
-            self.show_errorwin("torrent already in list")
-            return
-        
-        s = Swarm(dt['data'], dt['path'])
-        self.table_model.torrent_list.append(s)
-        
-        #'strategy': strategy,
-        #'check_hash' : check_hash,
-        # category, default_cateogry
-        
-        self.config_loader.auto_start = dt['start']
-        self.config_loader.check_hashes = dt['check_hash']
-        self.config_loader.padd_files = dt['pad_files']
-        
-        if 'size' in dt:
-            self.config_loader.preview_size = dt['size']
-        if 'location' in dt:
-            self.config_loader.preview_location = dt['location']
-        if 'category' in dt:
-            pass
-        if 'default_category' in dt:
-            pass
-        
-        if dt['default_path']:
-            self.config_loader.default_path = dt['path']
-        if dt['pad_files']:
-            Thread(target=s.file_handler.padd_files).start()
-        if dt['start']:
-            s.start_thread = Thread(target=s.start)
-            s.start_thread.start()
-        
-        self.open_preview = dt['not_again']
-        
-        torrent_name = dt['data'].files.name
-        readable_len = self.convert_bits(dt['data'].files.length)
-        
-        self.table_model.data.append([torrent_name, readable_len])
-        self.table_model.updatedData.emit()
-    
-    def convert_bits(self, bits: int):
-        if bits < 1000:
-            return f"{bits} B"
-        if bits / 1024 < 1000:
-            return f"{int(round(bits / 1024, 0))} KiB"
-        elif bits / (1024 ** 2) < 1000:
-            return f"{round(bits / (1024 ** 2), 1)} MiB"
-        elif bits  / (1024 ** 3) < 1000:
-            return f"{round(bits / (1024 ** 3), 2)} GiB"
-        elif bits / (1024 ** 4) < 1000: 
-            return f"{round(bits / (1024 ** 4), 2)} TiB"
-        elif bits / (1024 ** 5) < 1000:
-            return f"{round(bits / (1024 ** 5), 3)} PiB"    
-    
-    
-    def closeEvent(self, event: QCloseEvent):
-        # general
-        self.config_loader.settings.setValue('win_size', self.size())
-        self.config_loader.settings.setValue('win_loc', self.pos())
-        self.config_loader.settings.setValue('hori_splitter', self.hori_splitter.sizes())
-        self.config_loader.settings.setValue('vert_splitter', self.vert_splitter.sizes())
-        self.config_loader.settings.setValue('show_toolbar', self.tool_bar.isVisible())
-        self.config_loader.settings.setValue('show_statusbar', self.status_bar.isVisible())
-        self.config_loader.settings.setValue('side_current', self.side_panel.currentIndex())
-        self.config_loader.settings.setValue('side_tabs', self.side_panel.tabspos())
-        self.config_loader.settings.setValue('detail_current', self.detail_view.currentIndex())
-        self.config_loader.settings.setValue('detail_tabs', self.detail_view.tabspos())
-        self.config_loader.settings.setValue('table_tabs', self.table_view.horizontalHeader().saveState())
-        
-        # Preview Window
-        self.config_loader.settings.beginGroup('PreviewWindow')
-        self.config_loader.settings.setValue('preview_size', self.config_loader.preview_size)
-        self.config_loader.settings.setValue('preview_location', self.config_loader.preview_location)
-        self.config_loader.settings.setValue('open_preview', self.open_preview)
-        self.config_loader.settings.setValue('default_path', self.config_loader.default_path)
-        self.config_loader.settings.setValue('auto_start', self.config_loader.auto_start)
-        self.config_loader.settings.setValue('check_hashes', self.config_loader.check_hashes)
-        self.config_loader.settings.setValue('padd_files', self.config_loader.padd_files)
-        self.config_loader.settings.endGroup()
-        
-        event.accept()
-    
-    def show_errorwin(self, error_txt):
-        error_msg = QMessageBox(self)
-        error_msg.setWindowIcon(QIcon('resources/warning.svg'))
-        error_msg.setWindowTitle("Error")
-        error_msg.setText(error_txt)
-        error_msg.show()
+    def show(self, data=None):
+        if data:
+            self.appendRowEnd(data) 
     
     @pyqtSlot(QModelIndex)
     def select_torrent(self, index: QModelIndex):
@@ -298,24 +209,7 @@ class ApplicationWindow(QMainWindow):
         
         if dialog.exec():
             file_paths = dialog.selectedFiles()
-            for file_path in file_paths:
-                data = TorrentParser.parse_filepath(file_path)
-                if self.open_preview:
-                    window = PreviewWindow(self.config_loader, self)
-                    window.add_data.connect(self.appendRowEnd)
-                    window.show(data)
-                else:
-                    data = {
-                        'path': self.config_loader.default_path,
-                        'default_path': False,
-                        'strategy': 'rarest-first',
-                        'start': False,
-                        'check_hash' : True,
-                        'pad_files' : False,
-                        'not_again' : False,
-                        'data' : data
-                    }
-                    self.appendRowEnd(data)
+            self._open_file(file_paths)
     
     @pyqtSlot()
     def open_magnetlink(self):
@@ -488,10 +382,11 @@ class ApplicationWindow(QMainWindow):
             index = indexes[0]
             if dialog.checkbox.isChecked():
                 self.table_model.torrent_list[index.row()].file_handler.remove_files()
+                
+            backup_name = self.table_model.torrent_list[index.row()].backup_name
+            self.appdata_loader.remove_torrent(backup_name)
             
-            del self.table_model.torrent_list[index.row()]
-            del self.table_model.data[index.row()]
-            self.table_model.updatedData.emit()
+            self.table_model.remove(index.row())
             self._update()
     
     @pyqtSlot()
@@ -506,9 +401,7 @@ class ApplicationWindow(QMainWindow):
                 for row in range(self.table_model.rowCount()):
                     self.table_model.torrent_list[row].file_handler.remove_files()
                 
-                self.table_model.torrent_list = list()
-                self.table_model.data = list()
-                self.table_model.updatedData.emit()
+                self.table_model.remove()
                 self.detail_view._clear()
                 
     @pyqtSlot(str)
@@ -520,6 +413,119 @@ class ApplicationWindow(QMainWindow):
     def filter_torrents(self, filters: list):
         self.filter_model.filters = filters
         self.filter_model.invalidateFilter()
+    
+    def show_errorwin(self, error_txt):
+        error_msg = QMessageBox(self)
+        error_msg.setWindowIcon(QIcon('resources/warning.svg'))
+        error_msg.setWindowTitle("Error")
+        error_msg.setText(error_txt)
+        error_msg.show()
+    
+    def appendRowEnd(self, dt):
+        # dont't add if info_hash is same as in list
+        if dt['data'].info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
+            self.show_errorwin("torrent already in list")
+            return
+        
+        s = Swarm(dt['data'], dt['path'])
+        
+        # add into backup files
+        backup_name = self.appdata_loader.backup_torrent(dt['data'].raw_data)
+        s.backup_name = backup_name
+
+        self.table_model.torrent_list.append(s)
+        
+        
+        
+        #'strategy': strategy,
+        #'check_hash' : check_hash,
+        # category, default_cateogry
+        
+        self.config_loader.auto_start = dt['start']
+        self.config_loader.check_hashes = dt['check_hash']
+        self.config_loader.padd_files = dt['pad_files']
+        self.open_preview = dt['not_again']
+        
+        if 'size' in dt:
+            self.config_loader.preview_size = dt['size']
+        if 'location' in dt:
+            self.config_loader.preview_location = dt['location']
+        if 'category' in dt:
+            pass
+        if 'default_category' in dt:
+            pass
+        
+        if dt['default_path']:
+            self.config_loader.default_path = dt['path']
+        if dt['pad_files']:
+            Thread(target=s.file_handler.padd_files).start()
+        if dt['start']:
+            s.start_thread = Thread(target=s.start)
+            s.start_thread.start()
+        
+        
+        
+        torrent_name = dt['data'].files.name
+        torrent_size = dt['data'].files.length
+        self.table_model.append(torrent_name, torrent_size)
+    
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        for url in event.mimeData().urls():
+            if url.isLocalFile() and url.path().endswith('.torrent'):
+                event.accept()
+                return
+    
+    def dropEvent(self, event: QDropEvent):
+        for url in event.mimeData().urls():
+            if url.isLocalFile() and url.path().endswith('.torrent'):
+                self._open_file([url.path()])
+    
+    def closeEvent(self, event: QCloseEvent):
+        # general
+        self.config_loader.settings.setValue('win_size', self.size())
+        self.config_loader.settings.setValue('win_loc', self.pos())
+        self.config_loader.settings.setValue('hori_splitter', self.hori_splitter.sizes())
+        self.config_loader.settings.setValue('vert_splitter', self.vert_splitter.sizes())
+        self.config_loader.settings.setValue('show_toolbar', self.tool_bar.isVisible())
+        self.config_loader.settings.setValue('show_statusbar', self.status_bar.isVisible())
+        self.config_loader.settings.setValue('side_current', self.side_panel.currentIndex())
+        self.config_loader.settings.setValue('side_tabs', self.side_panel.tabspos())
+        self.config_loader.settings.setValue('detail_current', self.detail_view.currentIndex())
+        self.config_loader.settings.setValue('detail_tabs', self.detail_view.tabspos())
+        self.config_loader.settings.setValue('table_tabs', self.table_view.horizontalHeader().saveState())
+        
+        # Preview Window
+        self.config_loader.settings.beginGroup('PreviewWindow')
+        self.config_loader.settings.setValue('preview_size', self.config_loader.preview_size)
+        self.config_loader.settings.setValue('preview_location', self.config_loader.preview_location)
+        self.config_loader.settings.setValue('open_preview', self.open_preview)
+        self.config_loader.settings.setValue('default_path', self.config_loader.default_path)
+        self.config_loader.settings.setValue('auto_start', self.config_loader.auto_start)
+        self.config_loader.settings.setValue('check_hashes', self.config_loader.check_hashes)
+        self.config_loader.settings.setValue('padd_files', self.config_loader.padd_files)
+        self.config_loader.settings.endGroup()
+        
+        event.accept()
+    
+    def _open_file(self, file_paths):
+        for file_path in file_paths:
+            data = TorrentParser.parse_filepath(file_path)
+            if self.open_preview:
+                window = PreviewWindow(self.config_loader, self)
+                window.add_data.connect(self.appendRowEnd)
+                window.show(data)
+            else:
+                data = {
+                    'path': self.config_loader.default_path,
+                    'default_path': False,
+                    'strategy': 'rarest-first',
+                    'start': False,
+                    'check_hash' : True,
+                    'pad_files' : False,
+                    'not_again' : False,
+                    'data' : data
+                }
+                self.appendRowEnd(data)
     
     def _update(self):
         # update detail window, if it is open

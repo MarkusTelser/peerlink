@@ -48,4 +48,7 @@ class AppDataLoader:
                 remove(join(data_path, file))
     
     def load_torrents(self):
-        return len(listdir(join(self.path, 'torrents'))) > 0
+        if not exists(join(self.path, 'torrents')):
+            return list()
+        
+        return listdir(join(self.path, 'torrents'))

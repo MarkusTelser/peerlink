@@ -1,17 +1,28 @@
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtCore import pyqtSlot, pyqtSignal
+from src.frontend.utils.utils import convert_bits
 
 class TorrentListModel(QStandardItemModel):
-    updatedData = pyqtSignal()
-    
     def __init__(self):
         super().__init__()
-        self.updatedData.connect(self._update)
         self.data = list()
         self.torrent_list = list()
         self._update()
-        
-    @pyqtSlot()
+    
+    def remove(self, index=-1):
+        if index == -1:
+            self.torrent_list = list()
+            self.data = list()
+        else:
+            del self.torrent_list[index]
+            del self.data[index]
+        self._update()
+    
+    def append(self, name, size):
+        readable_size = convert_bits(size)
+        self.data.append([name, readable_size])
+        self._update()
+    
     def _update(self):
         self.clear()
         self.setHorizontalHeaderLabels(["name", "size", "progress"])

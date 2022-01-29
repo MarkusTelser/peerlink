@@ -11,10 +11,10 @@ class SortFilterProxyModel(QSortFilterProxyModel):
         self.setDynamicSortFilter(True)
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex):
-        if "Files/Single File" in self.filters:
+        if "File Mode/Single File" in self.filters:
             if self.source_model.torrent_list[source_row].data.has_multi_file:
                 return False
-        if "Files/Multi File" in self.filters:
+        if "File Mode/Multi File" in self.filters:
             if not self.source_model.torrent_list[source_row].data.has_multi_file:
                 return False
         return super().filterAcceptsRow(source_row, source_parent)
