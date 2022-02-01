@@ -437,7 +437,7 @@ class ApplicationWindow(QMainWindow):
             return
         
         swarm = Swarm(dt['data'], dt['path'])
-        swarm.creation_date = datetime.today().isoformat()
+        swarm.creation_date = datetime.now().isoformat()
         
         # add into backup files
         backup_name = self.appdata_loader.backup_torrent(dt['data'].raw_data)
@@ -475,20 +475,20 @@ class ApplicationWindow(QMainWindow):
         for torrent_data, extras in torrent_list:        
             swarm = Swarm(torrent_data, 'paaath')
             swarm.backup_name = extras['backup_name']
+            swarm.creation_date = extras['creation_date']
             self.table_model.append(swarm)
     
     def save_torrents(self):
         for torrent in self.table_model.torrent_list:
             save_data = {
-                'backup_name': torrent.backup_name
+                'backup_name': torrent.backup_name,
+                'creation_date': torrent.creation_date
             }
             bdata = bencode(save_data)
             f = open(join(f'/home/carlos/.local/share/peerlink/torrents/{torrent.backup_name}.ben'), 'wb')
             f.write(bdata)
             f.close()
             
-            
-    
     def dragEnterEvent(self, event: QDragEnterEvent):
         for url in event.mimeData().urls():
             if url.isLocalFile() and url.path().endswith('.torrent'):

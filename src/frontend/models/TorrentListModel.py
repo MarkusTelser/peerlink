@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QApplication, QProgressBar, QStyledItemDelegate, QSt
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtCore import Qt, pyqtSlot, pyqtSignal
 from src.frontend.utils.utils import convert_bits
+import datetime
 
 class TorrentListModel(QStandardItemModel):
     def __init__(self):
@@ -51,6 +52,8 @@ class TorrentListModel(QStandardItemModel):
             item = QStandardItem(availability)
             self.setItem(i, 4, item)
             
-            creation_date = torrent.creation_date
-            item = QStandardItem(creation_date)
+            print(torrent.creation_date)
+            creation_date = datetime.datetime.fromisoformat(torrent.creation_date)
+            local_date = creation_date.strftime("%Y-%m-%d %H:%M:%S")
+            item = QStandardItem(local_date)
             self.setItem(i, 6, item)
