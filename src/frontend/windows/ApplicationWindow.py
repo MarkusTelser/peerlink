@@ -13,6 +13,7 @@ from os.path import join, exists, dirname, isdir
 from threading import Thread
 import subprocess
 import sys
+from datetime import date, datetime
 from src.frontend.utils.AppDataLoader import AppDataLoader
 
 from src.frontend.utils.ConfigLoader import ConfigLoader
@@ -24,6 +25,7 @@ from src.frontend.widgets.SidePanel import SidePanel
 from src.frontend.widgets.dialogs.AboutDialog import AboutDialog
 from src.frontend.windows.PreviewWindow import PreviewWindow
 
+from src.backend.metadata.Bencoder import bencode
 from src.backend.metadata.TorrentParser import TorrentParser
 from src.frontend.models.TorrentListModel import TorrentListModel
 from src.frontend.views.TorrentListView import TorrentListView
@@ -40,12 +42,13 @@ class ApplicationWindow(QMainWindow):
         
         self.config_loader = config_loader
         self.appdata_loader = AppDataLoader()
+        self.show_launch = self.config_loader.show_launch
         self.open_preview = self.config_loader.open_preview
         self.current_torrent = None
         
         self.setAcceptDrops(True)
         self.setWindowTitle("FastPeer - Application Window")
-        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowIcon(QIcon('resources/logo.png'))
         self.setObjectName('window')
         
         # set screen size
@@ -143,6 +146,7 @@ class ApplicationWindow(QMainWindow):
         self.menu_bar.view_menu.aboutToShow.connect(self.update_viewmenu)
         self.menu_bar.show_toolbar.triggered.connect(lambda b: self.tool_bar.setVisible(b))
         self.menu_bar.show_statusbar.triggered.connect(lambda b: self.status_bar.setVisible(b))
+        self.menu_bar.show_launch.triggered.connect(lambda b: self.set_openlaunch(b))
         self.menu_bar.show_preview.triggered.connect(lambda b: self.set_openpreview(b))
         self.menu_bar.show_panel.triggered.connect(self.show_sidepanel)
         self.menu_bar.show_detail.triggered.connect(self.show_detailpanel)
@@ -203,6 +207,10 @@ class ApplicationWindow(QMainWindow):
     def set_openpreview(self, b):
         self.open_preview = b
     
+    @pyqtSlot(bool)
+    def set_openlaunch(self, b):
+        self.show_launch = b
+    
     @pyqtSlot()
     def open_file(self):
         dialog = FileDialog(self)
@@ -259,6 +267,7 @@ class ApplicationWindow(QMainWindow):
     def update_viewmenu(self):
         self.menu_bar.show_toolbar.setChecked(self.tool_bar.isVisible())
         self.menu_bar.show_statusbar.setChecked(self.status_bar.isVisible())
+        self.menu_bar.show_launch.setChecked(self.show_launch)
         self.menu_bar.show_preview.setChecked(self.open_preview)
         
         panel_state = self.hori_splitter.sizes()[0] != 0
@@ -427,19 +436,12 @@ class ApplicationWindow(QMainWindow):
             self.show_errorwin("torrent already in list")
             return
         
-        s = Swarm(dt['data'], dt['path'])
+        swarm = Swarm(dt['data'], dt['path'])
+        swarm.creation_date = datetime.today().isoformat()
         
         # add into backup files
         backup_name = self.appdata_loader.backup_torrent(dt['data'].raw_data)
-        s.backup_name = backup_name
-
-        self.table_model.torrent_list.append(s)
-        
-        
-        
-        #'strategy': strategy,
-        #'check_hash' : check_hash,
-        # category, default_cateogry
+        swarm.backup_name = backup_name
         
         self.config_loader.auto_start = dt['start']
         self.config_loader.check_hashes = dt['check_hash']
@@ -455,19 +457,37 @@ class ApplicationWindow(QMainWindow):
         if 'default_category' in dt:
             pass
         
+        #'strategy': strategy,
+        #'check_hash' : check_hash,
+        # category, default_cateogry
+        
         if dt['default_path']:
             self.config_loader.default_path = dt['path']
         if dt['pad_files']:
-            Thread(target=s.file_handler.padd_files).start()
+            Thread(target=swarm.file_handler.padd_files).start()
         if dt['start']:
-            s.start_thread = Thread(target=s.start)
-            s.start_thread.start()
+            swarm.start_thread = Thread(target=swarm.start)
+            swarm.start_thread.start()
         
-        
-        
-        torrent_name = dt['data'].files.name
-        torrent_size = dt['data'].files.length
-        self.table_model.append(torrent_name, torrent_size)
+        self.table_model.append(swarm)
+    
+    def load_torrents(self, torrent_list):
+        for torrent_data, extras in torrent_list:        
+            swarm = Swarm(torrent_data, 'paaath')
+            swarm.backup_name = extras['backup_name']
+            self.table_model.append(swarm)
+    
+    def save_torrents(self):
+        for torrent in self.table_model.torrent_list:
+            save_data = {
+                'backup_name': torrent.backup_name
+            }
+            bdata = bencode(save_data)
+            f = open(join(f'/home/carlos/.local/share/peerlink/torrents/{torrent.backup_name}.ben'), 'wb')
+            f.write(bdata)
+            f.close()
+            
+            
     
     def dragEnterEvent(self, event: QDragEnterEvent):
         for url in event.mimeData().urls():
@@ -493,6 +513,7 @@ class ApplicationWindow(QMainWindow):
         self.config_loader.settings.setValue('detail_current', self.detail_view.currentIndex())
         self.config_loader.settings.setValue('detail_tabs', self.detail_view.tabspos())
         self.config_loader.settings.setValue('table_tabs', self.table_view.horizontalHeader().saveState())
+        self.config_loader.settings.setValue('show_launch', self.show_launch)
         
         # Preview Window
         self.config_loader.settings.beginGroup('PreviewWindow')
@@ -504,6 +525,8 @@ class ApplicationWindow(QMainWindow):
         self.config_loader.settings.setValue('check_hashes', self.config_loader.check_hashes)
         self.config_loader.settings.setValue('padd_files', self.config_loader.padd_files)
         self.config_loader.settings.endGroup()
+        
+        self.save_torrents()
         
         event.accept()
     

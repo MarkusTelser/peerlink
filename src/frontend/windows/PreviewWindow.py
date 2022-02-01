@@ -59,7 +59,7 @@ class PreviewWindow(QMainWindow):
             self.move(qtRectangle.topLeft())
 
         # set icon to window
-        icon = QIcon('resources/logo.svg')
+        icon = QIcon('resources/logo.png')
         self.setWindowIcon(icon)
 
         self.addWidgets()
@@ -84,8 +84,7 @@ class PreviewWindow(QMainWindow):
         groupbox.setLayout(vbox)
         group_layout.addWidget(groupbox)
         vbox.setContentsMargins(10, 10, 0, 10)
-        groupbox.setStyleSheet("QGroupBox { font-weight: bold; color: red;} ")
-
+        
         # add download path input
         self.download_path = QLineEdit()
         self.download_path.setText(self.conf.default_path)
@@ -100,6 +99,7 @@ class PreviewWindow(QMainWindow):
         self.default_path = QCheckBox("set as default path")
         vbox.addWidget(self.default_path, 1, 0, 1, 0)
         
+        # add combo box for category
         category_box = QGroupBox("Category")
         category_layout = QVBoxLayout()
         category_box.setLayout(category_layout)
@@ -115,10 +115,6 @@ class PreviewWindow(QMainWindow):
         option_layout = QGridLayout()
         option_box.setLayout(option_layout)
         group_layout.addWidget(option_box)
-        option_box.setStyleSheet("QGroupBox { font-weight: bold; color: red;} ")
-        
-        # add combo box for category
-        
         
         # add combo box for download strategys
         strategy_label = QLabel('Download Strategy:')
@@ -148,7 +144,6 @@ class PreviewWindow(QMainWindow):
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
         bold = lambda txt: f"<b>{txt}</b>"  
-        info_box.setStyleSheet("QGroupBox { font-weight: bold; color: red;} ")
         self.label1 = QLabel(bold('Size: '))
         self.label2 = QLabel(bold('Creation date: '))
         self.label3 = QLabel(bold('Created by: '))
