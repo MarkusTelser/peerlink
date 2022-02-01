@@ -1,6 +1,6 @@
 from json import encoder
 from src.backend.metadata.TorrentParser import TorrentParser
-from src.backend.metadata.Bencoder import decode
+from src.backend.metadata.Bencoder import bdecode
 from collections import OrderedDict
 import json
 import os
@@ -10,7 +10,7 @@ for item in os.listdir("data/all"):
     with open(f"data/all/{item}",'rb') as f:
         data = f.read()
     
-    d = decode(data)
+    d = bdecode(data)
     
     del d.get("info")["pieces"]
     if "magnet-info" in d:
@@ -43,7 +43,7 @@ for item in os.listdir("data/all"):
 with open("../../../data/all/testtest.torrent", "rb") as f:
     data = f.read()
 
-d = bencode.decode(data)
+d = bencode.bdecode(data)
 
 del d.get("info")["pieces"]
 print(json.dumps(d, indent=4, sort_keys=True))

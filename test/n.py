@@ -1,4 +1,4 @@
-from src.backend.metadata.Bencoder import encode, decode
+from src.backend.metadata.Bencoder import bencode, bdecode
 import os
 
 path = "data/all/solo.torrent"
@@ -7,8 +7,8 @@ def decode_encode(path):
     with open(path, "rb") as f:
         data = f.read()
 
-    dec = decode(data)
-    enc = encode(dec)
+    dec = bdecode(data)
+    enc = bencode(dec)
     
     if enc == data:
         print("success")
