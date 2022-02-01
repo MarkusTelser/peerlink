@@ -1,15 +1,143 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHeaderView, QTabWidget, QTableView, QWidget, QVBoxLayout, QSizePolicy
+
+from curses import start_color
+from random import seed
+from PyQt6.QtWidgets import (
+    QHeaderView, 
+    QTabWidget, 
+    QTableView, 
+    QWidget, 
+    QVBoxLayout, 
+    QProgressBar, 
+    QGroupBox,
+    QLabel,
+    QGridLayout,
+    QScrollArea,
+    QSizePolicy
+)
 from PyQt6.QtGui import QColor, QIcon, QPainter, QStandardItem, QStandardItemModel, QBrush
 from PyQt6.QtCharts import QChart, QChartView, QSplineSeries, QValueAxis
+from PyQt6.QtCore import Qt
 from src.backend.metadata.TorrentData import TorrentFile
 from src.backend.swarm import Swarm
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.views.TorrentTreeView import TorrentTreeView
+from src.frontend.utils.utils import convert_bits
+from psutil import disk_usage
+from datetime import datetime
 
 class GeneralTab(QWidget):
     def __init__(self):
         super().__init__()
+        
+        central_layout = QVBoxLayout()
+        self.setLayout(central_layout)
+        central_widget = QWidget()
+        main_layout = QVBoxLayout()
+        central_widget.setLayout(main_layout)
+        
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setGeometry(central_widget.geometry())
+        scroll_area.setWidget(central_widget)
+        central_layout.addWidget(scroll_area)
+        
+        progress_bar = QProgressBar()
+        progress_bar.setValue(0)
+        progress_bar.setRange(0, 100)
+        main_layout.addWidget(progress_bar)
+        
+        health_bar = QProgressBar()
+        health_bar.setValue(0)
+        health_bar.setRange(0, 100)
+        main_layout.addWidget(health_bar)
+        
+        information_box = QGroupBox()
+        information_box.setTitle('Information')
+        information_layout = QGridLayout()
+        information_box.setLayout(information_layout)
+        
+        self.leecher = QLabel("Leecher: ")
+        self.seeder = QLabel("Seeder: ")
+        self.downloaded = QLabel("Downloaded: ")
+        self.uploaded = QLabel("Uploaded: ")
+        self.share_ratio = QLabel("Share ratio: ")
+        self.progress = QLabel("Progress: ")
+        self.download_speed = QLabel("Download speed: ")
+        self.upload_speed = QLabel("Upload speed: ")
+        self.pieces = QLabel("Pieces: ")
+        self.eta = QLabel("ETA: ")
+        self.health = QLabel("Health: ")
+        self.availability = QLabel("Availability: ")
+        self.time_active = QLabel("Time active: ")
+        self.reannounce_in = QLabel("Reaannounce in: ")
+        
+        information_layout.addWidget(self.leecher, 0, 0)
+        information_layout.addWidget(self.seeder, 0, 1)
+        information_layout.addWidget(self.downloaded, 1, 0)
+        information_layout.addWidget(self.uploaded, 1, 1)
+        information_layout.addWidget(self.share_ratio, 2, 0)
+        information_layout.addWidget(self.progress, 2, 1)
+        information_layout.addWidget(self.download_speed, 3, 0)
+        information_layout.addWidget(self.upload_speed, 3, 1)
+        information_layout.addWidget(self.pieces, 4, 0)
+        information_layout.addWidget(self.eta, 4, 1)
+        information_layout.addWidget(self.health, 5, 0)
+        information_layout.addWidget(self.availability, 5, 1)
+        information_layout.addWidget(self.time_active, 6, 0)
+        information_layout.addWidget(self.reannounce_in, 6, 1)
+        main_layout.addWidget(information_box)
+                
+        torrent_box = QGroupBox()
+        torrent_box.setTitle('Torrent')
+        torrent_layout = QGridLayout()
+        torrent_box.setLayout(torrent_layout)
+        
+        self.info_hash = QLabel("Info Hash: ")
+        self.save_path = QLabel("Save Path: ")
+        self.size = QLabel("Size: ")
+        self.created_by = QLabel("Created by: ")
+        self.creation_date = QLabel("Creation date: ")
+        self.start_date = QLabel("Start date: ")
+        self.comment = QLabel("Comment: ")
+        self.finish_date = QLabel("Finish date: ")
+        
+        torrent_layout.addWidget(self.info_hash, 0, 0)
+        torrent_layout.addWidget(self.save_path, 0, 1)
+        torrent_layout.addWidget(self.size, 1, 0)
+        torrent_layout.addWidget(self.created_by, 1, 1)
+        torrent_layout.addWidget(self.creation_date, 2, 0)
+        torrent_layout.addWidget(self.start_date, 2, 1)
+        torrent_layout.addWidget(self.comment, 3, 0)
+        torrent_layout.addWidget(self.finish_date, 3, 1)
+        main_layout.addWidget(torrent_box)
+        main_layout.addStretch()
+    
+    def _update(self, swarm):
+        free_space = convert_bits(disk_usage('/').free)
+        torrent_size = convert_bits(swarm.data.files.length)
+        piece_size = convert_bits(swarm.data.piece_length)
+        start_date = datetime.fromisoformat(swarm.start_date).strftime("%Y-%m-%d %H:%M:%S")
+        
+        self.pieces.setText(f"Pieces: {swarm.data.pieces_count} x {piece_size}")
+        self.info_hash.setText(f"Info hash: {swarm.data.info_hash_hex}")
+        self.save_path.setText(f"Save Path: {swarm.path}")
+        self.size.setText(f"Size: {torrent_size} (of {free_space} on local disk)")
+        self.created_by.setText(f"Created by: {swarm.data.created_by}")
+        self.creation_date.setText(f"Creation date: {swarm.data.creation_date}")
+        self.start_date.setText(f"Start date: {start_date}")
+        self.comment.setText(f"Comment: {swarm.data.comment}")
+        self.finish_date.setText(f"Finish date: {swarm.finish_date}")
+    
+    def _clear(self):
+        self.pieces.setText("Pieces: ")
+        self.info_hash.setText("Info hash: ")
+        self.save_path.setText("Save Path: ")
+        self.size.setText("Size: ")
+        self.created_by.setText("Created by: ")
+        self.creation_date.setText("Creation date: ")
+        self.start_date.setText("Start date: ")
+        self.comment.setText("Comment: ")
+        self.finish_date.setText("Finish date: ")
  
 class ChartTab(QWidget):
     def __init__(self):
@@ -165,7 +293,7 @@ class TorrentDetailView(QTabWidget):
         self.tabs.append([self.files_tab, QIcon('resources/files.svg'), "Files"])
         
         self.setMovable(True)
-        #self.setTabsClosable(True)
+        self.setMinimumHeight(300)
         self.setMinimumWidth(self.tabBar().sizeHint().width() + 30)
         self.tabBar().setUsesScrollButtons(False)
         
@@ -185,11 +313,13 @@ class TorrentDetailView(QTabWidget):
         return [tab_texts.index(self.tabText(i)) for i in range(len(self.tabs)) if self.isTabVisible(i)]    
     
     def _update(self, dt: Swarm):
+        self.general_tab._update(dt)
         self.trackers_tab._update(dt.tracker_list)
         self.peers_tab._update(dt.peer_list)
         self.files_tab._update(dt.data.files)
     
     def _clear(self):
+        self.general_tab._clear()
         self.trackers_tab._clear()
         self.peers_tab._clear()
         self.files_tab._clear()

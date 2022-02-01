@@ -9,7 +9,7 @@ class TorrentListModel(QStandardItemModel):
         super().__init__()
         self.data = list()
         self.torrent_list = list()
-        self.setHorizontalHeaderLabels(["name", "size", "progress", "health", "availability", "share ratio", "creation date"])
+        self.setHorizontalHeaderLabels(["name", "size", "progress", "health", "availability", "share ratio", "start date", "creation date"])
         self._update()
     
     def remove(self, index=-1):
@@ -52,8 +52,11 @@ class TorrentListModel(QStandardItemModel):
             item = QStandardItem(availability)
             self.setItem(i, 4, item)
             
-            print(torrent.creation_date)
-            creation_date = datetime.datetime.fromisoformat(torrent.creation_date)
-            local_date = creation_date.strftime("%Y-%m-%d %H:%M:%S")
+            start_date = datetime.datetime.fromisoformat(torrent.start_date)
+            local_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
             item = QStandardItem(local_date)
             self.setItem(i, 6, item)
+            
+            creation_date = torrent.data.creation_date
+            item = QStandardItem(creation_date)
+            self.setItem(i, 7, item)

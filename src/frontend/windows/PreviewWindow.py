@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QGuiApplication, QIcon, QCloseEvent
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtCore import QSize, Qt
-from os.path import expanduser, join
+from os.path import expanduser
 from psutil import disk_usage
 from os.path import exists, isdir
 import sys

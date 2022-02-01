@@ -840,3 +840,7 @@ QLineEdit#SearchBar{
 	padding: 2px; 
 	border: 1px solid gray;
 }
+
+QScrollArea{
+	border: 0px solid black;
+}

@@ -16,9 +16,6 @@ class Swarm:
     
     def __init__(self, data, path) -> None:
         self.data = data
-        self.path = path
-        self.backup_name = ""
-        self.creation_date = ""
         self.announces = data.announces
         self.info_hash = data.info_hash
         self.piece_manager = PieceManager(data.pieces_count)
@@ -31,6 +28,11 @@ class Swarm:
         self.finished_tracker = Queue()
         
         self.start_thread = None
+        
+        self.path = path
+        self.backup_name = ""
+        self.start_date = ""
+        self.finish_date = ""
     
     def start(self):
         try:
