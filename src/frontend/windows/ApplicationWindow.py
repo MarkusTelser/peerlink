@@ -409,6 +409,8 @@ class ApplicationWindow(QMainWindow):
             if dialog.checkbox.isChecked():
                 for row in range(self.table_model.rowCount()):
                     self.table_model.torrent_list[row].file_handler.remove_files()
+                    backup_name = self.table_model.torrent_list[row].backup_name
+                    self.appdata_loader.remove_torrent(backup_name)
                 
                 self.table_model.remove()
                 self.detail_view._clear()
