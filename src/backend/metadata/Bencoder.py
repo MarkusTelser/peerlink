@@ -157,8 +157,8 @@ class Bencoder:
 
 b = Bencoder()
 
-def decode(byte_string: bytes):
+def bdecode(byte_string: bytes):
     return b.decode(byte_string)
 
-def encode(data):
+def bencode(data):
     return b.encode(data)

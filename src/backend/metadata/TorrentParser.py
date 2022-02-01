@@ -1,6 +1,6 @@
 from os.path import exists
 from datetime import datetime
-from .Bencoder import decode
+from .Bencoder import bdecode
 from .TorrentData import *
 from ..exceptions import *
 
@@ -10,7 +10,7 @@ class TorrentParser:
         if file == None:
             raise Exception("Error: File equals None")
         encry = file.read()
-        data = decode(encry)
+        data = bdecode(encry)
         return TorrentParser.parse(data)
     
     @staticmethod
@@ -18,7 +18,7 @@ class TorrentParser:
         if exists(filepath):
             with open(filepath, "rb") as f:
                 encry = f.read()
-            data = decode(encry)
+            data = bdecode(encry)
             return TorrentParser.parse(data, encry)
         else:
             print("Error: File doesnt exist")

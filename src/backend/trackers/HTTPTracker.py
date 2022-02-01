@@ -4,7 +4,7 @@ from socket import inet_ntoa, inet_ntop
 from socket import AF_INET6
 from struct import unpack
 from enum import Enum
-from ..metadata.Bencoder import decode
+from ..metadata.Bencoder import bdecode
 from ..peer_protocol.PeerIDs import PeerIDs
 
 # exception
@@ -167,7 +167,7 @@ class HTTPTracker:
         except RequestException as e:
             raise NetworkExceptions("5" + str(e))
         
-        answer = decode(recv.content)
+        answer = bdecode(recv.content)
         
         # decode bencoded answer
         if "failure reason" in answer:
@@ -287,7 +287,7 @@ class HTTPTracker:
             raise NetworkExceptions("5" + str(e))
             # any other possible exception
 
-        answer = decode(recv.content)        
+        answer = bdecode(recv.content)        
         
         if "failure reason" in answer:
             raise MessageExceptions(f"Scrape failed: {answer['failure reason']}")

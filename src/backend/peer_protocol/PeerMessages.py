@@ -3,7 +3,7 @@ from os import stat
 from struct import pack, unpack
 from collections import namedtuple
 
-from src.backend.metadata.Bencoder import encode
+from src.backend.metadata.Bencoder import bencode
 
 class PeerMessageIDs:
     CHOKE = 0x0

@@ -43,7 +43,7 @@ class PieceManager:
     @property
     def availability(self):
         with self.lock:
-            full_availability = min([x.count_peers for x in self.pieces])
+            full_availability = min([x.count_peers for x in self.pieces], default=-1)
             count_lowest = len([x for x in self.pieces if x.count_peers == full_availability])
             part_availability = (self.pieces_count - count_lowest) / self.pieces_count 
             return round(full_availability + part_availability, 2)

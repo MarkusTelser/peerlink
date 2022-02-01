@@ -2,7 +2,7 @@ import socket
 from struct import unpack, pack
 from dataclasses import dataclass
 from ipaddress import IPv6Address, ip_address
-from src.backend.metadata.Bencoder import decode, encode
+from src.backend.metadata.Bencoder import bdecode, bencode
 
 @dataclass
 class HandshakeMessage:
@@ -23,7 +23,7 @@ class ExtensionProtocol:
             print("no handhsake")
         
         payload = unpack(f"!{len(bdata) - 6}s", bdata[6:])[0]
-        data = decode(payload)
+        data = bdecode(payload)
 
         print(data)
         if "m" in data:
@@ -75,7 +75,7 @@ class ExtensionProtocol:
         # data to binary
         index = self.MESSAGE_ID
         extended_id = 0
-        payload = encode(payload)
+        payload = bencode(payload)
         length = 2 + len(payload)
         msg = pack("!IB", length, index)
         msg += pack("!B", extended_id)

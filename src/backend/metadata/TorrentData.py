@@ -3,7 +3,7 @@ from base64 import b32encode
 from urllib.parse import quote_plus 
 from random import choice
 from string import ascii_letters
-from .Bencoder import encode
+from .Bencoder import bencode
 from os.path import join
 
 class TorrentFile:
@@ -50,13 +50,13 @@ class TorrentData:
 
     @staticmethod
     def gen_info_hash(info):
-        encoded = encode(info)
+        encoded = bencode(info)
         hash = sha1(encoded).digest()   
         return hash
             
     @staticmethod
     def gen_info_hash_hex(info):
-        encoded = encode(info)
+        encoded = bencode(info)
         hex_hash = sha1(encoded).hexdigest()
         return hex_hash.upper()
 

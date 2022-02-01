@@ -18,6 +18,7 @@ class Swarm:
         self.data = data
         self.path = path
         self.backup_name = ""
+        self.creation_date = ""
         self.announces = data.announces
         self.info_hash = data.info_hash
         self.piece_manager = PieceManager(data.pieces_count)
