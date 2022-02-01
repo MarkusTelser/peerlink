@@ -1,5 +1,18 @@
 from PyQt6.QtGui import QAction, QMouseEvent, QIcon
-from PyQt6.QtWidgets import QCheckBox, QHeaderView, QTableView, QAbstractItemView, QMenu, QVBoxLayout, QSizePolicy
+from PyQt6.QtWidgets import (
+    QApplication, 
+    QCheckBox, 
+    QHeaderView, 
+    QTableView, 
+    QAbstractItemView, 
+    QMenu, 
+    QVBoxLayout, 
+    QSizePolicy,
+    QStyledItemDelegate,
+    QStyleOptionProgressBar,
+    QStyle
+)
+
 from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtCore import pyqtSlot
 

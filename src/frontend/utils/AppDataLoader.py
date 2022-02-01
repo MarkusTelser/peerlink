@@ -7,6 +7,9 @@ from random import choices
 from string import ascii_uppercase, digits
 import shutil
 
+from src.backend.metadata.TorrentParser import TorrentParser
+from src.backend.metadata.Bencoder import bdecode
+
 class AppDataLoader:
     def __init__(self):
         self.path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
@@ -48,7 +51,24 @@ class AppDataLoader:
                 remove(join(data_path, file))
     
     def load_torrents(self):
-        if not exists(join(self.path, 'torrents')):
-            return list()
+        torrent_list = list()
         
-        return listdir(join(self.path, 'torrents'))
+        if not exists(join(self.path, 'torrents')):
+            return torrent_list
+        
+        torrents = {x.split('.')[0] for x in listdir(join(self.path, 'torrents'))}
+        
+        for torrent in torrents:
+            raw_path = join(self.path, 'torrents', torrent)
+            if not exists(raw_path + '.torrent') or not exists(raw_path + '.ben'):
+                continue
+            
+            file_path = raw_path + '.torrent'
+            torrent_file = TorrentParser.parse_filepath(file_path)
+            extra = open(raw_path +  '.ben', 'rb').read()
+            torrent_extra = bdecode(extra)
+            torrent_list.append((torrent_file, torrent_extra))
+        
+        print(torrent_list)
+        
+        return torrent_list

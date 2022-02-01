@@ -1,5 +1,6 @@
+from PyQt6.QtWidgets import QApplication, QProgressBar, QStyledItemDelegate, QStyleOptionProgressBar, QStyle
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtCore import pyqtSlot, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSlot, pyqtSignal
 from src.frontend.utils.utils import convert_bits
 
 class TorrentListModel(QStandardItemModel):
@@ -7,6 +8,7 @@ class TorrentListModel(QStandardItemModel):
         super().__init__()
         self.data = list()
         self.torrent_list = list()
+        self.setHorizontalHeaderLabels(["name", "size", "progress", "health", "availability", "share ratio", "creation date"])
         self._update()
     
     def remove(self, index=-1):
@@ -18,15 +20,37 @@ class TorrentListModel(QStandardItemModel):
             del self.data[index]
         self._update()
     
-    def append(self, name, size):
-        readable_size = convert_bits(size)
-        self.data.append([name, readable_size])
+    def append(self, torrent_swarm):
+        name = torrent_swarm.data.files.name
+        size = convert_bits(torrent_swarm.data.files.length)
+        self.data.append([name, size])
+        self.torrent_list.append(torrent_swarm)
         self._update()
     
     def _update(self):
-        self.clear()
-        self.setHorizontalHeaderLabels(["name", "size", "progress"])
-        for i, row in enumerate(self.data):
-            for j, column in enumerate(row):
-                item = QStandardItem(column)
-                self.setItem(i, j, item)
+        self.setRowCount(0)
+        for i, torrent in enumerate(self.torrent_list):
+            
+            name = torrent.data.files.name
+            item = QStandardItem(name)
+            self.setItem(i, 0, item)
+            
+            size = convert_bits(torrent.data.files.length)
+            item = QStandardItem(size)
+            self.setItem(i, 1, item)
+            
+            progress = f"{torrent.piece_manager.downloaded}%"
+            item = QStandardItem(progress)
+            self.setItem(i, 2, item)
+            
+            health = f"{torrent.piece_manager.health}%"
+            item = QStandardItem(health)
+            self.setItem(i, 3, item)
+            
+            availability = str(torrent.piece_manager.availability)
+            item = QStandardItem(availability)
+            self.setItem(i, 4, item)
+            
+            creation_date = torrent.creation_date
+            item = QStandardItem(creation_date)
+            self.setItem(i, 6, item)

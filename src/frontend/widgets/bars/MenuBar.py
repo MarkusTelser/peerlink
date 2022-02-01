@@ -111,7 +111,11 @@ class MenuBar(QMenuBar):
         self.view_menu.addMenu(self.detail_tabs)
         self.view_menu.addSeparator()
         
-        self.show_preview = QAction("Show Torrent Preview")
+        self.show_launch = QAction("Show Launch Window")
+        self.show_launch.setCheckable(True)
+        self.view_menu.addAction(self.show_launch)
+        
+        self.show_preview = QAction("Show Preview Window")
         self.show_preview.setCheckable(True)
         self.view_menu.addAction(self.show_preview)
         

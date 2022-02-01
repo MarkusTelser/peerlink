@@ -19,6 +19,7 @@ class ConfigLoader():
         self.detail_current = self.settings.value('detail_current', 0, int)
         self.detail_tabs = self.settings.value('detail_tabs', [], list)
         self.table_tabs = self.settings.value('table_tabs', QByteArray(), QByteArray)
+        self.show_launch = self.settings.value('show_launch', True, bool)
         
         # Preview Window
         self.settings.beginGroup('PreviewWindow')
