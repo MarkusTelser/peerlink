@@ -1,6 +1,3 @@
-
-from curses import start_color
-from random import seed
 from PyQt6.QtWidgets import (
     QHeaderView, 
     QTabWidget, 
@@ -11,19 +8,27 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QLabel,
     QGridLayout,
-    QScrollArea,
-    QSizePolicy
+    QScrollArea
 )
-from PyQt6.QtGui import QColor, QIcon, QPainter, QStandardItem, QStandardItemModel, QBrush
+from PyQt6.QtGui import (
+    QColor, 
+    QIcon, 
+    QPainter, 
+    QStandardItem, 
+    QStandardItemModel, 
+    QBrush
+)
 from PyQt6.QtCharts import QChart, QChartView, QSplineSeries, QValueAxis
+from datetime import datetime
+from psutil import disk_usage
 from PyQt6.QtCore import Qt
+
 from src.backend.metadata.TorrentData import TorrentFile
 from src.backend.swarm import Swarm
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.utils.utils import convert_bits
-from psutil import disk_usage
-from datetime import datetime
+
 
 class GeneralTab(QWidget):
     def __init__(self):
@@ -86,7 +91,7 @@ class GeneralTab(QWidget):
         information_layout.addWidget(self.time_active, 6, 0)
         information_layout.addWidget(self.reannounce_in, 6, 1)
         main_layout.addWidget(information_box)
-                
+
         torrent_box = QGroupBox()
         torrent_box.setTitle('Torrent')
         torrent_layout = QGridLayout()
@@ -116,9 +121,10 @@ class GeneralTab(QWidget):
         free_space = convert_bits(disk_usage('/').free)
         torrent_size = convert_bits(swarm.data.files.length)
         piece_size = convert_bits(swarm.data.piece_length)
-        start_date = datetime.fromisoformat(swarm.start_date).strftime("%Y-%m-%d %H:%M:%S")
+        start_date = datetime.fromisoformat(swarm.start_date).strftime("%Y-%m-%d %H:%M:%S") if  len(swarm.start_date) else "not yet" 
+        finish_date = datetime.fromisoformat(swarm.finish_date).strftime("%Y-%m-%d %H:%M:%S") if  len(swarm.finish_date) else "not yet" 
         
-        self.pieces.setText(f"Pieces: {swarm.data.pieces_count} x {piece_size}")
+        self.pieces.setText(f"Pieces: {swarm.data.pieces_count} x {piece_size} (have {swarm.piece_manager.finished_pieces})")
         self.info_hash.setText(f"Info hash: {swarm.data.info_hash_hex}")
         self.save_path.setText(f"Save Path: {swarm.path}")
         self.size.setText(f"Size: {torrent_size} (of {free_space} on local disk)")
@@ -126,10 +132,23 @@ class GeneralTab(QWidget):
         self.creation_date.setText(f"Creation date: {swarm.data.creation_date}")
         self.start_date.setText(f"Start date: {start_date}")
         self.comment.setText(f"Comment: {swarm.data.comment}")
-        self.finish_date.setText(f"Finish date: {swarm.finish_date}")
+        self.finish_date.setText(f"Finish date: {finish_date}")
     
     def _clear(self):
+        self.leecher.setText("Leecher: ")
+        self.seeder.setText("Seeder: ")
+        self.downloaded.setText("Downloaded: ")
+        self.uploaded.setText("Uploaded: ")
+        self.share_ratio.setText("Share ratio: ")
+        self.progress.setText("Progress: ")
+        self.download_speed.setText("Download speed: ")
+        self.upload_speed.setText("Upload speed: ")
         self.pieces.setText("Pieces: ")
+        self.eta.setText("ETA: ")
+        self.health.setText("Health: ")
+        self.availability.setText("Availability: ")
+        self.time_active.setText("Time active: ")
+        self.reannounce_in.setText("Reaannounce in: ")
         self.info_hash.setText("Info hash: ")
         self.save_path.setText("Save Path: ")
         self.size.setText("Size: ")

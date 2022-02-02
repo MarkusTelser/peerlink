@@ -52,8 +52,11 @@ class TorrentListModel(QStandardItemModel):
             item = QStandardItem(availability)
             self.setItem(i, 4, item)
             
-            start_date = datetime.datetime.fromisoformat(torrent.start_date)
-            local_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
+            if len(torrent.start_date) > 0:
+                start_date = datetime.fromisoformat(torrent.start_date).strftime("%Y-%m-%d %H:%M:%S")
+                local_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                local_date = "not yet"
             item = QStandardItem(local_date)
             self.setItem(i, 6, item)
             

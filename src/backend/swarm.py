@@ -2,6 +2,7 @@ from queue import Queue
 from threading import Thread
 from src.backend.trackers.HTTPTracker import HTTPTracker
 from threading import BoundedSemaphore
+from datetime import datetime
 from src.backend.trackers.UDPTracker import UDPTracker
 
 from .peer_protocol.PeerIDs import PeerIDs
@@ -36,6 +37,8 @@ class Swarm:
     
     def start(self):
         try:
+            if len(self.start_date) == 0:
+                self.start_date = datetime.now().isoformat()
             self.init_tracker()
             self.announce_tracker()
             self.connect_peers()

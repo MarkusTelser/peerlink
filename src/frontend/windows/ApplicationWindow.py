@@ -138,12 +138,14 @@ class ApplicationWindow(QMainWindow):
         self.menu_bar.create_torrent.triggered.connect(self.create_torrent)
         self.menu_bar.import_torrent.triggered.connect(self.import_torrent)
         self.menu_bar.exit.triggered.connect(self.close)
-        self.menu_bar.resume.triggered.connect(self.start_torrent)
-        self.menu_bar.pause.triggered.connect(self.pause_torrent)
-        self.menu_bar.move_torrent.triggered.connect(self.move_torrent)
-        self.menu_bar.open_explorer.triggered.connect(self.open_explorer)
-        self.menu_bar.remove.triggered.connect(self.delete_torrent)
-        self.menu_bar.view_menu.aboutToShow.connect(self.update_viewmenu)
+        self.menu_bar.edit_resume.triggered.connect(self.start_torrent)
+        self.menu_bar.edit_pause.triggered.connect(self.pause_torrent)
+        self.menu_bar.edit_move.triggered.connect(self.move_torrent)
+        self.menu_bar.edit_copy_name.triggered.connect(self.copy_name)
+        self.menu_bar.edit_copy_hash.triggered.connect(self.copy_hash)
+        self.menu_bar.edit_copy_path.triggered.connect(self.copy_path)
+        self.menu_bar.edit_open.triggered.connect(self.open_explorer)
+        self.menu_bar.edit_remove.triggered.connect(self.delete_torrent)
         self.menu_bar.show_toolbar.triggered.connect(lambda b: self.tool_bar.setVisible(b))
         self.menu_bar.show_statusbar.triggered.connect(lambda b: self.status_bar.setVisible(b))
         self.menu_bar.show_launch.triggered.connect(lambda b: self.set_openlaunch(b))
@@ -156,6 +158,8 @@ class ApplicationWindow(QMainWindow):
         self.menu_bar.help_bug.triggered.connect(lambda: self.open_link(self.BUG_LINK))
         self.menu_bar.help_thanks.triggered.connect(lambda: self.open_link(self.THANKS_LINK))
         self.menu_bar.help_about.triggered.connect(self.open_aboutdialog)
+        self.menu_bar.edit_menu.aboutToShow.connect(self.update_editmenu)
+        self.menu_bar.view_menu.aboutToShow.connect(self.update_viewmenu)
         
         self.tool_bar.open_file.clicked.connect(self.open_file)
         self.tool_bar.open_link.clicked.connect(self.open_magnetlink)
@@ -262,6 +266,25 @@ class ApplicationWindow(QMainWindow):
         elif self.vert_splitter.sizes()[1] == 0:
             fsize = self.vert_splitter.size().height()
             self.vert_splitter.setSizes([int(fsize * 0.7),int(fsize * 0.3)])
+    
+    @pyqtSlot()
+    def update_editmenu(self):
+        if len(self.table_view.selectedIndexes()) == 0:
+            self.menu_bar.edit_resume.setDisabled(True)
+            self.menu_bar.edit_pause.setDisabled(True)
+            self.menu_bar.edit_move.setDisabled(True)
+            self.menu_bar.edit_copy_name.setDisabled(True)
+            self.menu_bar.edit_copy_hash.setDisabled(True)
+            self.menu_bar.edit_copy_path.setDisabled(True)
+            self.menu_bar.edit_remove.setDisabled(True)
+        else:
+            self.menu_bar.edit_resume.setEnabled(True)
+            self.menu_bar.edit_pause.setEnabled(True)
+            self.menu_bar.edit_move.setEnabled(True)
+            self.menu_bar.edit_copy_name.setEnabled(True)
+            self.menu_bar.edit_copy_hash.setEnabled(True)
+            self.menu_bar.edit_copy_path.setEnabled(True)
+            self.menu_bar.edit_remove.setEnabled(True)
     
     @pyqtSlot()
     def update_viewmenu(self):
@@ -439,7 +462,6 @@ class ApplicationWindow(QMainWindow):
             return
         
         swarm = Swarm(dt['data'], dt['path'])
-        swarm.start_date = datetime.now().isoformat()
         
         # add into backup files
         backup_name = self.appdata_loader.backup_torrent(dt['data'].raw_data)

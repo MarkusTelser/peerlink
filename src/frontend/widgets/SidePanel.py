@@ -1,6 +1,21 @@
+from ctypes import alignment
+from distutils.log import debug
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt6.QtGui import QIcon, QMouseEvent
-from PyQt6.QtWidgets import QTabWidget, QVBoxLayout, QWidget, QTreeWidget, QTreeWidgetItem, QFrame, QSizePolicy
+from PyQt6.QtGui import QIcon, QMouseEvent, QAction, QFont
+from PyQt6.QtWidgets import (
+    QTabWidget, 
+    QVBoxLayout,
+    QWidget, 
+    QTreeWidget, 
+    QTreeWidgetItem, 
+    QFrame, 
+    QSizePolicy,
+    QPlainTextEdit,
+    QLineEdit,
+    QComboBox,
+    QHBoxLayout,
+    QLabel
+)
 
 class CategoryTab(QWidget):
     def __init__(self):
@@ -9,6 +24,56 @@ class CategoryTab(QWidget):
 class LogTab(QWidget):
     def __init__(self):
         super().__init__()
+        
+        main_layout = QVBoxLayout()
+        self.setLayout(main_layout)
+        
+        sub_widget = QWidget()
+        sub_layout = QHBoxLayout()
+        sub_layout.setContentsMargins(0, 0, 0, 0)
+        sub_widget.setLayout(sub_layout)
+        
+        options = ["Debug", "Info", "Warning", "Error", "Critical"]
+        debug_level = QComboBox()
+        debug_level.addItems(options)
+        sub_layout.addStretch()
+        sub_layout.addWidget(QLabel('Logging Level: '))
+        sub_layout.addWidget(debug_level)
+        main_layout.addWidget(sub_widget)
+        
+        self.log_text = ""
+        self.log_view = QPlainTextEdit(self.log_text)
+        self.log_view.setReadOnly(True)
+        #self.log_view.setDocument()
+        self.log_view.setFont(QFont('Arial', 10))
+        self.log_view.setStyleSheet('border: 2px solid black;')
+        main_layout.addWidget(self.log_view)
+        
+        filter = QLineEdit()
+        filter.setStyleSheet('border: 2px solid black;')
+        filter.setPlaceholderText('Filter...')
+        filter.setClearButtonEnabled(True)
+        filter.findChild(QAction, "_q_qlineeditclearaction").setIcon(QIcon("resources/cancel.svg"))
+        main_layout.addWidget(filter)
+        
+        filter.textChanged.connect(self.filter)
+        debug_level.currentTextChanged.connect(self.change_loglevel)
+        
+    @pyqtSlot(str)
+    def filter(self, text: str):
+        if text == "":
+            self.log_view.setPlainText(self.log_text)
+            return
+        
+        displayed_text = ""
+        for line in self.log_text.split('\n'):
+            if text not in line:
+                displayed_text += line + '\n'
+        self.log_view.setPlainText(displayed_text)
+    
+    @pyqtSlot(str)
+    def change_loglevel(self, level: str):
+        pass
 
 class FilterTree(QTreeWidget):
     changed_item = pyqtSignal(list)

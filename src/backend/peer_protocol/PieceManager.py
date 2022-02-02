@@ -35,6 +35,11 @@ class PieceManager:
             return round(len(finished_pieces) / self.pieces_count * 100, 2)
     
     @property
+    def finished_pieces(self):
+        with self.lock:
+            return len([x for x in self.pieces if x.status == 'FINISHED'])
+    
+    @property
     def health(self):
         with self.lock:
             have_count = len([x for x in self.pieces if x.count_peers > 0])

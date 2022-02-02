@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QMenuBar, QMenu
 from PyQt6.QtGui import QIcon, QKeySequence, QAction
+from PyQt6.QtCore import pyqtSlot
 
 class MenuBar(QMenuBar):
     def __init__(self):
@@ -38,53 +39,53 @@ class MenuBar(QMenuBar):
         self.addMenu(fileMenu)
         
         # edit menu
-        editMenu = QMenu("&Edit", self)
+        self.edit_menu = QMenu("&Edit", self)
         
         action_icon = QIcon("resources/resume.svg")
         action_name = "Resume"
         action_shortcut = QKeySequence("Ctrl+S")
-        self.resume = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_resume = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         action_icon = QIcon("resources/pause.svg")
         action_name = "Pause"
         action_shortcut = QKeySequence("Ctrl+P")
-        self.pause = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_pause = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         action_icon = QIcon("resources/move.svg")
         action_name = "Move"
         action_shortcut = QKeySequence("Ctrl+M")
-        self.move_torrent = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_move = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
-        editMenu.addSeparator()
+        self.edit_menu.addSeparator()
         
         action_icon = QIcon("resources/copy.svg")
         action_name = "Copy name"
         action_shortcut = QKeySequence("Ctrl+C")
-        self.copy_name = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_copy_name = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         action_icon = QIcon("resources/copy.svg")
         action_name = "Copy hash"
         action_shortcut = QKeySequence("Ctrl+Shift+C")
-        self.copy_hash = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_copy_hash = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         action_icon = QIcon("resources/copy.svg")
         action_name = "Copy path"
         action_shortcut = QKeySequence("Ctrl+Shift+P")
-        self.copy_path = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_copy_path = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
-        editMenu.addSeparator()
+        self.edit_menu.addSeparator()
         
         action_icon = QIcon("resources/files.svg")
         action_name = "Open in file explorer"
         action_shortcut = QKeySequence("Ctrl+E")
-        self.open_explorer = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_open = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         action_icon = QIcon("resources/remove.svg")
         action_name = "Remove"
         action_shortcut = QKeySequence("Ctrl+D")
-        self.remove = editMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
+        self.edit_remove = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
-        self.addMenu(editMenu)
+        self.addMenu(self.edit_menu)
         
         # settings menu
         self.view_menu = QMenu("&View", self)
