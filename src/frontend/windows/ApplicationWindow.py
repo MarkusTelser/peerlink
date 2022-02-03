@@ -7,15 +7,25 @@ from PyQt6.QtWidgets import (
     QWidget,
     QStackedLayout
 )
-from PyQt6.QtGui import QGuiApplication, QIcon, QAction, QCloseEvent, QDesktopServices, QDragEnterEvent, QDropEvent
+from PyQt6.QtGui import (
+    QGuiApplication, 
+    QIcon, 
+    QAction,
+    QCloseEvent, 
+    QDesktopServices, 
+    QDragEnterEvent, 
+    QDropEvent
+)
 from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl, QTimer
 from os.path import join, exists, dirname, isdir
 from threading import Thread
 import subprocess
 import sys
-from datetime import date, datetime
-from src.frontend.utils.AppDataLoader import AppDataLoader
 
+from src.frontend.models.TorrentListModel import TorrentListModel
+from src.frontend.views.TorrentListView import TorrentListView
+from src.frontend.views.TorrentDetailView import TorrentDetailView
+from src.frontend.utils.AppDataLoader import AppDataLoader
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.widgets.StatisticsPanel import StatisticsPanel
 from src.frontend.widgets.dialogs import DeleteDialog, FileDialog, MagnetLinkDialog
@@ -23,14 +33,15 @@ from src.frontend.widgets.bars import MenuBar, StatusBar, ToolBar
 from src.frontend.models.SortFilterProcxyModel import SortFilterProxyModel
 from src.frontend.widgets.SidePanel import SidePanel
 from src.frontend.widgets.dialogs.AboutDialog import AboutDialog
+from src.frontend.windows.DiagramWindow import DiagramWindow
+from src.frontend.windows.IpFilterWindow import IpFilterWindow
 from src.frontend.windows.PreviewWindow import PreviewWindow
 
 from src.backend.metadata.Bencoder import bencode
 from src.backend.metadata.TorrentParser import TorrentParser
-from src.frontend.models.TorrentListModel import TorrentListModel
-from src.frontend.views.TorrentListView import TorrentListView
-from src.frontend.views.TorrentDetailView import TorrentDetailView
 from src.backend.swarm import Swarm
+from src.frontend.windows.SpeedLimitWindow import SpeedLimitWindow
+from src.frontend.windows.StatisticsWindow import StatisticsWindow
 
 class ApplicationWindow(QMainWindow):
     DONATE_LINK = 'www.google.com'
@@ -94,11 +105,8 @@ class ApplicationWindow(QMainWindow):
         self.hori_splitter = QSplitter()
         self.hori_splitter.setOrientation(Qt.Orientation.Horizontal)
         
-        self.main_widget = QWidget()
-        self.stacked_layout = QStackedLayout()
-        self.main_widget.setLayout(self.stacked_layout)
-        self.stacked_layout.insertWidget(0, self.hori_splitter)
-        self.main_layout.addWidget(self.main_widget)
+        
+        self.main_layout.addWidget(self.hori_splitter)
         
         self.side_panel = SidePanel(self.config_loader.side_tabs)
         if self.side_panel.count() > 0:
@@ -123,10 +131,6 @@ class ApplicationWindow(QMainWindow):
         if self.detail_view.count() > 0:
             self.detail_view.setCurrentIndex(self.config_loader.detail_current)
         self.vert_splitter.addWidget(self.detail_view)
-        
-        # general statistics
-        self.statistics = StatisticsPanel()
-        self.stacked_layout.insertWidget(1, self.statistics)
         
         print(self.config_loader.hori_splitter, self.hori_splitter.size())
         self.vert_splitter.setSizes(self.config_loader.vert_splitter)
@@ -154,13 +158,17 @@ class ApplicationWindow(QMainWindow):
         self.menu_bar.show_detail.triggered.connect(self.show_detailpanel)
         self.menu_bar.panel_tabs.triggered.connect(self.update_paneltabs)
         self.menu_bar.detail_tabs.triggered.connect(self.update_detailtabs)
+        self.menu_bar.tools_speed.triggered.connect(self.open_diagram)
+        self.menu_bar.tools_statistics.triggered.connect(self.open_statistics)
+        self.menu_bar.tools_filter.triggered.connect(self.open_ipfilter)
+        self.menu_bar.tools_limit.triggered.connect(self.open_speedlimit)
         self.menu_bar.help_donate.triggered.connect(lambda: self.open_link(self.DONATE_LINK))
         self.menu_bar.help_bug.triggered.connect(lambda: self.open_link(self.BUG_LINK))
         self.menu_bar.help_thanks.triggered.connect(lambda: self.open_link(self.THANKS_LINK))
         self.menu_bar.help_about.triggered.connect(self.open_aboutdialog)
         self.menu_bar.edit_menu.aboutToShow.connect(self.update_editmenu)
         self.menu_bar.view_menu.aboutToShow.connect(self.update_viewmenu)
-        
+
         self.tool_bar.open_file.clicked.connect(self.open_file)
         self.tool_bar.open_link.clicked.connect(self.open_magnetlink)
         self.tool_bar.resume.clicked.connect(self.start_torrent)
@@ -180,7 +188,8 @@ class ApplicationWindow(QMainWindow):
         self.table_view.menu_delete.triggered.connect(self.delete_torrent)
         
         self.side_panel.tabs[0][0].filter_tree.changed_item.connect(self.filter_torrents)
-        self.status_bar.speed.clicked.connect(self.open_statistics)
+        self.status_bar.speed.clicked.connect(self.open_diagram)
+        self.status_bar.statistics.clicked.connect(self.open_statistics)
     
     def show(self, data=None):
         if data:
@@ -244,11 +253,24 @@ class ApplicationWindow(QMainWindow):
         pass
     
     @pyqtSlot()
+    def open_ipfilter(self):
+        window = IpFilterWindow(self)
+        window.show()
+    
+    @pyqtSlot()
+    def open_speedlimit(self):
+        window = SpeedLimitWindow(self)
+        window.show()
+    
+    @pyqtSlot()
+    def open_diagram(self):
+        window = DiagramWindow(self)
+        window.show()
+        
+    @pyqtSlot()
     def open_statistics(self):
-        if self.stacked_layout.currentIndex() == 0:
-            self.stacked_layout.setCurrentIndex(1)
-        else:
-            self.stacked_layout.setCurrentIndex(0)
+        window = StatisticsWindow(self)
+        window.show()
     
     @pyqtSlot(bool)
     def show_sidepanel(self, checked: bool):
@@ -455,43 +477,55 @@ class ApplicationWindow(QMainWindow):
         error_msg.setText(error_txt)
         error_msg.show()
     
-    def appendRowEnd(self, dt):
+    def appendRowEnd(self, data, extras={}, meta={}):
         # dont't add if info_hash is same as in list
-        if dt['data'].info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
+        if data.info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
             self.show_errorwin("torrent already in list")
             return
         
-        swarm = Swarm(dt['data'], dt['path'])
+        """
+        'path': path,
+            'category': category,
+            'strategy': strategy,
+            'start': start,
+            'check_hash' : check_hash,
+            'pad_files' : pad_files,
+            'not_again' : not_again,
+        """
+        # save data about window to config
+        if 'size' in extras:
+            self.config_loader.preview_size = extras['size']
+        if 'location' in extras:
+            self.config_loader.preview_location = extras['location']
+        if 'default_path' in extras and extras['default_path']:
+            self.config_loader.default_path = extras['path']
+        if 'default_category' in extras:
+            pass
+        if 'not_again' in extras:
+            self.open_preview = extras['not_again']
+        
+        swarm = Swarm(data, extras['path'])
         
         # add into backup files
-        backup_name = self.appdata_loader.backup_torrent(dt['data'].raw_data)
-        swarm.backup_name = backup_name
+        swarm.backup_name = self.appdata_loader.backup_torrent(data.raw_data)
         
-        self.config_loader.auto_start = dt['start']
-        self.config_loader.check_hashes = dt['check_hash']
-        self.config_loader.padd_files = dt['pad_files']
-        self.open_preview = dt['not_again']
-        
-        if 'size' in dt:
-            self.config_loader.preview_size = dt['size']
-        if 'location' in dt:
-            self.config_loader.preview_location = dt['location']
-        if 'category' in dt:
-            pass
-        if 'default_category' in dt:
-            pass
-        
-        #'strategy': strategy,
-        #'check_hash' : check_hash,
-        # category, default_cateogry
-        
-        if dt['default_path']:
-            self.config_loader.default_path = dt['path']
-        if dt['pad_files']:
-            Thread(target=swarm.file_handler.padd_files).start()
-        if dt['start']:
+        if 'start' in extras and extras['start']:
+            self.config_loader.auto_start = extras['start']
             swarm.start_thread = Thread(target=swarm.start)
             swarm.start_thread.start()
+        
+        if 'check_hash' in extras and extras['check_hash']:
+            self.config_loader.check_hashes = extras['check_hash']
+        
+        if 'pad_files' in extras and extras['pad_files']:
+            self.config_loader.padd_files = extras['pad_files']
+            Thread(target=swarm.file_handler.padd_files).start()
+        
+        if 'category' in extras and extras['category']:
+            pass
+        
+        if 'startegy' in extras and extras['startegy']:
+            pass
         
         self.table_model.append(swarm)
     

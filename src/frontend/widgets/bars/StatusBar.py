@@ -38,11 +38,11 @@ class StatusBar(QStatusBar):
         count_nodes.setContentsMargins(-1, -1, 10, -1)
         self.addPermanentWidget(count_nodes)
         
-        self.speed = QPushButton('Speed')
+        self.speed = QPushButton('')
         self.speed.setIcon(QIcon('resources/chart.svg'))
         self.addPermanentWidget(self.speed)
         
-        self.statistics = QPushButton('Stats')
+        self.statistics = QPushButton('')
         self.statistics.setIcon(QIcon('resources/stats.svg'))
         self.addPermanentWidget(self.statistics)
         

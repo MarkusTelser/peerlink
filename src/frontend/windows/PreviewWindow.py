@@ -35,7 +35,7 @@ from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.utils.utils import convert_bits
 
 class PreviewWindow(QMainWindow):
-    add_data = pyqtSignal(dict)
+    add_data = pyqtSignal(TorrentData, dict, dict)
     
     def __init__(self, conf: ConfigLoader, parent=None):
         super(PreviewWindow, self).__init__(parent=parent)
@@ -255,22 +255,25 @@ class PreviewWindow(QMainWindow):
         
         # TODO if implemeted, check which files are checked and set in model data
         
-        data = {
+        extras = {
+            'start': start,
+            'path': path,
+            'category': category,
+            'strategy': strategy,
+            'check_hash' : check_hash,
+            'pad_files' : pad_files
+        }
+        
+        meta = {
             'size': self.size(),
             'location': self.pos(),
-            'path': path,
             'default_path': default_path,
-            'category': category,
             'default_category': default_category,
-            'strategy': strategy,
-            'start': start,
-            'check_hash' : check_hash,
-            'pad_files' : pad_files,
-            'not_again' : not_again,
-            'data' : self.torrent_data
+            'not_again' : not_again
         }
+        
         self.close()
-        self.add_data.emit(data)
+        self.add_data.emit(self.torrent_data, extras, meta)
     
     def reject(self):
         self.close()

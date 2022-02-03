@@ -126,6 +126,26 @@ class MenuBar(QMenuBar):
         settingsMenu = QMenu("&Settings", self)
         self.addMenu(settingsMenu)
         
+        # settings menu
+        self.tools_menu = QMenu("&Tools", self)
+        self.addMenu(self.tools_menu)
+        
+        self.tools_filter = QAction("Ip Filter")
+        self.tools_filter.setIcon(QIcon('resources/filter.svg'))
+        self.tools_menu.addAction(self.tools_filter)
+        
+        self.tools_limit = QAction("Speed Limit")
+        self.tools_limit.setIcon(QIcon('resources/limit.svg'))
+        self.tools_menu.addAction(self.tools_limit)
+        
+        self.tools_speed = QAction("Diagram")
+        self.tools_speed.setIcon(QIcon('resources/chart.svg'))
+        self.tools_menu.addAction(self.tools_speed) 
+        
+        self.tools_statistics = QAction("Statistics")
+        self.tools_statistics.setIcon(QIcon('resources/stats.svg'))
+        self.tools_menu.addAction(self.tools_statistics)
+        
         # help menu
         helpMenu = QMenu("&Help", self)
         
