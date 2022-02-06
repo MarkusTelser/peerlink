@@ -45,7 +45,7 @@ from src.frontend.windows.StatisticsWindow import StatisticsWindow
 
 class ApplicationWindow(QMainWindow):
     DONATE_LINK = 'www.google.com'
-    BUG_LINK = 'www.google.com'
+    BUG_LINK = 'https://github.com/MarkusTelser/peerlink/issues'
     THANKS_LINK = 'https://saythanks.io/to/MarkusTelser'
     
     def __init__(self, config_loader):
@@ -197,7 +197,8 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot(QModelIndex)
     def select_torrent(self, index: QModelIndex):
-        data = self.table_model.torrent_list[index.row()]
+        real_index = index.siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+        data = self.table_model.torrent_list[real_index]
         self.detail_view._update(data)
     
     @pyqtSlot()
@@ -427,20 +428,20 @@ class ApplicationWindow(QMainWindow):
     @pyqtSlot()
     def delete_torrent(self):
         indexes = self.table_view.selectedIndexes()
+        real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         if len(indexes) == 0:
             self.show_errorwin("no torrent selected")
             return  
 
         dialog = DeleteDialog()
         if dialog.exec():
-            index = indexes[0]
             if dialog.checkbox.isChecked():
-                self.table_model.torrent_list[index.row()].file_handler.remove_files()
+                self.table_model.torrent_list[real_index].file_handler.remove_files()
                 
-            backup_name = self.table_model.torrent_list[index.row()].backup_name
+            backup_name = self.table_model.torrent_list[real_index].backup_name
             self.appdata_loader.remove_torrent(backup_name)
             
-            self.table_model.remove(index.row())
+            self.table_model.remove(real_index)
             self._update()
     
     @pyqtSlot()
@@ -477,56 +478,64 @@ class ApplicationWindow(QMainWindow):
         error_msg.setText(error_txt)
         error_msg.show()
     
-    def appendRowEnd(self, data, extras={}, meta={}):
+    def appendRowEnd(self, data, extras={}):
         # dont't add if info_hash is same as in list
         if data.info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
             self.show_errorwin("torrent already in list")
             return
-        
-        """
-        'path': path,
-            'category': category,
-            'strategy': strategy,
-            'start': start,
-            'check_hash' : check_hash,
-            'pad_files' : pad_files,
-            'not_again' : not_again,
-        """
-        # save data about window to config
+        print(extras)
+        # save data to config
+        if 'start' in extras:
+            self.config_loader.auto_start = extras['start']
+        if 'check_hashes' in extras:
+            self.config_loader.check_hashes = extras['check_hash']
+        if 'pad_files' in extras:
+            self.config_loader.padd_files = extras['pad_files']
         if 'size' in extras:
             self.config_loader.preview_size = extras['size']
         if 'location' in extras:
             self.config_loader.preview_location = extras['location']
-        if 'default_path' in extras and extras['default_path']:
+        if 'default_path' in extras:
             self.config_loader.default_path = extras['path']
         if 'default_category' in extras:
             pass
         if 'not_again' in extras:
             self.open_preview = extras['not_again']
         
+        # set default values if not in extras
+        if 'start' not in extras:
+            extras['start'] = self.config_loader.auto_start
+        if 'path' not in extras:
+            extras['path'] = self.config_loader.default_path
+        if 'category' not in extras:
+            pass
+        if 'startegy' not in extras:
+            pass
+        if 'check_hash' not in extras:
+            extras['check_hash'] = self.config_loader.check_hashes
+        if 'pad_files' not in extras:
+            extras['pad_files'] = self.config_loader.padd_files
+        print(extras['path'])   
         swarm = Swarm(data, extras['path'])
         
         # add into backup files
         swarm.backup_name = self.appdata_loader.backup_torrent(data.raw_data)
         
-        if 'start' in extras and extras['start']:
-            self.config_loader.auto_start = extras['start']
+        # actions if key true
+        if extras['start']:
             swarm.start_thread = Thread(target=swarm.start)
             swarm.start_thread.start()
-        
-        if 'check_hash' in extras and extras['check_hash']:
-            self.config_loader.check_hashes = extras['check_hash']
-        
-        if 'pad_files' in extras and extras['pad_files']:
-            self.config_loader.padd_files = extras['pad_files']
+        """
+        if extras['category']:
+            pass
+        if extras['startegy']:
+            pass
+        """
+        if extras['check_hash']:
+            pass
+        if extras['pad_files']:
             Thread(target=swarm.file_handler.padd_files).start()
-        
-        if 'category' in extras and extras['category']:
-            pass
-        
-        if 'startegy' in extras and extras['startegy']:
-            pass
-        
+        print('add cong')
         self.table_model.append(swarm)
     
     def load_torrents(self, torrent_list):
@@ -534,6 +543,7 @@ class ApplicationWindow(QMainWindow):
             swarm = Swarm(torrent_data, extras['save_path'])
             swarm.backup_name = extras['backup_name']
             swarm.start_date = extras['start_date']
+            print(torrent_data.files.name)
             self.table_model.append(swarm)
     
     def save_torrents(self):
@@ -597,16 +607,6 @@ class ApplicationWindow(QMainWindow):
                 window.add_data.connect(self.appendRowEnd)
                 window.show(data)
             else:
-                data = {
-                    'path': self.config_loader.default_path,
-                    'default_path': False,
-                    'strategy': 'rarest-first',
-                    'start': False,
-                    'check_hash' : True,
-                    'pad_files' : False,
-                    'not_again' : False,
-                    'data' : data
-                }
                 self.appendRowEnd(data)
     
     def _update(self):
@@ -616,7 +616,8 @@ class ApplicationWindow(QMainWindow):
             if len(indexes) == 0:
                 self.detail_view._clear()
             else:
-                data = self.table_model.torrent_list[indexes[0].row()]
+                real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+                data = self.table_model.torrent_list[real_index]
                 self.detail_view._update(data)
         
 if __name__ == "__main__":

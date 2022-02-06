@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QApplication
 
 from src.frontend.windows.LaunchWindow import LaunchWindow
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
-from src.frontend.utils.ArgParser import args_parser
+from src.frontend.utils.ArgParser import args_parser, args_torrent
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.utils.AppDataLoader import AppDataLoader
 
@@ -18,22 +18,22 @@ def run():
     conf = ConfigLoader()
     app_data  = AppDataLoader()
     torrent_list = app_data.load_torrents()
+    arg_torrents = args_torrent(args)
     
-    if args['p'] != None or args['m'] != None:
-        # received file-path in args, open MainWindow
-        if args['p'] != None:
-            print('filepath', args['p'])
-        # received magnet-link in args, open MainWindow
-        if args['m'] != None:
-            print('magnet link', args['m'])
     
-        sys.exit(app.exec())
     # decide which window to load depending on settings
-    elif conf.show_launch and len(torrent_list) == 0:
+    if conf.show_launch and len(torrent_list) == 0 and len(arg_torrents) == 0:
         window = LaunchWindow(conf)
     else:
         window = ApplicationWindow(conf)
+        
+        # load app data torrents from previous sessions
         window.load_torrents(torrent_list)
+        
+        # load console argument torrents
+        if len(arg_torrents) != 0:
+            for torrent, extras in arg_torrents:
+                window.appendRowEnd(torrent, extras)
     
     window.show()
 

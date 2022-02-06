@@ -105,6 +105,7 @@ class GeneralTab(QWidget):
         self.start_date = QLabel("Start date: ")
         self.comment = QLabel("Comment: ")
         self.finish_date = QLabel("Finish date: ")
+        self.comment.setWordWrap(True)
         
         torrent_layout.addWidget(self.info_hash, 0, 0)
         torrent_layout.addWidget(self.save_path, 0, 1)

@@ -31,9 +31,9 @@ class TorrentListModel(QStandardItemModel):
     def _update(self):
         self.setRowCount(0)
         for i, torrent in enumerate(self.torrent_list):
-            
             name = torrent.data.files.name
             item = QStandardItem(name)
+            item.setData(i, Qt.ItemDataRole.InitialSortOrderRole + 69)
             self.setItem(i, 0, item)
             
             size = convert_bits(torrent.data.files.length)

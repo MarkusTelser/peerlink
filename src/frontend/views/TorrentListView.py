@@ -30,7 +30,7 @@ class TorrentListView(QTableView):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         
         # vertical & horizontal header settings
         self.horizontalHeader().restoreState(column_state)
@@ -79,8 +79,6 @@ class TorrentListView(QTableView):
         menu_layout = QVBoxLayout()
         menu_layout.setSpacing(0)
         self.select_menu.setLayout(menu_layout)
-        
-        
     
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.RightButton:

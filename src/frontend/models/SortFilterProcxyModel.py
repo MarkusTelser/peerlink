@@ -21,7 +21,6 @@ class SortFilterProxyModel(QSortFilterProxyModel):
     
     def lessThan(self, left: QModelIndex, right: QModelIndex) -> bool:  
         column_index = left.column()
-        
         # size
         if column_index == 1: 
             sizes = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'] 

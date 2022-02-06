@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 import sys
 
 from src.backend.metadata.MagnetLink import MagnetLink
+from src.backend.metadata.TorrentParser import TorrentParser
 
 def args_parser():
     prog = "peerlink"
@@ -39,6 +40,7 @@ def args_parser():
         sys.exit()
     
     args = vars(args)
+    
     if not args['p'] and not args['m']:
         optional_par = False
         if args['author']:
@@ -59,6 +61,13 @@ def args_parser():
         if optional_par:
            sys.exit()
     
+    return parser
+
+def args_torrent(parser):
+    torrents = list()
+    
+    args = vars(parser.parse_args())
+    
     # check if valid path, else throw error
     if args['p']:
         if not exists(args['p']):
@@ -67,6 +76,26 @@ def args_parser():
             parser.error('path is not a file')
         if not splitext(args['p'])[1] == '.torrent':
             parser.error('file is not a torrent')
+        
+        torrent = TorrentParser.parse_filepath(args['p'])
+        extras = dict()
+       
+        extras['pad_files'] = args['pad_files']
+        extras['start'] = not args['dont_autostart']
+        extras['check_hash'] = not args['dont_check_pieces']
+        extras['strategy'] = args['download_strategy']
+        if args['save_path'] != None:
+            extras['path'] = args['save_path']
+        if args['category'] != None:
+            extras['category'] = args['category']
+        
+        torrents.append((torrent, extras))
+            
+    return torrents
+            
+def args_magnet(parser):
+    magnets = list()
+    args = parser.parse()
     
     # check if valid magnet link, else throw error
     if args['m']:
@@ -75,4 +104,4 @@ def args_parser():
         except Exception as e:
             parser.error(str(e))
     
-    return args
+    return magnets
