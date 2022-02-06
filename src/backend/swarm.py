@@ -31,11 +31,16 @@ class Swarm:
         self.start_thread = None
         
         self.path = path
+        self.category = ""
         self.backup_name = ""
         self.start_date = ""
         self.finish_date = ""
     
     def start(self):
+        self.start_thread = Thread(target=self._start)
+        self.start_thread.start()
+    
+    def _start(self):
         try:
             if len(self.start_date) == 0:
                 self.start_date = datetime.now().isoformat()
@@ -45,6 +50,9 @@ class Swarm:
         except Exception:
             raise Exception('crashed')
     
+    def pause(self):
+        self.start_thread = None
+
     def init_tracker(self):
         print(self.announces)
         

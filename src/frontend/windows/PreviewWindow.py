@@ -35,7 +35,7 @@ from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.utils.utils import convert_bits
 
 class PreviewWindow(QMainWindow):
-    add_data = pyqtSignal(TorrentData, dict, dict)
+    add_data = pyqtSignal(TorrentData, dict)
     
     def __init__(self, conf: ConfigLoader, parent=None):
         super(PreviewWindow, self).__init__(parent=parent)
@@ -49,7 +49,6 @@ class PreviewWindow(QMainWindow):
         self.resize(self.conf.preview_size)
 
         # center in the middle of screen
-        print(self.conf.preview_location)
         if not self.conf.preview_location.isNull():
             self.move(self.conf.preview_location)
         else:
@@ -104,10 +103,14 @@ class PreviewWindow(QMainWindow):
         category_layout = QVBoxLayout()
         category_box.setLayout(category_layout)
         group_layout.addWidget(category_box)
+        
         self.category = QComboBox()
         self.category.setEditable(True)
+        self.category.addItems(self.conf.categorys)
+        self.category.setEditText(self.conf.default_category)
         self.category.lineEdit().setPlaceholderText('Enter new/existing category')
         self.default_category = QCheckBox('set as default category')
+        
         category_layout.addWidget(self.category)
         category_layout.addWidget(self.default_category)
         
@@ -261,10 +264,8 @@ class PreviewWindow(QMainWindow):
             'category': category,
             'strategy': strategy,
             'check_hash' : check_hash,
-            'pad_files' : pad_files
-        }
+            'pad_files' : pad_files,
         
-        meta = {
             'size': self.size(),
             'location': self.pos(),
             'default_path': default_path,
@@ -273,7 +274,7 @@ class PreviewWindow(QMainWindow):
         }
         
         self.close()
-        self.add_data.emit(self.torrent_data, extras, meta)
+        self.add_data.emit(self.torrent_data, extras)
     
     def reject(self):
         self.close()

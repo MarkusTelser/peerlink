@@ -1,5 +1,6 @@
 from ctypes import alignment
 from distutils.log import debug
+from operator import ge
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt6.QtGui import QIcon, QMouseEvent, QAction, QFont
 from PyQt6.QtWidgets import (
@@ -20,6 +21,45 @@ from PyQt6.QtWidgets import (
 class CategoryTab(QWidget):
     def __init__(self):
         super().__init__()
+        
+        main_layout = QVBoxLayout()
+        self.setLayout(main_layout)
+        
+        general_tree = QTreeWidget()
+        general_tree.header().hide()
+        general_tree.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        general_tree.setSelectionMode(QTreeWidget.SelectionMode.SingleSelection)
+        self.option1 = QTreeWidgetItem(general_tree, ["All"])
+        self.option2 = QTreeWidgetItem(general_tree, ["Categorized"])
+        self.option3 = QTreeWidgetItem(general_tree, ["Uncategorized"])
+        main_layout.addWidget(general_tree)    
+        
+        self.category_tree = QTreeWidget()
+        self.category_tree.header().hide()
+        main_layout.addWidget(self.category_tree)
+        
+        main_layout.addStretch()
+        
+    def _update(self, torrent_list, categorys):
+        categorized = 0
+        for torrent in torrent_list:
+            if len(torrent.category) != 0:
+                categorized += 1
+        
+        self.option1.setText(0, f"All ({len(torrent_list)})")
+        self.option2.setText(0, f"Categorized ({categorized})")
+        self.option3.setText(0, f"Uncategorized ({len(torrent_list) - categorized})")
+        
+        self.category_tree.clear()
+        for category in categorys:
+            QTreeWidgetItem(self.category_tree, [category])
+        
+        for torrent in torrent_list:
+            if len(torrent.category) != 0:
+                c = self.category_tree.findItems(torrent.category, Qt.MatchFlag.MatchExactly)[0]
+                QTreeWidgetItem(c, [torrent.data.files.name])
+        
+        
 
 class LogTab(QWidget):
     def __init__(self):
@@ -95,8 +135,8 @@ class FilterTree(QTreeWidget):
         self.expandAll()
         self.header().hide()
         self.setFrameShadow(QFrame.Shadow.Raised)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setSelectionMode(QTreeWidget.SelectionMode.MultiSelection)
-       
 
         self.itemSelectionChanged.connect(self.item_selected)
         self.itemDoubleClicked.connect(self.item_doubleclick)
@@ -110,22 +150,19 @@ class FilterTree(QTreeWidget):
                 filter = f"{item.parent().text(0)}/{item.text(0)}"
                 filters.append(filter)
             else:
-                self.currentItem().setSelected(False)
+                item.setSelected(False)
             
         self.changed_item.emit(filters)
-        self.clearFocus()
     
     @pyqtSlot(QTreeWidgetItem, int)
     def item_doubleclick(self, item: QTreeWidgetItem, column: int):
         # if is a top level category
         if self.currentItem().childCount() != 0:
             self.currentItem().setSelected(False)
-            self.clearFocus()
     
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         if self.indexAt(event.pos()).data() == None:
             self.clearSelection()
-        self.clearFocus()
         return super().mouseDoubleClickEvent(event)
     
 
@@ -210,3 +247,6 @@ class SidePanel(QTabWidget):
     def tabspos(self):
         tab_texts = [x[2] for x in self.tabs]
         return [tab_texts.index(self.tabText(i)) for i in range(len(self.tabs)) if self.isTabVisible(i)]
+    
+    def _update(self, torrent_list, categorys):
+        self.tabs[1][0]._update(torrent_list, categorys)

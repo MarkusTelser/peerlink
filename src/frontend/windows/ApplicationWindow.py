@@ -108,7 +108,7 @@ class ApplicationWindow(QMainWindow):
         
         self.main_layout.addWidget(self.hori_splitter)
         
-        self.side_panel = SidePanel(self.config_loader.side_tabs)
+        self.side_panel = SidePanel(self.config_loader)
         if self.side_panel.count() > 0:
             self.side_panel.setCurrentIndex(self.config_loader.side_current)
         self.hori_splitter.addWidget(self.side_panel)
@@ -132,7 +132,6 @@ class ApplicationWindow(QMainWindow):
             self.detail_view.setCurrentIndex(self.config_loader.detail_current)
         self.vert_splitter.addWidget(self.detail_view)
         
-        print(self.config_loader.hori_splitter, self.hori_splitter.size())
         self.vert_splitter.setSizes(self.config_loader.vert_splitter)
         self.hori_splitter.setSizes(self.config_loader.hori_splitter)
         
@@ -203,11 +202,15 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot()
     def start_torrent(self):
-        pass
+        indexes = self.table_view.selectedIndexes()
+        real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+        self.table_model.torrent_list[real_index].start()
     
     @pyqtSlot()
     def pause_torrent(self):
-        pass
+        indexes = self.table_view.selectedIndexes()
+        real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+        self.table_model.torrent_list[real_index].pause()
     
     @pyqtSlot()
     def move_torrent(self):
@@ -497,8 +500,10 @@ class ApplicationWindow(QMainWindow):
             self.config_loader.preview_location = extras['location']
         if 'default_path' in extras:
             self.config_loader.default_path = extras['path']
+        if 'category' in extras and len(extras['category']) > 0 and extras['category'] not in self.config_loader.categorys:
+            self.config_loader.categorys.append(extras['category'])
         if 'default_category' in extras:
-            pass
+            self.config_loader.default_category = extras['category']
         if 'not_again' in extras:
             self.open_preview = extras['not_again']
         
@@ -508,7 +513,7 @@ class ApplicationWindow(QMainWindow):
         if 'path' not in extras:
             extras['path'] = self.config_loader.default_path
         if 'category' not in extras:
-            pass
+            extras['category'] = self.config_loader.default_category
         if 'startegy' not in extras:
             pass
         if 'check_hash' not in extras:
@@ -523,11 +528,10 @@ class ApplicationWindow(QMainWindow):
         
         # actions if key true
         if extras['start']:
-            swarm.start_thread = Thread(target=swarm.start)
-            swarm.start_thread.start()
-        """
+            swarm.start()
         if extras['category']:
-            pass
+            swarm.category = extras['category']
+        """
         if extras['startegy']:
             pass
         """
@@ -541,6 +545,7 @@ class ApplicationWindow(QMainWindow):
     def load_torrents(self, torrent_list):
         for torrent_data, extras in torrent_list:        
             swarm = Swarm(torrent_data, extras['save_path'])
+            swarm.category = extras['category']
             swarm.backup_name = extras['backup_name']
             swarm.start_date = extras['start_date']
             print(torrent_data.files.name)
@@ -550,6 +555,7 @@ class ApplicationWindow(QMainWindow):
         for torrent in self.table_model.torrent_list:
             save_data = {
                 'save_path': torrent.path,
+                'category': torrent.category,
                 'backup_name': torrent.backup_name,
                 'start_date': torrent.start_date   
             }
@@ -590,6 +596,8 @@ class ApplicationWindow(QMainWindow):
         self.config_loader.settings.setValue('preview_location', self.config_loader.preview_location)
         self.config_loader.settings.setValue('open_preview', self.open_preview)
         self.config_loader.settings.setValue('default_path', self.config_loader.default_path)
+        self.config_loader.settings.setValue('categorys', self.config_loader.categorys)
+        self.config_loader.settings.setValue('default_category', self.config_loader.default_category)
         self.config_loader.settings.setValue('auto_start', self.config_loader.auto_start)
         self.config_loader.settings.setValue('check_hashes', self.config_loader.check_hashes)
         self.config_loader.settings.setValue('padd_files', self.config_loader.padd_files)
@@ -619,6 +627,9 @@ class ApplicationWindow(QMainWindow):
                 real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
                 data = self.table_model.torrent_list[real_index]
                 self.detail_view._update(data)
+                
+        # update side panel
+        self.side_panel._update(self.table_model.torrent_list, self.config_loader.categorys)
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
