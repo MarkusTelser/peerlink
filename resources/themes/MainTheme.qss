@@ -272,7 +272,7 @@ QSpinBox::down-arrow,
 QDoubleSpinBox::down-arrow,
 QDateTimeEdit::down-arrow
 {
-    image: url(://arrow-down.png);
+    image: url(resources/arrow-down.png);
     width: 7px;
 }
 
@@ -281,7 +281,7 @@ QSpinBox::up-arrow,
 QDoubleSpinBox::up-arrow,
 QDateTimeEdit::up-arrow
 {
-    image: url(://arrow-up.png);
+    image: url(resources/arrow-up.png);
     width: 7px;
 }
 
