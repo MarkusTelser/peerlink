@@ -3,6 +3,7 @@ from PyQt6.QtGui import QIcon
 
 from src.frontend.widgets.SearchBox import SearchBar
 
+
 class ToolBar(QToolBar):
     def __init__(self):
         super().__init__()

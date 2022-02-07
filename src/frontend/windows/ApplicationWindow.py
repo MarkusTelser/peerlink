@@ -4,8 +4,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QSplitter,
     QHBoxLayout,
-    QWidget,
-    QStackedLayout
+    QWidget
 )
 from PyQt6.QtGui import (
     QGuiApplication, 
@@ -16,7 +15,15 @@ from PyQt6.QtGui import (
     QDragEnterEvent, 
     QDropEvent
 )
-from PyQt6.QtCore import QRegularExpression, QSize, Qt, QModelIndex, pyqtSlot, QUrl, QTimer
+from PyQt6.QtCore import (
+    QRegularExpression, 
+    QSize, 
+    Qt, 
+    QModelIndex, 
+    pyqtSlot, 
+    QUrl, 
+    QTimer
+)
 from os.path import join, exists, dirname, isdir
 from threading import Thread
 import subprocess
@@ -27,7 +34,6 @@ from src.frontend.views.TorrentListView import TorrentListView
 from src.frontend.views.TorrentDetailView import TorrentDetailView
 from src.frontend.utils.AppDataLoader import AppDataLoader
 from src.frontend.utils.ConfigLoader import ConfigLoader
-from src.frontend.widgets.StatisticsPanel import StatisticsPanel
 from src.frontend.widgets.dialogs import DeleteDialog, FileDialog, MagnetLinkDialog
 from src.frontend.widgets.bars import MenuBar, StatusBar, ToolBar
 from src.frontend.models.SortFilterProcxyModel import SortFilterProxyModel
@@ -37,11 +43,12 @@ from src.frontend.windows.DiagramWindow import DiagramWindow
 from src.frontend.windows.IpFilterWindow import IpFilterWindow
 from src.frontend.windows.PreviewWindow import PreviewWindow
 
+from src.backend.swarm import Swarm
 from src.backend.metadata.Bencoder import bencode
 from src.backend.metadata.TorrentParser import TorrentParser
-from src.backend.swarm import Swarm
 from src.frontend.windows.SpeedLimitWindow import SpeedLimitWindow
 from src.frontend.windows.StatisticsWindow import StatisticsWindow
+
 
 class ApplicationWindow(QMainWindow):
     DONATE_LINK = 'www.google.com'
@@ -58,8 +65,8 @@ class ApplicationWindow(QMainWindow):
         self.current_torrent = None
         
         self.setAcceptDrops(True)
-        self.setWindowTitle("FastPeer - Application Window")
-        self.setWindowIcon(QIcon('resources/logo.png'))
+        self.setWindowTitle("Application Window - PeerLink")
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         self.setObjectName('window')
         
         # set screen size
@@ -108,7 +115,7 @@ class ApplicationWindow(QMainWindow):
         
         self.main_layout.addWidget(self.hori_splitter)
         
-        self.side_panel = SidePanel(self.config_loader)
+        self.side_panel = SidePanel(self.config_loader.side_tabs)
         if self.side_panel.count() > 0:
             self.side_panel.setCurrentIndex(self.config_loader.side_current)
         self.hori_splitter.addWidget(self.side_panel)

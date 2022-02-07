@@ -1,6 +1,4 @@
-from PyQt6.QtGui import QAction, QMouseEvent, QIcon
 from PyQt6.QtWidgets import (
-    QApplication, 
     QCheckBox, 
     QHeaderView, 
     QTableView, 
@@ -8,13 +6,9 @@ from PyQt6.QtWidgets import (
     QMenu, 
     QVBoxLayout, 
     QSizePolicy,
-    QStyledItemDelegate,
-    QStyleOptionProgressBar,
-    QStyle
 )
-
-from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtGui import QAction, QMouseEvent, QIcon
+from PyQt6.QtCore import QPoint, Qt, pyqtSlot
 
 
 class TorrentListView(QTableView):

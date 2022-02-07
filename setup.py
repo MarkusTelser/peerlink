@@ -6,7 +6,7 @@ setup(
     license="GPL v3.0",
     author="Markus Telser",
     author_email="markus.telser99@gmail.com",
-    url="https://github.com/MarkusTelser/fastlink",
+    url="https://github.com/MarkusTelser/peerlink",
     description="bittorrent client from scratch for linux, mac, win",
     long_description=''.join(open('README.md', 'r').readlines()),
     long_description_content_type="text/markdown",
@@ -23,10 +23,10 @@ setup(
         ],
     },
     project_urls={
-        'Bug Reports': 'https://github.com/MarkusTelser/fastlink/issues',
+        'Bug Reports': 'https://github.com/MarkusTelser/peerlink/issues',
         'Funding': 'https://donate.pypi.org',
         'Say Thanks!': 'https://saythanks.io/to/MarkusTelser',
-        'Source': 'https://github.com/MarkusTelser/fastlink',
+        'Source': 'https://github.com/MarkusTelser/peerlink',
     },
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -1,5 +1,6 @@
-from PyQt6.QtCore import QModelIndex, QSortFilterProxyModel, pyqtSignal
+from PyQt6.QtCore import QModelIndex, QSortFilterProxyModel
 from PyQt6.QtGui import QStandardItemModel
+
 
 class SortFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, source_model: QStandardItemModel):

@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QStatusBar, QLabel, QPushButton, QGraphicsDropShadowEffect
-from PyQt6.QtGui import QAction, QIcon, QColor
+from PyQt6.QtWidgets import QStatusBar, QLabel, QPushButton
+from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QSize
+
 
 class StatusBar(QStatusBar):
     def __init__(self):

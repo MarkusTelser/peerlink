@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QMenuBar, QMenu
 from PyQt6.QtGui import QIcon, QKeySequence, QAction
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtWidgets import QMenuBar, QMenu
+
 
 class MenuBar(QMenuBar):
     def __init__(self):

@@ -1,5 +1,6 @@
-from PyQt6.QtGui import QStandardItemModel, QMouseEvent
+from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import QTreeView
+
 
 class TorrentTreeView(QTreeView):
     def __init__(self, model):

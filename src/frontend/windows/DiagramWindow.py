@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
-from PyQt6.QtGui import QColor, QPainter
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QPainter, QIcon, QGuiApplication
 from PyQt6.QtCharts import QSplineSeries, QChart, QValueAxis, QChartView
-from PyQt6.QtGui import QGuiApplication
+from PyQt6.QtCore import Qt
+
 
 class DiagramWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -15,7 +15,8 @@ class DiagramWindow(QMainWindow):
         self.setCentralWidget(main_widget)
         
         self.resize(600, 600)
-        self.setWindowTitle("Diagram - peerlink")
+        self.setWindowTitle("Diagram - PeerLink")
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         
         # center in the middle of screen
         qtRectangle = self.frameGeometry()

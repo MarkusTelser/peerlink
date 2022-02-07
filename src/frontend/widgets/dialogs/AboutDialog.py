@@ -1,7 +1,16 @@
-from threading import main_thread
-from PyQt6.QtWidgets import QDialog,QTextEdit, QVBoxLayout, QLabel, QTabWidget, QWidget, QDialogButtonBox, QPlainTextEdit
+from PyQt6.QtWidgets import (
+    QDialog,
+    QTextEdit,
+    QVBoxLayout,
+    QLabel,
+    QTabWidget,
+    QWidget,
+    QDialogButtonBox,
+    QPlainTextEdit
+)
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QSize
+
 
 class GeneralTab(QWidget):
     def __init__(self):
@@ -46,9 +55,8 @@ class AboutDialog(QDialog):
         super().__init__()
         
         self.resize(QSize(600, 600))
-        
-        self.setWindowIcon(QIcon('resources/logo.png'))
-        self.setWindowTitle('About peerlink')
+        self.setWindowTitle('About - PeerLink')
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)

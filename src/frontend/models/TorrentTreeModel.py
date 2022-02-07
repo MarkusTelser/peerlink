@@ -1,9 +1,9 @@
-from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QCheckBox, QFileIconProvider
+from PyQt6.QtGui import QStandardItemModel, QStandardItem, QIcon
+from PyQt6.QtWidgets import QFileIconProvider
 from PyQt6.QtCore import QFileInfo, pyqtSignal
 
 from src.backend.metadata.TorrentData import TorrentFile
+
 
 class TorrentTreeModel(QStandardItemModel):
     update_data = pyqtSignal()

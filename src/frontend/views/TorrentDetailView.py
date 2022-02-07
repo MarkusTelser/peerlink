@@ -19,12 +19,12 @@ from PyQt6.QtGui import (
     QBrush
 )
 from PyQt6.QtCharts import QChart, QChartView, QSplineSeries, QValueAxis
+from PyQt6.QtCore import Qt
 from datetime import datetime
 from psutil import disk_usage
-from PyQt6.QtCore import Qt
 
-from src.backend.metadata.TorrentData import TorrentFile
 from src.backend.swarm import Swarm
+from src.backend.metadata.TorrentData import TorrentFile
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.utils.utils import convert_bits

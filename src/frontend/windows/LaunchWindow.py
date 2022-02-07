@@ -33,14 +33,11 @@ class LaunchWindow(QMainWindow):
         
         self.conf = conf
         self.main_window = None
-        self.setWindowTitle("Launch Window - FastPeer")
-        self.setObjectName("LaunchWindow")
+        
         self.setAcceptDrops(True)
-
-        # set icon to window
-        icon = QIcon('resources/logo.png')
-        self.setWindowIcon(icon)
-        self.setWindowIconText("logo")    
+        self.setObjectName("LaunchWindow")
+        self.setWindowTitle("Launch Window - PeerLink")
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         
         # set screen size
         width, height = 700, 600
@@ -76,7 +73,7 @@ class LaunchWindow(QMainWindow):
         # add image of logo
         wrapper_label = QLabel()
         wrapper_label.setScaledContents(True)
-        pixmap = QPixmap('resources/logoo.svg')
+        pixmap = QPixmap('resources/logo.svg')
         wrapper_label.setPixmap(pixmap)
         self.main_layout.addWidget(wrapper_label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.main_layout.addSpacing(25)

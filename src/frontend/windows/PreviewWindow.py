@@ -1,5 +1,3 @@
-
-from os import error
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -17,10 +15,9 @@ from PyQt6.QtWidgets import (
     QWidget,
     QApplication,
     QErrorMessage,
-    QScrollArea,
     QSizePolicy
 )
-from PyQt6.QtGui import QGuiApplication, QIcon, QCloseEvent
+from PyQt6.QtGui import QGuiApplication, QIcon
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtCore import QSize, Qt
 from os.path import expanduser
@@ -34,15 +31,19 @@ from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.utils.utils import convert_bits
 
+
 class PreviewWindow(QMainWindow):
     add_data = pyqtSignal(TorrentData, dict)
     
     def __init__(self, conf: ConfigLoader, parent=None):
         super(PreviewWindow, self).__init__(parent=parent)
-        self.setWindowTitle("FastPeer - View Torrent")
+        
         self.torrent_data = None
         self.conf = conf
 
+        self.setWindowTitle("View Torrent - PeerLink")
+        self.setWindowIcon(QIcon('resources/logo.svg'))
+        
         # set minimum and standard window size
         min_width, min_height = 300, 300
         self.setMinimumSize(QSize(min_width, min_height))
@@ -56,10 +57,6 @@ class PreviewWindow(QMainWindow):
             centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
             qtRectangle.moveCenter(centerPoint)
             self.move(qtRectangle.topLeft())
-
-        # set icon to window
-        icon = QIcon('resources/logo.png')
-        self.setWindowIcon(icon)
 
         self.addWidgets()
     

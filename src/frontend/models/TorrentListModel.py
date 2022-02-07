@@ -1,8 +1,9 @@
-from PyQt6.QtWidgets import QApplication, QProgressBar, QStyledItemDelegate, QStyleOptionProgressBar, QStyle
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtCore import Qt, pyqtSlot, pyqtSignal
-from src.frontend.utils.utils import convert_bits
+from PyQt6.QtCore import Qt
 from datetime import datetime
+
+from src.frontend.utils.utils import convert_bits
+
 
 class TorrentListModel(QStandardItemModel):
     def __init__(self):

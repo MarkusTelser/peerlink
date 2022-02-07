@@ -1,8 +1,3 @@
-from ctypes import alignment
-from distutils.log import debug
-from operator import ge
-from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt6.QtGui import QIcon, QMouseEvent, QAction, QFont
 from PyQt6.QtWidgets import (
     QTabWidget, 
     QVBoxLayout,
@@ -17,6 +12,9 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel
 )
+from PyQt6.QtGui import QIcon, QMouseEvent, QAction, QFont
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
+
 
 class CategoryTab(QWidget):
     def __init__(self):

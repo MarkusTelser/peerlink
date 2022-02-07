@@ -1,14 +1,13 @@
-from turtle import back
 from PyQt6.QtCore import QStandardPaths
 from os.path import exists, join
 from os import mkdir, listdir, remove
-from dataclasses import dataclass
 from random import choices
 from string import ascii_uppercase, digits
-import shutil
+from shutil import move
 
 from src.backend.metadata.TorrentParser import TorrentParser
 from src.backend.metadata.Bencoder import bdecode
+
 
 class AppDataLoader:
     def __init__(self):
@@ -28,7 +27,7 @@ class AppDataLoader:
         # move file to byte data
         if type(arg) == str:
             try:
-                shutil.move(arg, new_path)
+                move(arg, new_path)
             except FileNotFoundError:
                 print('file not found')
             except PermissionError:

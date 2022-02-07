@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
-from PyQt6.QtGui import QGuiApplication
+from PyQt6.QtGui import QGuiApplication, QIcon
+
 
 class SpeedLimitWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -12,7 +13,8 @@ class SpeedLimitWindow(QMainWindow):
         self.setCentralWidget(main_widget)
         
         self.resize(600, 600)
-        self.setWindowTitle("Speed Limit - peerlink")
+        self.setWindowTitle("Speed Limit - PeerLink")
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         
         # center in the middle of screen
         qtRectangle = self.frameGeometry()

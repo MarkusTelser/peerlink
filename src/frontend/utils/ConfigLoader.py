@@ -1,6 +1,7 @@
-from PyQt6.QtCore import QSettings, QSize, QPoint, QByteArray, QStandardPaths
+from PyQt6.QtCore import QSettings, QSize, QPoint, QByteArray
 from PyQt6.QtWidgets import QApplication
 from os.path import join, expanduser
+
 
 class ConfigLoader():
     def __init__(self):

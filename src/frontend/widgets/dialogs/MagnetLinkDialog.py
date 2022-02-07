@@ -20,10 +20,9 @@ class MagnetLinkDialog(QDialog):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         
-        self.setWindowTitle('Add Magnet Link')
-        self.setWindowIcon(QIcon('resources/logo.png'))
-        QApplication.clipboard().dataChanged.connect(self.insert_clipboard)
         self.setFixedSize(600, 120)
+        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowTitle('Add Magnet Link - PeerLink')
         
         message = QLabel("Enter magnet link:")
         self.layout.addWidget(message)
@@ -42,6 +41,8 @@ class MagnetLinkDialog(QDialog):
         buttonBox.rejected.connect(self.reject)
         buttonBox.accepted.connect(self.accept)
         self.layout.addWidget(buttonBox)
+        
+        QApplication.clipboard().dataChanged.connect(self.insert_clipboard)
 
     def insert_clipboard(self):
         clipboard = QApplication.clipboard().text()

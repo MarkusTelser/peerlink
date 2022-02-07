@@ -1,14 +1,15 @@
 from PyQt6.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import Qt, pyqtSlot
+
 
 class DeleteDialog(QDialog):
     def __init__(self, all_torrents=False):
         super().__init__()
         
-        self.setWindowTitle('Delete Torrent')
-        self.setWindowIcon(QIcon('resources/logo.png'))
         self.setBaseSize(300, 300)
+        self.setWindowTitle('Delete Torrent - PeerLink')
+        self.setWindowIcon(QIcon('resources/logo.svg'))
         
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)

@@ -1,10 +1,11 @@
 from PyQt6.QtCore import QSettings
 from os.path import dirname, exists, isfile, splitext
 from argparse import ArgumentParser
-import sys
+from sys import exit
 
 from src.backend.metadata.MagnetLink import MagnetLink
 from src.backend.metadata.TorrentParser import TorrentParser
+
 
 def args_parser():
     prog = "peerlink"
@@ -37,7 +38,7 @@ def args_parser():
 
     if args.help:
         print(parser.format_help(), end="")
-        sys.exit()
+        exit()
     
     args = vars(args)
     
@@ -50,16 +51,16 @@ def args_parser():
             print(open('LICENSE.txt').read(), end="")
             optional_par = True
         if args['version']:
-            print('peerlink 0.1 beta')
+            print('peerlink 0.1')
             optional_par = True
         if args['repository']:
-            print('https://github.com/MarkusTelser/fastlink')
+            print('https://github.com/MarkusTelser/peerlink')
             optional_par = True
         if args['config']:
             print(dirname(QSettings().fileName()))
             optional_par = True
         if optional_par:
-           sys.exit()
+           exit()
     
     return parser
 

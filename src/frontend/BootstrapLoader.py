@@ -1,5 +1,5 @@
-import sys
 from PyQt6.QtWidgets import QApplication
+import sys
 
 from src.frontend.windows.LaunchWindow import LaunchWindow
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
@@ -12,7 +12,7 @@ def run():
     app = QApplication(sys.argv)
     app.setApplicationName('peerlink')
     app.setApplicationVersion('0.1')
-    app.setStyleSheet(open('resources/themes/custom.qss').read())
+    app.setStyleSheet(open('resources/themes/MainTheme.qss').read())
     
     args = args_parser()
     conf = ConfigLoader()
