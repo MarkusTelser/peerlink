@@ -134,17 +134,21 @@ class LaunchWindow(QMainWindow):
         if file_dialog.exec():
             for file_path in file_dialog.selectedFiles():
                 data = TorrentParser.parse_filepath(file_path)
-                window = PreviewWindow(self.conf, self)
-                window.add_data.connect(self.open_mainwindow)
-                window.show(data)
+                if self.conf.open_preview:
+                    window = PreviewWindow(self.conf, self)
+                    window.add_data.connect(self.open_mainwindow)
+                    window.show(data)
+                else:
+                    self.open_mainwindow(data)
             
     def open_mainwindow(self, data):
-        if data and self.main_window == None:
-            self.main_window = ApplicationWindow(self.conf)
-            self.main_window.show(data)
-            self.close()
-        elif data:
-            self.main_window.appendRowEnd(data)
+        if data:
+            if self.main_window == None:
+                self.main_window = ApplicationWindow(self.conf)
+                self.main_window.show(data)
+                self.close()
+            else:
+                self.main_window.appendRowEnd(data)
     
     def open_magnetlink(self):
         magnet_dialog = MagnetLinkDialog()
