@@ -28,7 +28,7 @@ from os.path import join, exists, dirname, isdir
 from threading import Thread
 import subprocess
 import sys
-
+import PyQt6.QtNetwork
 from src.frontend.models.TorrentListModel import TorrentListModel
 from src.frontend.views.TorrentListView import TorrentListView
 from src.frontend.views.TorrentDetailView import TorrentDetailView
@@ -118,6 +118,7 @@ class ApplicationWindow(QMainWindow):
         self.side_panel = SidePanel(self.config_loader.side_tabs)
         if self.side_panel.count() > 0:
             self.side_panel.setCurrentIndex(self.config_loader.side_current)
+        self.side_panel.tabs[1][0].setCategorys(self.config_loader.categorys)
         self.hori_splitter.addWidget(self.side_panel)
         
         # vertical splitter for main table, info table
@@ -194,6 +195,9 @@ class ApplicationWindow(QMainWindow):
         self.table_view.menu_delete.triggered.connect(self.delete_torrent)
         
         self.side_panel.tabs[0][0].filter_tree.changed_item.connect(self.filter_torrents)
+        self.side_panel.tabs[1][0].infoSelected.connect(self.filter_infocat)
+        self.side_panel.tabs[1][0].catSelected.connect(self.filter_category)
+        
         self.status_bar.speed.clicked.connect(self.open_diagram)
         self.status_bar.statistics.clicked.connect(self.open_statistics)
     
@@ -210,12 +214,16 @@ class ApplicationWindow(QMainWindow):
     @pyqtSlot()
     def start_torrent(self):
         indexes = self.table_view.selectedIndexes()
+        if len(indexes) == 0:
+            return
         real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         self.table_model.torrent_list[real_index].start()
     
     @pyqtSlot()
     def pause_torrent(self):
         indexes = self.table_view.selectedIndexes()
+        if len(indexes) == 0:
+            return
         real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         self.table_model.torrent_list[real_index].pause()
     
@@ -373,8 +381,8 @@ class ApplicationWindow(QMainWindow):
         indexes = self.table_view.selectedIndexes()
         if len(indexes) == 0:
             return
+        index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         
-        index = indexes[0].row()
         txt = self.table_model.torrent_list[index].data.files.name
         clipboard = QApplication.clipboard()
         clipboard.clear(mode=clipboard.Mode.Clipboard)
@@ -385,8 +393,8 @@ class ApplicationWindow(QMainWindow):
         indexes = self.table_view.selectedIndexes()
         if len(indexes) == 0:
             return
+        index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         
-        index = indexes[0].row()
         txt = self.table_model.torrent_list[index].data.info_hash_hex
         clipboard = QApplication.clipboard()
         clipboard.clear(mode=clipboard.Mode.Clipboard)
@@ -397,8 +405,8 @@ class ApplicationWindow(QMainWindow):
         indexes = self.table_view.selectedIndexes()
         if len(indexes) == 0:
             return
+        index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         
-        index = indexes[0].row()
         root_path = self.table_model.torrent_list[index].data.files.name
         txt = join(self.table_model.torrent_list[index].path, root_path) 
         clipboard = QApplication.clipboard()
@@ -411,7 +419,7 @@ class ApplicationWindow(QMainWindow):
         if len(indexes) == 0:
             full_path = self.config_loader.default_path
         else:
-            index = indexes[0].row()
+            index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
             rel_path = self.table_model.torrent_list[index].data.files.name
             full_path = join(self.table_model.torrent_list[index].path, rel_path)
             if not isdir(full_path):
@@ -438,11 +446,11 @@ class ApplicationWindow(QMainWindow):
     @pyqtSlot()
     def delete_torrent(self):
         indexes = self.table_view.selectedIndexes()
-        real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         if len(indexes) == 0:
             self.show_errorwin("no torrent selected")
             return  
-
+        real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+        
         dialog = DeleteDialog()
         if dialog.exec():
             if dialog.checkbox.isChecked():
@@ -475,6 +483,16 @@ class ApplicationWindow(QMainWindow):
     def search_torrents(self, search: str):
         reg = QRegularExpression(search, QRegularExpression.PatternOption.CaseInsensitiveOption)
         self.filter_model.setFilterRegularExpression(reg)
+    
+    @pyqtSlot(str)
+    def filter_infocat(self, filter: str):
+        self.filter_model.cat_info = filter
+        self.filter_model.invalidateFilter()
+    
+    @pyqtSlot(str)
+    def filter_category(self, filter: str):
+        self.filter_model.cat_filter = filter
+        self.filter_model.invalidateFilter()
     
     @pyqtSlot(list)
     def filter_torrents(self, filters: list):
@@ -546,8 +564,9 @@ class ApplicationWindow(QMainWindow):
             pass
         if extras['pad_files']:
             Thread(target=swarm.file_handler.padd_files).start()
-        print('add cong')
+        
         self.table_model.append(swarm)
+        self.side_panel.tabs[1][0].append(swarm)
     
     def load_torrents(self, torrent_list):
         for torrent_data, extras in torrent_list:        
@@ -555,8 +574,9 @@ class ApplicationWindow(QMainWindow):
             swarm.category = extras['category']
             swarm.backup_name = extras['backup_name']
             swarm.start_date = extras['start_date']
-            print(torrent_data.files.name)
             self.table_model.append(swarm)
+            
+            self.side_panel.tabs[1][0].append(swarm)
     
     def save_torrents(self):
         for torrent in self.table_model.torrent_list:
@@ -634,9 +654,6 @@ class ApplicationWindow(QMainWindow):
                 real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
                 data = self.table_model.torrent_list[real_index]
                 self.detail_view._update(data)
-                
-        # update side panel
-        self.side_panel._update(self.table_model.torrent_list, self.config_loader.categorys)
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)

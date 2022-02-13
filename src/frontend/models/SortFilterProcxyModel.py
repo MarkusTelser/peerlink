@@ -7,6 +7,9 @@ class SortFilterProxyModel(QSortFilterProxyModel):
         super().__init__()
         
         self.filters = list()
+        self.cat_info = ""
+        self.cat_filter = ""
+        
         self.source_model = source_model
         self.setSourceModel(source_model)
         self.setDynamicSortFilter(True)
@@ -18,6 +21,17 @@ class SortFilterProxyModel(QSortFilterProxyModel):
         if "File Mode/Multi File" in self.filters:
             if not self.source_model.torrent_list[source_row].data.has_multi_file:
                 return False
+        if "All" in self.cat_info:
+            return True
+        if "Categorized" in self.cat_info:
+            if self.source_model.torrent_list[source_row].category == "":
+                return False
+        if "Uncategorized" in self.cat_info:
+            if self.source_model.torrent_list[source_row].category != "":
+                return False
+        if self.cat_filter !=  "" and self.cat_filter != self.source_model.torrent_list[source_row].category:
+            return False    
+        
         return super().filterAcceptsRow(source_row, source_parent)
     
     def lessThan(self, left: QModelIndex, right: QModelIndex) -> bool:  

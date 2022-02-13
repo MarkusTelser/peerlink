@@ -1,62 +1,98 @@
+from unicodedata import category
 from PyQt6.QtWidgets import (
     QTabWidget, 
     QVBoxLayout,
     QWidget, 
-    QTreeWidget, 
-    QTreeWidgetItem, 
+    QListWidget,
+    QListWidgetItem, 
+    QTreeWidget,
+    QTreeWidgetItem,
     QFrame, 
     QSizePolicy,
     QPlainTextEdit,
     QLineEdit,
     QComboBox,
     QHBoxLayout,
-    QLabel
+    QLabel,
+    QGroupBox
 )
 from PyQt6.QtGui import QIcon, QMouseEvent, QAction, QFont
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 
 
 class CategoryTab(QWidget):
+    infoSelected = pyqtSignal(str)
+    catSelected = pyqtSignal(str)
+    
     def __init__(self):
         super().__init__()
+        
+        self._all = 0
+        self._cat = 0
+        self._uncat = 0
+        self._cats = dict()
         
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         
-        general_tree = QTreeWidget()
-        general_tree.header().hide()
-        general_tree.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        general_tree.setSelectionMode(QTreeWidget.SelectionMode.SingleSelection)
-        self.option1 = QTreeWidgetItem(general_tree, ["All"])
-        self.option2 = QTreeWidgetItem(general_tree, ["Categorized"])
-        self.option3 = QTreeWidgetItem(general_tree, ["Uncategorized"])
-        main_layout.addWidget(general_tree)    
+        info_list = QListWidget()
+        #info_list.setStyleSheet("background: red;")
+        info_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.option1 = QListWidgetItem("All (0)", info_list)
+        self.option2 = QListWidgetItem("Categorized (0)", info_list)
+        self.option3 = QListWidgetItem("Uncategorized (0)", info_list)
+        main_layout.addWidget(info_list)    
         
-        self.category_tree = QTreeWidget()
-        self.category_tree.header().hide()
-        main_layout.addWidget(self.category_tree)
+        self.cat_box = QGroupBox("Categorys")
+        self.cat_layout = QVBoxLayout()
+        self.cat_box.setLayout(self.cat_layout)
+        self.cat_list = QListWidget()
+        #self.cat_list.setFrameShape(QFrame.Shape.NoFrame)
+        #self.cat_list.setStyleSheet("background: red;")
+        self.cat_layout.addWidget(self.cat_list)
+        main_layout.addWidget(self.cat_box)
         
-        main_layout.addStretch()
-        
-    def _update(self, torrent_list, categorys):
-        categorized = 0
-        for torrent in torrent_list:
-            if len(torrent.category) != 0:
-                categorized += 1
-        
-        self.option1.setText(0, f"All ({len(torrent_list)})")
-        self.option2.setText(0, f"Categorized ({categorized})")
-        self.option3.setText(0, f"Uncategorized ({len(torrent_list) - categorized})")
-        
-        self.category_tree.clear()
+        info_list.itemClicked.connect(lambda l: self.infoSelected.emit(self._extract(l.text())))
+        self.cat_list.itemClicked.connect(lambda l: self.catSelected.emit(self._extract(l.text())))
+    
+    def _extract(self, ftext):
+        return '('.join(ftext.split('(')[:-1]).strip()
+    
+    def setCategorys(self, categorys):
         for category in categorys:
-            QTreeWidgetItem(self.category_tree, [category])
+            self.cat_list.addItem(QListWidgetItem(f"{category} (0)"))
+            self._cats[category] = 0
+    
+    def append(self, torrent):
+        self._all += 1
+        self._cat += 1 if len(torrent.category) > 0 else 0
+        self._uncat += 1 if len(torrent.category) == 0 else 0
         
-        for torrent in torrent_list:
-            if len(torrent.category) != 0:
-                c = self.category_tree.findItems(torrent.category, Qt.MatchFlag.MatchExactly)[0]
-                QTreeWidgetItem(c, [torrent.data.files.name])
+        self.option1.setText(f"All ({self._all})")
+        self.option2.setText(f"Categorized ({self._cat})")
+        self.option3.setText(f"Uncategorized ({self._uncat})")
         
+        if torrent.category != "":
+            find_name = f"{torrent.category} ({self._cats[torrent.category]})"
+            finds = self.cat_list.findItems(find_name, Qt.MatchFlag.MatchExactly)
+            if len(finds) != 0:
+                self._cats[torrent.category] += 1
+                finds[0].setText(f"{self._extract(finds[0].text())} ({self._cats[torrent.category]})")
+    
+    def remove(self, torrent):
+        self._all -= 1
+        self._cat -= 1 if len(torrent.category) > 0 else 0
+        self._uncat -= 1 if len(torrent.category) == 0 else 0
+        
+        self.option1.setText(0, f"All ({self._all})")
+        self.option2.setText(0, f"Categorized ({self._cat})")
+        self.option3.setText(0, f"Uncategorized ({self._uncat})")
+        
+        if len(torrent.category) != 0:
+            finds = self.cat_list.findItems(torrent.data.files.name, Qt.MatchFlag.MatchExactly)
+            if len(finds) > 0:
+                item = finds[0]
+                self.cat_list.removeItemWidget(item)
         
 
 class LogTab(QWidget):
@@ -245,6 +281,3 @@ class SidePanel(QTabWidget):
     def tabspos(self):
         tab_texts = [x[2] for x in self.tabs]
         return [tab_texts.index(self.tabText(i)) for i in range(len(self.tabs)) if self.isTabVisible(i)]
-    
-    def _update(self, torrent_list, categorys):
-        self.tabs[1][0]._update(torrent_list, categorys)
