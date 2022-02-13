@@ -141,14 +141,15 @@ class LaunchWindow(QMainWindow):
                 else:
                     self.open_mainwindow(data)
             
-    def open_mainwindow(self, data):
+    def open_mainwindow(self, data, extras):
         if data:
             if self.main_window == None:
                 self.main_window = ApplicationWindow(self.conf)
-                self.main_window.show(data)
+                self.main_window.appendRowEnd(data, extras)
+                self.main_window.show()
                 self.close()
             else:
-                self.main_window.appendRowEnd(data)
+                self.main_window.appendRowEnd(data, extras)
     
     def open_magnetlink(self):
         magnet_dialog = MagnetLinkDialog()
