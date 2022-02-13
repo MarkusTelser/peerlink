@@ -197,6 +197,9 @@ class ApplicationWindow(QMainWindow):
         self.side_panel.tabs[0][0].filter_tree.changed_item.connect(self.filter_torrents)
         self.side_panel.tabs[1][0].infoSelected.connect(self.filter_infocat)
         self.side_panel.tabs[1][0].catSelected.connect(self.filter_category)
+        self.side_panel.tabs[1][0].newCategory.connect(self.add_category)
+        self.side_panel.tabs[1][0].renameCategory.connect(self.rename_category)
+        self.side_panel.tabs[1][0].deleteCategory.connect(self.delete_category)
         
         self.status_bar.speed.clicked.connect(self.open_diagram)
         self.status_bar.statistics.clicked.connect(self.open_statistics)
@@ -217,7 +220,7 @@ class ApplicationWindow(QMainWindow):
         if len(indexes) == 0:
             return
         real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
-        self.table_model.torrent_list[real_index].start()
+        Thread(target=self.table_model.torrent_list[real_index].start).start()
     
     @pyqtSlot()
     def pause_torrent(self):
@@ -443,23 +446,31 @@ class ApplicationWindow(QMainWindow):
             pass
             # TODO log other platforms that are not supported
     
+    def _delete_torrent(self, index, remove_files):
+        if remove_files:
+            self.table_model.torrent_list[index].file_handler.remove_files()
+        
+        # remove backed up meta files
+        backup_name = self.table_model.torrent_list[index].backup_name
+        self.appdata_loader.remove_torrent(backup_name)
+        
+        # remove from category
+        category_name = self.table_model.torrent_list[index].category
+        self.side_panel.tabs[1][0].remove(category_name)
+        
+        self.table_model.remove(index)
+    
     @pyqtSlot()
     def delete_torrent(self):
         indexes = self.table_view.selectedIndexes()
         if len(indexes) == 0:
             self.show_errorwin("no torrent selected")
             return  
-        real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         
         dialog = DeleteDialog()
         if dialog.exec():
-            if dialog.checkbox.isChecked():
-                self.table_model.torrent_list[real_index].file_handler.remove_files()
-                
-            backup_name = self.table_model.torrent_list[real_index].backup_name
-            self.appdata_loader.remove_torrent(backup_name)
-            
-            self.table_model.remove(real_index)
+            real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+            self._delete_torrent(real_index, dialog.checkbox.isChecked())
             self._update()
     
     @pyqtSlot()
@@ -471,13 +482,9 @@ class ApplicationWindow(QMainWindow):
         dialog = DeleteDialog(all_torrents=True)
         if dialog.exec():
             if dialog.checkbox.isChecked():
-                for row in range(self.table_model.rowCount()):
-                    self.table_model.torrent_list[row].file_handler.remove_files()
-                    backup_name = self.table_model.torrent_list[row].backup_name
-                    self.appdata_loader.remove_torrent(backup_name)
-                
-                self.table_model.remove()
-                self.detail_view._clear()
+                for row in reversed(range(self.table_model.rowCount())):
+                    self._delete_torrent(row, dialog.checkbox.isChecked())
+                self._update()
                 
     @pyqtSlot(str)
     def search_torrents(self, search: str):
@@ -486,11 +493,13 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot(str)
     def filter_infocat(self, filter: str):
+        self.filter_model.cat_filter = ''
         self.filter_model.cat_info = filter
         self.filter_model.invalidateFilter()
     
     @pyqtSlot(str)
     def filter_category(self, filter: str):
+        self.filter_model.cat_info = ''
         self.filter_model.cat_filter = filter
         self.filter_model.invalidateFilter()
     
@@ -498,6 +507,25 @@ class ApplicationWindow(QMainWindow):
     def filter_torrents(self, filters: list):
         self.filter_model.filters = filters
         self.filter_model.invalidateFilter()
+    
+    @pyqtSlot(str)
+    def add_category(self, category):
+        self.config_loader.categorys.append(category)
+    
+    @pyqtSlot(str, str)
+    def rename_category(self, old_cat, new_cat):
+        self.config_loader.categorys.remove(old_cat)
+        self.config_loader.categorys.append(new_cat)
+        for torrent in self.table_model.torrent_list:
+            if torrent.category == old_cat:
+                torrent.category = new_cat
+    
+    @pyqtSlot(str)
+    def delete_category(self, category):
+        self.config_loader.categorys.remove(category)
+        for torrent in self.table_model.torrent_list:
+            if torrent.category == category:
+                torrent.category = ''
     
     def show_errorwin(self, error_txt):
         error_msg = QMessageBox(self)
@@ -511,7 +539,7 @@ class ApplicationWindow(QMainWindow):
         if data.info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
             self.show_errorwin("torrent already in list")
             return
-        print(extras)
+        print(data, extras)
         # save data to config
         if 'start' in extras:
             self.config_loader.auto_start = extras['start']
@@ -527,7 +555,7 @@ class ApplicationWindow(QMainWindow):
             self.config_loader.default_path = extras['path']
         if 'category' in extras and len(extras['category']) > 0 and extras['category'] not in self.config_loader.categorys:
             self.config_loader.categorys.append(extras['category'])
-        if 'default_category' in extras:
+        if 'default_category' in extras and extras['default_category']:
             self.config_loader.default_category = extras['category']
         if 'not_again' in extras:
             self.open_preview = extras['not_again']
@@ -538,6 +566,7 @@ class ApplicationWindow(QMainWindow):
         if 'path' not in extras:
             extras['path'] = self.config_loader.default_path
         if 'category' not in extras:
+            print('no category')
             extras['category'] = self.config_loader.default_category
         if 'startegy' not in extras:
             pass
@@ -549,13 +578,12 @@ class ApplicationWindow(QMainWindow):
         swarm = Swarm(data, extras['path'])
         
         # add into backup files
+        swarm.category = extras['category']
         swarm.backup_name = self.appdata_loader.backup_torrent(data.raw_data)
-        
+        print(extras['category'])
         # actions if key true
         if extras['start']:
             swarm.start()
-        if extras['category']:
-            swarm.category = extras['category']
         """
         if extras['startegy']:
             pass

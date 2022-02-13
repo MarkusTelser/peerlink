@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication
 import sys
-
+import asyncio
 from src.frontend.windows.LaunchWindow import LaunchWindow
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
 from src.frontend.utils.ArgParser import args_parser, args_torrent

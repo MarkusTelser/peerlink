@@ -269,9 +269,9 @@ class PreviewWindow(QMainWindow):
             'default_category': default_category,
             'not_again' : not_again
         }
-        
-        self.close()
+        print(self.torrent_data, extras)
         self.add_data.emit(self.torrent_data, extras)
+        self.close()
     
     def reject(self):
         self.close()
