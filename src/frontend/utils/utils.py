@@ -1,3 +1,5 @@
+from PyQt6.QtWidgets import QMessageBox
+
 def convert_bits(bits: int):
     if bits < 1000:
         return f"{bits} B"
@@ -11,3 +13,12 @@ def convert_bits(bits: int):
         return f"{round(bits / (1024 ** 4), 2)} TiB"
     elif bits / (1024 ** 5) < 1000:
         return f"{round(bits / (1024 ** 5), 3)} PiB"
+    
+    
+def showError(error, parent=None):
+    error_window = QMessageBox(parent)
+    error_window.setIcon(QMessageBox.Icon.Critical)
+    error_window.setText(error)
+    error_window.setWindowTitle("Error - PeerLink")
+    error_window.show()
+    

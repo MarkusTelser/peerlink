@@ -6,11 +6,12 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QDialogButtonBox,
     QPushButton,
-    QBoxLayout,
-    QMessageBox
+    QBoxLayout
 )
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
+
+from src.frontend.utils.utils import showError
 
 
 class MagnetLinkDialog(QDialog):
@@ -53,8 +54,4 @@ class MagnetLinkDialog(QDialog):
         if self.text_box.text():
             return super().accept()
         else:
-            error_window = QMessageBox(self)
-            error_window.setIcon(QMessageBox.Icon.Critical)
-            error_window.setText('No magnet link inserted!')
-            error_window.setWindowTitle("Error")
-            error_window.show()
+            showError('No magnet link inserted!', self)

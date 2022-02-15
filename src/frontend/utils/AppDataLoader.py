@@ -68,6 +68,4 @@ class AppDataLoader:
             torrent_extra = bdecode(extra)
             torrent_list.append((torrent_file, torrent_extra))
         
-        print(torrent_list)
-        
         return torrent_list

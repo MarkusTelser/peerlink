@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QMessageBox,
     QSplitter,
     QHBoxLayout,
     QWidget
@@ -28,8 +27,9 @@ from os.path import join, exists, dirname, isdir
 from threading import Thread
 import subprocess
 import sys
-import PyQt6.QtNetwork
+
 from src.frontend.models.TorrentListModel import TorrentListModel
+from src.frontend.utils.utils import showError
 from src.frontend.views.TorrentListView import TorrentListView
 from src.frontend.views.TorrentDetailView import TorrentDetailView
 from src.frontend.utils.AppDataLoader import AppDataLoader
@@ -429,7 +429,7 @@ class ApplicationWindow(QMainWindow):
                 full_path = dirname(full_path)
         
         if not exists(full_path):
-            self.show_errorwin("path doesn't exist")
+            showError('Path doesnt exist!', self)
             return
         
         if not isdir(full_path):
@@ -464,7 +464,7 @@ class ApplicationWindow(QMainWindow):
     def delete_torrent(self):
         indexes = self.table_view.selectedIndexes()
         if len(indexes) == 0:
-            self.show_errorwin("no torrent selected")
+            ('Error', 'No torrent selected', self)
             return  
         
         dialog = DeleteDialog()
@@ -476,7 +476,7 @@ class ApplicationWindow(QMainWindow):
     @pyqtSlot()
     def delete_alltorrents(self):
         if self.table_model.rowCount() == 0:
-            self.show_errorwin("torrent list is empty")
+            showError('Torrent list is empty', self)
             return
         
         dialog = DeleteDialog(all_torrents=True)
@@ -527,19 +527,12 @@ class ApplicationWindow(QMainWindow):
             if torrent.category == category:
                 torrent.category = ''
     
-    def show_errorwin(self, error_txt):
-        error_msg = QMessageBox(self)
-        error_msg.setWindowIcon(QIcon('resources/warning.svg'))
-        error_msg.setWindowTitle("Error")
-        error_msg.setText(error_txt)
-        error_msg.show()
-    
     def appendRowEnd(self, data, extras={}):
         # dont't add if info_hash is same as in list
         if data.info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
-            self.show_errorwin("torrent already in list")
+            showError('Torrent is already in list', self)
             return
-        print(data, extras)
+        
         # save data to config
         if 'start' in extras:
             self.config_loader.auto_start = extras['start']
@@ -566,7 +559,6 @@ class ApplicationWindow(QMainWindow):
         if 'path' not in extras:
             extras['path'] = self.config_loader.default_path
         if 'category' not in extras:
-            print('no category')
             extras['category'] = self.config_loader.default_category
         if 'startegy' not in extras:
             pass
@@ -574,13 +566,13 @@ class ApplicationWindow(QMainWindow):
             extras['check_hash'] = self.config_loader.check_hashes
         if 'pad_files' not in extras:
             extras['pad_files'] = self.config_loader.padd_files
-        print(extras['path'])   
+        
         swarm = Swarm(data, extras['path'])
         
         # add into backup files
         swarm.category = extras['category']
         swarm.backup_name = self.appdata_loader.backup_torrent(data.raw_data)
-        print(extras['category'])
+        
         # actions if key true
         if extras['start']:
             swarm.start()

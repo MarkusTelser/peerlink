@@ -16,12 +16,12 @@ from PyQt6.QtWidgets import (
     QLabel,
     QGroupBox,
     QMenu,
-    QInputDialog,
-    QMessageBox
+    QInputDialog
 )
 from PyQt6.QtGui import QIcon, QMouseEvent, QAction, QFont
-from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QPoint
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 
+from src.frontend.utils.utils import showError
 
 class CategoryList(QListWidget):
     def __init__(self) -> None:
@@ -79,13 +79,11 @@ class CategoryTab(QWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         
         self.info_list = QListWidget()
-        
-        #self.info_list.setStyleSheet("background: red;")
         self.info_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.info_list.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.option1 = QListWidgetItem("All (0)", self.info_list)
-        self.option2 = QListWidgetItem("Categorized (0)", self.info_list)
-        self.option3 = QListWidgetItem("Uncategorized (0)", self.info_list)
+        self.option1 = QListWidgetItem(QIcon('resources/general.svg'), "All (0)", self.info_list)
+        self.option2 = QListWidgetItem(QIcon('resources/category.svg'), "Categorized (0)", self.info_list)
+        self.option3 = QListWidgetItem(QIcon('resources/inactive.svg'), "Uncategorized (0)", self.info_list)
         main_layout.addWidget(self.info_list)    
         
         self.cat_box = QGroupBox("Categorys")
@@ -107,11 +105,7 @@ class CategoryTab(QWidget):
                 self.cat_list.addItem(QListWidgetItem(f"{category} (0)"))
                 self._cats[category] = 0
             elif show_error:
-                error_window = QMessageBox(self)
-                error_window.setIcon(QMessageBox.Icon.Critical)
-                error_window.setText('Category name exists already!')
-                error_window.setWindowTitle("Error")
-                error_window.show()
+                showError('Category name exists already!', self)
         
         self.cat_box.setTitle(f"Categorys ({len(self._cats)})")
     
@@ -126,7 +120,6 @@ class CategoryTab(QWidget):
         
         if torrent.category != "":
             # add category if not already existing
-            print(torrent.category)
             if torrent.category not in self._cats:
                 self.setCategorys([torrent.category])
                 self.newCategory.emit(torrent.category)
@@ -174,11 +167,7 @@ class CategoryTab(QWidget):
             
             # show error if new name exists already
             if new_name in self._cats:
-                error_window = QMessageBox(self)
-                error_window.setIcon(QMessageBox.Icon.Critical)
-                error_window.setText('Category name exists already!')
-                error_window.setWindowTitle("Error")
-                error_window.show()
+                showError('Category name exists already!', self)
                 return
             
             # rename gui item, change internal struct

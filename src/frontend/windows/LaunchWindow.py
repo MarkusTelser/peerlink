@@ -172,7 +172,6 @@ class LaunchWindow(QMainWindow):
         self.stacked_layout.setCurrentIndex(0)
     
     def dragEnterEvent(self, event: QDragEnterEvent):
-        print(event.mimeData().text(), event.mimeData().text())
         right_format = False
         for url in event.mimeData().urls():
             if url.isLocalFile() and url.path().endswith('.torrent'):

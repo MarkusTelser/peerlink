@@ -18,7 +18,6 @@ class TorrentTreeView(QTreeView):
     
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         if self.indexAt(event.pos()).row() == -1:
-            print('in')
             self.clearSelection()
             self.clearFocus()
         return super().mouseDoubleClickEvent(event)

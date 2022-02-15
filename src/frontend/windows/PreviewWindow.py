@@ -8,13 +8,11 @@ from PyQt6.QtWidgets import (
     QLabel, 
     QLineEdit,
     QMainWindow,
-    QMessageBox,
     QPushButton,
     QSplitter,
     QVBoxLayout,
     QWidget,
     QApplication,
-    QErrorMessage,
     QSizePolicy
 )
 from PyQt6.QtGui import QGuiApplication, QIcon
@@ -29,7 +27,7 @@ from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
-from src.frontend.utils.utils import convert_bits
+from src.frontend.utils.utils import convert_bits, showError
 
 
 class PreviewWindow(QMainWindow):
@@ -228,19 +226,13 @@ class PreviewWindow(QMainWindow):
         default_path = self.default_path.isChecked()
         path = self.download_path.text().strip()
         if not path:
-            error_msg = QMessageBox(self)
-            error_msg.setWindowIcon(QIcon('resources/warning.svg'))
-            error_msg.setWindowTitle("Error")
-            error_msg.setText("download path is empty")
-            error_msg.show()
+            showError('Save path is empty!', self)
             return
         if not exists(path):
-            error_msg = QErrorMessage(self)
-            error_msg.showMessage("download path does not exist")
+            showError('Save path does not exist!', self)
             return
         if not isdir(path):
-            error_msg = QErrorMessage(self)
-            error_msg.showMessage("download path is not a directory")
+            showError('Save path is not a directory!', self)
             return
         
         category = self.category.currentText()
@@ -269,7 +261,7 @@ class PreviewWindow(QMainWindow):
             'default_category': default_category,
             'not_again' : not_again
         }
-        print(self.torrent_data, extras)
+        
         self.add_data.emit(self.torrent_data, extras)
         self.close()
     
