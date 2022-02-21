@@ -1,31 +1,12 @@
 import asyncio
-import aiohttp
-from time import sleep
 
-async def test():
-    print('hello')
-    return 0
+async def ttask():
+    print('do sometthing')
 
-def add_here(task: asyncio.Task):
-    print(task.exception(), task.result())
-    print('finished')
+async def run():
+    event_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(event_loop)
+    t = asyncio.create_task(ttask()) 
+    await t
 
-async def request(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            pokemon = await resp.text()
-            print(pokemon)
-
-async def main():
-    url = 'https://pokeapi.co/api/v2/pokemon/151'
-    asyncio.create_task(request(url))
-    print('after')
-    task = asyncio.create_task(test())
-    task.add_done_callback(add_here)
-    i = 0
-    while True:
-        print("round", i)
-        await asyncio.sleep(1)
-        i += 1
-
-asyncio.run(main())
+asyncio.run(run())

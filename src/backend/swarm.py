@@ -1,7 +1,8 @@
 from queue import Queue
 from threading import Thread
+import threading
 from src.backend.trackers.HTTPTracker import HTTPTracker
-from threading import BoundedSemaphore
+from asyncio import BoundedSemaphore
 from datetime import datetime
 from src.backend.trackers.UDPTracker import UDPTracker
 
@@ -10,6 +11,7 @@ from .peer_protocol.PieceManager import PieceManager
 from .FileHandler import FileHandler
 from .trackers.Tracker import give_object
 from .peer_protocol.Peer import Peer
+import asyncio
 
 class Swarm:
     MAX_TRACKER = 100
@@ -26,7 +28,6 @@ class Swarm:
         self.tracker_limit = BoundedSemaphore(value=Swarm.MAX_TRACKER)
         self.peer_list = list()
         self.tracker_list = list()
-        self.finished_tracker = Queue()
         
         self.start_thread = None
         
@@ -37,39 +38,47 @@ class Swarm:
         self.finish_date = ""
     
     def start(self):
-        self.start_thread = Thread(target=self._start)
-        self.start_thread.start()
+        print(threading.current_thread().name)
+        self.start_thread = asyncio.create_task(self._start())
+        print('after creating start ')
     
-    def _start(self):
+    async def _start(self):
         try:
             if len(self.start_date) == 0:
                 self.start_date = datetime.now().isoformat()
+            print('heere')
             self.init_tracker()
-            self.announce_tracker()
-            self.connect_peers()
+            await self.announce_tracker()
+            print('hree')
+            
+            #self.connect_peers()
         except Exception:
             raise Exception('crashed')
     
     def pause(self):
-        self.start_thread = None
+        self.start_thread.cancel()
 
     def init_tracker(self):
         print(self.announces)
         
         for tiers in self.announces: 
             for announce in tiers:
-                tracker = give_object(announce, self.info_hash, self.tracker_limit, self.finished_tracker)
+                tracker = give_object(announce, self.info_hash, self.tracker_limit)
                 if tracker != None:
                     self.tracker_list.append(tracker)
     
-    def announce_tracker(self):     
-        # wait until previous announces are done
-        self.finished_tracker.join()
-            
-        for t in self.tracker_list:
-            thread = Thread(target=t.announce)
-            thread.start()
-            
+    async def announce_tracker(self):
+        tasks = list()
+        for tracker in self.tracker_list:
+            if type(tracker) != HTTPTracker:
+                task = asyncio.create_task(tracker.announce())
+                task.add_done_callback(self.finished_tracker)
+                tasks.append(task)
+        
+        await asyncio.gather(*[t for t in tasks])
+        
+    def finished_tracker(self, future):
+        print(future.result(), future.exception())
 
     def connect_peers(self):
         finished = 0 

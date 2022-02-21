@@ -38,17 +38,17 @@ def parse_url(announce_url: str):
     return (tracker_type, tracker_address)
 
 
-def give_object(announce_url: str, info_hash: bytes, start_queue, result_queue):
+def give_object(announce_url: str, info_hash: bytes, start_queue):
     typ, address = parse_url(announce_url)
     
     tracker = None
     
     if typ == TrackerType.HTTP:
-        tracker = HTTPTracker(address, info_hash, start_queue, result_queue)
+        tracker = HTTPTracker(address, info_hash, start_queue)
     elif typ == TrackerType.UDP:
         host, port, extension = address
         addr = host, port
-        tracker = UDPTracker(addr, extension, info_hash, start_queue, result_queue)
+        tracker = UDPTracker(addr, extension, info_hash, start_queue)
     elif typ == TrackerType.UNSUPPORTED:
         # TODO tracker type not recognized
         pass

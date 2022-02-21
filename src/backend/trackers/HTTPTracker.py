@@ -28,7 +28,7 @@ class TrackerStatus(Enum):
 class HTTPTracker:
     TIMEOUT = 3
 
-    def __init__(self, address, info_hash, semaphore, result_queue):
+    def __init__(self, address, info_hash, semaphore):
         self.address = address
         self.info_hash = info_hash
         
@@ -41,7 +41,6 @@ class HTTPTracker:
         self.trackerid = ""
         
         self.semaphore = semaphore
-        self.result_queue = result_queue
         
         self.status = TrackerStatus.NOCONTACT
         self.error = None
@@ -65,6 +64,7 @@ class HTTPTracker:
         trackerid = ""
         
         with self.semaphore:
+            recv = None
             try:
                 self.status = TrackerStatus.CONNECTING
                 recv = self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
@@ -73,19 +73,20 @@ class HTTPTracker:
                 self.error = str(e)
                 self.status = TrackerStatus.ERROR
             finally:
-                self.result_queue.put(self)
                 if not self.error:
                     self.status = TrackerStatus.FINISHED
+                return recv
         
     def scrape(self):
         with self.semaphore:
+            recv = None
             try:
                 recv = self._scrape(self.info_hash)
                 self.peers = recv
             except Exception as e:
                 self.error = str(e)
             finally:
-                self.result_queue.put(self)   
+                return recv
         
     
     """

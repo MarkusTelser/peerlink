@@ -1,4 +1,5 @@
 import socket
+import asyncio
 from time import time
 from enum import Enum
 from random import choice
@@ -41,19 +42,17 @@ class UDPTracker:
     BUFFER_SIZE = 2048
     TIMEOUT = 5
 
-    def __init__(self, address, extension, info_hash, semaphore, result_queue):
+    def __init__(self, address, extension, info_hash, semaphore):
         self.address = address
         self.extension = extension
         self.info_hash = info_hash
         self.sock = None
         
         self.semaphore = semaphore
-        self.result_queue = result_queue
         
         self.peers = list()
         self.leechers = 0
         self.seeders = 0
-        
         
         self.n_cycles = 0
         self.cid_expiry_date = 0
@@ -61,29 +60,34 @@ class UDPTracker:
         self.status = TrackerStatus.NOCONTACT
         self.error = None
 
-    def _send(self, msg):
+    async def _send(self, msg):
         try:
-            self.sock.sendall(msg)
-        except socket.timeout:
+            loop = asyncio.get_running_loop()
+            co = loop.sock_sendall(self.sock, msg)
+            await asyncio.wait_for(co, timeout=UDPTracker.TIMEOUT)
+        except asyncio.TimeoutError:
             raise SendTimeout("Sending connect timed out")
         except socket.error as e: # alias of OSError
             raise NetworkExceptions(e)
+        except Exception as e:
+            print('other ', e)
     
-    def _sendrecv(self, msg):
+    async def _sendrecv(self, msg):
         successful = False
         while self.n_cycles <= UDPTracker.MAX_TIMEOUT_CYCLES and not successful:
             try:
+                await self._send(msg)
+                loop = asyncio.get_running_loop()
                 timeout = 15 * (2 ** self.n_cycles)
-                self.sock.settimeout(timeout)
-                
-                self._send(msg)
-                recv = self.sock.recv(UDPTracker.BUFFER_SIZE)
+                co = loop.sock_recv(self.sock, UDPTracker.BUFFER_SIZE)
+                recv = await asyncio.wait_for(co, timeout=timeout)
             except ConnectionRefusedError:
                 raise ConnectionRefused("Connection refused")
-            except socket.timeout:
-                #print(f"received timeout after {timeout}s")
+            except asyncio.TimeoutError:
+                print(f"received timeout after {timeout}s")
                 self.n_cycles += 1
             except socket.error as e: # alias of OSError
+                print('otherwise')
                 raise NetworkExceptions(e)
             else:
                 successful = True
@@ -95,20 +99,22 @@ class UDPTracker:
         self.n_cycles = 0 # reset timeout cycles to zero
         return recv
 
-    def create_con(self):
+    async def create_con(self):
+        loop = asyncio.get_running_loop()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(UDPTracker.TIMEOUT)
+        sock.setblocking(False)
         try:
-            sock.connect((self.address))
+            await loop.sock_connect(sock, (self.address))
+            self.sock = sock
         except socket.gaierror as e:
             raise UnknownHost("Couldn't resolve host name")
-        self.sock = sock
         
     def close_con(self):
         self.sock.close()
         self.sock = None
-    
-    def announce(self):
+        
+    async def announce(self):
         peer_id = bytes(PeerIDs.generate_key(), 'utf-8')
         event = UDPEvents.STARTED.value
 
@@ -123,35 +129,37 @@ class UDPTracker:
         port = 0
         key = 0
         
-        with self.semaphore:
+        async with self.semaphore:
+            peers = None
             try:
                 self.status = TrackerStatus.CONNECTING
-                self.create_con()
-                peers = self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want, self.extension)
+                await self.create_con()
+                peers = await self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want, self.extension)
                 self.peers = peers
             except Exception as e:
                 self.error = str(e)
                 self.status = TrackerStatus.ERROR
             finally:
-                if self.sock is not None:
+                if self.sock  is not None:
                     self.close_con()
-                self.result_queue.put(self)
                 if not self.error:
                     self.status = TrackerStatus.FINISHED
+                return peers
             
         
-    def scrape(self):
+    async def scrape(self):
         with self.semaphore:
+            peers = None
             try:
-                self.create_con()
-                peers = self._scrape(self.info_hash)
+                await self.create_con()
+                peers = await self._scrape(self.info_hash)
                 self.peers = peers
             except Exception as e:
                 self.error = str(e)
             finally:
                 if self.sock is not None:
                     self.close_con()
-                self.result_queue.put(self)
+                return peers
     
     """
     Connect request:
@@ -164,12 +172,12 @@ class UDPTracker:
     32-bit integer transaction_id
     64-bit integer connection_id
     """
-    def connect(self):
+    async def connect(self):
         TID = self.gen_tid()
         msg = pack('!QII', UDPTracker.IDENTIFICATION, Actions.CONNECT.value, TID)
 
         # send and receive connect packet
-        recv = self._sendrecv(msg)
+        recv = await self._sendrecv(msg)
         
         if len(recv) < 16:
             raise WrongFormat("Announce response smaller than 16 bytes")
@@ -218,10 +226,10 @@ class UDPTracker:
     32-bit integer IP address
     16-bit integer TCP port
     """
-    def _announce(self, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0, num_want=-1, extensions=""):
+    async def _announce(self, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0, num_want=-1, extensions=""):
         # update cid if expired / not existing
         if time() > self.cid_expiry_date:
-            cid = self.connect()
+            cid = await self.connect()
         
         # create message
         TID = self.gen_tid()
@@ -239,7 +247,7 @@ class UDPTracker:
         msg += self.encodeExt(extensions)
         
         # send and receive announce packet
-        recv = self._sendrecv(msg)
+        recv = await self._sendrecv(msg)
 
         if len(recv) < 20:
             print("Error: Announce response smaller than 20 bytes")
@@ -289,10 +297,10 @@ class UDPTracker:
     32-bit integer completed
     32-bit integer leechers
     """
-    def _scrape(self, info_hashes: list):
+    async def _scrape(self, info_hashes: list):
         # update cid if expired / not existing
         if time() > self.cid_expiry_date:
-            cid = self.connect()
+            cid = await self.connect()
         
         # create message
         TID = self.gen_tid()
@@ -306,7 +314,7 @@ class UDPTracker:
             msg += pack('!20s', info_hashes)
             
         # send and receive scrape packet
-        recv = self._sendrecv(msg)
+        recv = await self._sendrecv(msg)
         
         if len(recv) < 8:
             print("Error: Scrape response smaller than 8 bytes")
@@ -335,7 +343,6 @@ class UDPTracker:
             leecher = unpack('!I', recv[16 + i * 12:20 + i * 12])[0]
             results.append((seeders, completed, leecher))
         
-        print(results)
         return results
 
     """
