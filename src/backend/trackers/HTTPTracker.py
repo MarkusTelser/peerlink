@@ -330,5 +330,5 @@ class HTTPTracker:
                 self.min_request_interval = flags["min_request_interval"]
                 print(self.min_request_interval)
             print(flags)
-        print(answer)
+        
         return answer.get("files")

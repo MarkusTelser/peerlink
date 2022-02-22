@@ -319,7 +319,6 @@ class UDPTracker:
             msg += pack('!20s', info_hashes)
             
         # send and receive scrape packet
-        print(msg)
         recv = await self._sendrecv(msg)
         
         if len(recv) < 8:
@@ -348,6 +347,8 @@ class UDPTracker:
             completed = unpack('!I', recv[12 + i * 12:16 + i * 12])[0]
             leecher = unpack('!I', recv[16 + i * 12:20 + i * 12])[0]
             results.append((seeders, completed, leecher))
+        
+        print(results)
         
         return results
 

@@ -1,8 +1,10 @@
 
+from abc import abstractmethod
 from logging import exception
 from src.backend.Session import Session
 from src.backend.metadata import TorrentParser
 from src.backend.swarm import Swarm
+from abc import abstractmethod, ABC
 """
 s = Session()
 
@@ -19,8 +21,11 @@ import asyncio
 
 async def run():
     fp = 'data/all/test.torrent'
+    #fp = 'data/all/ubuntu.torrent'
+    #fp = 'data/archive/cIOS-firmware-images_archive.torrent'
     data = TorrentParser.parse_filepath(fp)
     save_path = '~/Desktop'
+    print(data.announces)
     t = Swarm(data, save_path)
     
     s = Session()
@@ -97,4 +102,10 @@ async def test():
     await tracker.announce()
     await asyncio.sleep(1000)
 
+
 asyncio.run(run(), debug=True)
+
+
+
+    
+    
