@@ -1,3 +1,4 @@
+import logging
 from queue import Queue
 from threading import Thread
 import threading
@@ -70,15 +71,23 @@ class Swarm:
     async def announce_tracker(self):
         tasks = list()
         for tracker in self.tracker_list:
-            if type(tracker) != HTTPTracker:
-                task = asyncio.create_task(tracker.announce())
-                task.add_done_callback(self.finished_tracker)
-                tasks.append(task)
+            name = tracker.address
+            task = asyncio.create_task(tracker.announce(), name=name)
+            task.add_done_callback(self.finished_tracker)
+            tasks.append(task)
         
         await asyncio.gather(*[t for t in tasks])
         
     def finished_tracker(self, future):
-        print(future.result(), future.exception())
+        
+        if future.exception():
+            print(future.exception())
+            logging.exception('exception')
+        elif future.result():
+            if type(future.result()) == tuple:
+                print(future.result()[1])
+            print(len(future.result()), future.get_name())
+
 
     def connect_peers(self):
         finished = 0 

@@ -1,18 +1,25 @@
 from os import stat_result
+import aiohttp
+from async_timeout import asyncio
+from charset_normalizer import logging
 import requests
 from socket import inet_ntoa, inet_ntop
 from socket import AF_INET6
 from struct import unpack
 from enum import Enum
+
+from yarl import URL
 from ..metadata.Bencoder import bdecode
 from ..peer_protocol.PeerIDs import PeerIDs
 
 # exception
+import traceback
 from ..exceptions import *
 from requests.models import HTTPError
 from requests.sessions import TooManyRedirects
 from requests import ConnectionError
 from requests.exceptions import RequestException, Timeout
+from urllib.parse import quote_plus
 
 class HTTPEvents:
     STARTED = "started"
@@ -45,7 +52,7 @@ class HTTPTracker:
         self.status = TrackerStatus.NOCONTACT
         self.error = None
 
-    def announce(self):
+    async def announce(self):
         event = HTTPEvents.STARTED
         peer_id = PeerIDs.generate()
 
@@ -53,7 +60,7 @@ class HTTPTracker:
         port = 6881
         uploaded = "0"
         downloaded = "0"
-        left = "1000000"
+        left = "100000"
 
         # optional
         ip = 0
@@ -63,13 +70,16 @@ class HTTPTracker:
         key = PeerIDs.generate_key()
         trackerid = ""
         
-        with self.semaphore:
+        async with self.semaphore:
             recv = None
             try:
                 self.status = TrackerStatus.CONNECTING
-                recv = self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
+                recv = await self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
                 self.peers = recv
             except Exception as e:
+                logging.error(e, exc_info=True)
+                print('http', e)
+                
                 self.error = str(e)
                 self.status = TrackerStatus.ERROR
             finally:
@@ -77,11 +87,11 @@ class HTTPTracker:
                     self.status = TrackerStatus.FINISHED
                 return recv
         
-    def scrape(self):
-        with self.semaphore:
+    async def scrape(self):
+        async with self.semaphore:
             recv = None
             try:
-                recv = self._scrape(self.info_hash)
+                recv = await self._scrape(self.info_hash)
                 self.peers = recv
             except Exception as e:
                 self.error = str(e)
@@ -124,11 +134,12 @@ class HTTPTracker:
     peers_ipv6 (optional): when compact ipv6 are requested
     or peers6 (optional): same as peers_ipv6
     """
-    def _announce(self, info_hash, peer_id, port, uploaded, downloaded, left, ip=None, event=None, numwant=None, no_peer_id=None, compact=None, key=None, trackerid=None):
+    async def _announce(self, info_hash, peer_id, port, uploaded, downloaded, left, ip=None, event=None, numwant=None, no_peer_id=None, compact=None, key=None, trackerid=None):
         params = {}
 
         # required parameters
-        params['info_hash'] = info_hash
+        print(info_hash)
+        params['info_hash'] = quote_plus(info_hash)
         params['peer_id'] = peer_id
         params['port'] = port
         params['uploaded'] = uploaded
@@ -152,23 +163,33 @@ class HTTPTracker:
             params['trackerid'] = trackerid 
 
         try:
-            recv = requests.get(self.address, params=params, timeout=HTTPTracker.TIMEOUT)
+            async with aiohttp.ClientSession() as session:
+                param_url = "&".join([f"{x}={params[x]}" for x in params])
+                url = f"{self.address}?{param_url}"
+                async with session.get(URL(url, encoded=True), timeout=HTTPTracker.TIMEOUT) as resp:
+                    if resp.status != 200:
+                        raise Exception('wrong status code ' + str(resp.status) )
+                    recv = await resp.read()
         except HTTPError as e:
             raise NetworkExceptions("1" + str(e))
             # unsuccessful status code
-        except Timeout as e:
+        except asyncio.TimeoutError as e:
             raise NetworkExceptions("2 Request timed out")
             # request timed out
         except TooManyRedirects as e:
             raise NetworkExceptions("3" +str(e))
             # exceeds number of max redirect
-        except ConnectionError as e:
+        except aiohttp.ClientConnectionError as e:
             raise NetworkExceptions("4 Network problem" + self.address)
             # the event of a network problem (e.g. DNS failure, refused connection, etc)
         except RequestException as e:
             raise NetworkExceptions("5" + str(e))
+        except Exception as e:
+            logging.exception('te')
+            print('uncaught', e)
+            return
         
-        answer = bdecode(recv.content)
+        answer = bdecode(recv)
         
         # decode bencoded answer
         if "failure reason" in answer:
@@ -243,7 +264,6 @@ class HTTPTracker:
                 port = unpack("!H", byte_string[i * 18 + 16: i * 18 + 18])[0]
                 self.peers.append((ip, port))
         
-        recv.close()
         return self.peers
 
 
@@ -256,7 +276,7 @@ class HTTPTracker:
     noted that scrape exchanges have no effect on a peer's participation
     in a swarm.
     """
-    def _scrape(self, info_hashes=None): 
+    async def _scrape(self, info_hashes=None): 
         if not "announce" in self.address:
             raise WrongFormat(f"Url contains no announce {self.address}")
         link = self.address.replace("announce","scrape")
@@ -271,7 +291,13 @@ class HTTPTracker:
             params["info_hash"] = info_hashes
         
         try:
-            recv = requests.get(link, params=params, timeout=HTTPTracker.TIMEOUT)
+            async with aiohttp.ClientSession() as session:
+                param_url = "&".join([f"{x}={params[x]}" for x in params])
+                url = f"{link}?{param_url}"
+                async with session.get(URL(url, encoded=True), timeout=HTTPTracker.TIMEOUT) as resp:
+                    if resp.status != 200:
+                        raise Exception('wrong status code ' + str(resp.status) )
+                    recv = await resp.read()
         except HTTPError as e:
             raise NetworkExceptions("1" + str(e))
             # unsuccessful status code
@@ -288,7 +314,7 @@ class HTTPTracker:
             raise NetworkExceptions("5" + str(e))
             # any other possible exception
 
-        answer = bdecode(recv.content)        
+        answer = bdecode(recv)        
         
         if "failure reason" in answer:
             raise MessageExceptions(f"Scrape failed: {answer['failure reason']}")
