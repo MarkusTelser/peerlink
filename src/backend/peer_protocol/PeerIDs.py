@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, random, randint
 from string import ascii_letters
 from ..exceptions import *
 
@@ -253,6 +253,11 @@ class PeerIDs:
     def generate_key():
         # key with atleast 32 bit entrophy for identification with peer id
         return ''.join(choice(ascii_letters) for _ in range(4))
+    
+    @staticmethod
+    def generate_ikey():
+        # equivalten to generate_key but for UDP Tracker
+        return randint(0, 9999)
     
     @staticmethod
     def get_client(pid: bytes):

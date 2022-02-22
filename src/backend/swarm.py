@@ -2,7 +2,7 @@ import logging
 from queue import Queue
 from threading import Thread
 import threading
-from src.backend.trackers.HTTPTracker import HTTPTracker
+from src.backend.trackers.HTTPTracker import HTTPEvents, HTTPTracker
 from asyncio import BoundedSemaphore
 from datetime import datetime
 from src.backend.trackers.UDPTracker import UDPTracker
@@ -17,12 +17,14 @@ import asyncio
 class Swarm:
     MAX_TRACKER = 100
     MAX_PEERS = 70
+    LISTEN_PORT = 6881
     
     def __init__(self, data, path) -> None:
         self.data = data
         self.announces = data.announces
         self.info_hash = data.info_hash
-        self.piece_manager = PieceManager(data.pieces_count)
+        self.peer_id = PeerIDs.generate()
+        self.piece_manager = PieceManager(data.pieces_count, data.piece_length)
         self.file_handler = FileHandler(data, path)
         
         self.peer_limit = BoundedSemaphore(value=Swarm.MAX_PEERS)
@@ -47,10 +49,12 @@ class Swarm:
         try:
             if len(self.start_date) == 0:
                 self.start_date = datetime.now().isoformat()
-            print('heere')
+            
             self.init_tracker()
-            await self.announce_tracker()
-            print('hree')
+            await self.scrape_trackers()
+            #await self.announce_trackers(HTTPEvents.STARTED)
+            
+            
             
             #self.connect_peers()
         except Exception:
@@ -64,22 +68,32 @@ class Swarm:
         
         for tiers in self.announces: 
             for announce in tiers:
-                tracker = give_object(announce, self.info_hash, self.tracker_limit)
+                tracker = give_object(announce, self.info_hash, self.peer_id, Swarm.LISTEN_PORT, self.tracker_limit)
                 if tracker != None:
                     self.tracker_list.append(tracker)
     
-    async def announce_tracker(self):
+    async def announce_trackers(self, event=None):
         tasks = list()
         for tracker in self.tracker_list:
-            name = tracker.address
-            task = asyncio.create_task(tracker.announce(), name=name)
+            uploaded = self.piece_manager.uploaded_bytes
+            downloaded = self.piece_manager.downloaded_bytes
+            left = self.piece_manager.left_bytes
+            
+            task = asyncio.create_task(tracker.announce(event, uploaded, downloaded, left), name=tracker.address)
             task.add_done_callback(self.finished_tracker)
             tasks.append(task)
         
         await asyncio.gather(*[t for t in tasks])
         
+    async def scrape_trackers(self):
+        tasks = list()
+        for tracker in self.tracker_list:
+            print(tracker)
+            task = asyncio.create_task(tracker.scrape(), name=tracker.address)
+            tasks.append(task)
+        await asyncio.gather(*[t for t in tasks])
+    
     def finished_tracker(self, future):
-        
         if future.exception():
             print(future.exception())
             logging.exception('exception')

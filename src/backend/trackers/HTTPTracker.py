@@ -1,19 +1,17 @@
-from os import stat_result
+from enum import Enum
 import aiohttp
-from async_timeout import asyncio
+import asyncio
 from charset_normalizer import logging
-import requests
 from socket import inet_ntoa, inet_ntop
 from socket import AF_INET6
 from struct import unpack
-from enum import Enum
 
 from yarl import URL
+
 from ..metadata.Bencoder import bdecode
 from ..peer_protocol.PeerIDs import PeerIDs
 
 # exception
-import traceback
 from ..exceptions import *
 from requests.models import HTTPError
 from requests.sessions import TooManyRedirects
@@ -35,9 +33,11 @@ class TrackerStatus(Enum):
 class HTTPTracker:
     TIMEOUT = 3
 
-    def __init__(self, address, info_hash, semaphore):
+    def __init__(self, address, info_hash, peer_id, port, semaphore):
         self.address = address
         self.info_hash = info_hash
+        self.peer_id = peer_id
+        self.port = port
         
         self.interval = 0
         self.min_interval = 0
@@ -52,16 +52,7 @@ class HTTPTracker:
         self.status = TrackerStatus.NOCONTACT
         self.error = None
 
-    async def announce(self):
-        event = HTTPEvents.STARTED
-        peer_id = PeerIDs.generate()
-
-        # demo values
-        port = 6881
-        uploaded = "0"
-        downloaded = "0"
-        left = "100000"
-
+    async def announce(self, event, uploaded, downloaded, left):
         # optional
         ip = 0
         numwant = 50
@@ -74,10 +65,10 @@ class HTTPTracker:
             recv = None
             try:
                 self.status = TrackerStatus.CONNECTING
-                recv = await self._announce(self.info_hash, peer_id, port, uploaded, downloaded, left, event=event)
+                recv = await self._announce(self.info_hash, self.peer_id, self.port, uploaded, downloaded, left, event)
                 self.peers = recv
             except Exception as e:
-                logging.error(e, exc_info=True)
+                #logging.error(e, exc_info=True)
                 print('http', e)
                 
                 self.error = str(e)
@@ -134,11 +125,10 @@ class HTTPTracker:
     peers_ipv6 (optional): when compact ipv6 are requested
     or peers6 (optional): same as peers_ipv6
     """
-    async def _announce(self, info_hash, peer_id, port, uploaded, downloaded, left, ip=None, event=None, numwant=None, no_peer_id=None, compact=None, key=None, trackerid=None):
+    async def _announce(self, info_hash, peer_id, port, uploaded, downloaded, left, event=None, ip=None, numwant=None, no_peer_id=None, compact=None, key=None, trackerid=None):
         params = {}
 
         # required parameters
-        print(info_hash)
         params['info_hash'] = quote_plus(info_hash)
         params['peer_id'] = peer_id
         params['port'] = port
@@ -288,7 +278,7 @@ class HTTPTracker:
             pass
         # scrape one or multiple info_hashes, either str or list
         elif type(info_hashes) == bytes or type(info_hashes) == list:
-            params["info_hash"] = info_hashes
+            params["info_hash"] = quote_plus(info_hashes)
         
         try:
             async with aiohttp.ClientSession() as session:
@@ -340,5 +330,5 @@ class HTTPTracker:
                 self.min_request_interval = flags["min_request_interval"]
                 print(self.min_request_interval)
             print(flags)
-        
+        print(answer)
         return answer.get("files")

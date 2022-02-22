@@ -1,15 +1,15 @@
+import logging
 import socket
 import asyncio
 from time import time
 from enum import Enum
-from random import choice
 from random import randint
-from string import ascii_letters
 from struct import pack, unpack
 from ipaddress import IPv6Address, ip_address
 
 from src.backend.exceptions import *
 from src.backend.peer_protocol.PeerIDs import PeerIDs
+from src.backend.trackers.HTTPTracker import HTTPEvents
 
 class Actions(Enum):
     CONNECT = 0x0
@@ -23,17 +23,17 @@ class UDPEvents(Enum):
     STARTED = 0x2
     STOPPED = 0x3
 
-class TrackerStatus(Enum):
-    NOCONTACT = 0
-    CONNECTING = 1
-    FINISHED = 2
-    ERROR = 3
-
 # UDP Tracker Extension (BEP 41)
 class UDPExtensionTypes(Enum):
     EndOfOptions = 0x0
     NOP = 0x1
     URLData = 0x2
+
+class TrackerStatus(Enum):
+    NOCONTACT = 0
+    CONNECTING = 1
+    FINISHED = 2
+    ERROR = 3
 
 class UDPTracker:
     IDENTIFICATION = 0x41727101980
@@ -42,10 +42,12 @@ class UDPTracker:
     BUFFER_SIZE = 2048
     TIMEOUT = 5
 
-    def __init__(self, address, extension, info_hash, semaphore):
+    def __init__(self, address, extension, info_hash, peer_id, port, semaphore):
         self.address = address
         self.extension = extension
         self.info_hash = info_hash
+        self.peer_id = bytes(peer_id, 'utf-8')
+        self.port = port
         self.sock = None
         
         self.semaphore = semaphore
@@ -114,27 +116,28 @@ class UDPTracker:
         self.sock.close()
         self.sock = None
         
-    async def announce(self):
-        peer_id = bytes(PeerIDs.generate_key(), 'utf-8')
-        event = UDPEvents.STARTED.value
-
-        # demo values
-        downloaded = 0
-        left = 0
-        uploaded = 0
-        num_want = 500
+    async def announce(self, event, uploaded, downloaded, left):
+        # translate HTTP Events to UDP Events
+        if event == HTTPEvents.STARTED:
+            event = UDPEvents.STARTED.value
+        elif event == HTTPEvents.STOPPED:
+            event = UDPEvents.STOPPED.value
+        elif event == HTTPEvents.COMPLETED:
+            event = UDPEvents.COMPLETED.value
+        else:
+            event = UDPEvents.NONE
 
         # if not given
         ip = 0
-        port = 0
-        key = 0
+        key = PeerIDs.generate_ikey()
+        num_want = 200
         
         async with self.semaphore:
             peers = None
             try:
                 self.status = TrackerStatus.CONNECTING
                 await self.create_con()
-                peers = await self._announce(self.info_hash, peer_id, downloaded, left, uploaded, event, key, port, ip, num_want, self.extension)
+                peers = await self._announce(self.info_hash, self.peer_id, int(uploaded), int(downloaded), int(left), event, key, self.port, ip, num_want, self.extension)
                 self.peers = peers
             except Exception as e:
                 self.error = str(e)
@@ -148,13 +151,14 @@ class UDPTracker:
             
         
     async def scrape(self):
-        with self.semaphore:
+        async with self.semaphore:
             peers = None
             try:
                 await self.create_con()
                 peers = await self._scrape(self.info_hash)
                 self.peers = peers
             except Exception as e:
+                #logging.exception('t')
                 self.error = str(e)
             finally:
                 if self.sock is not None:
@@ -226,7 +230,7 @@ class UDPTracker:
     32-bit integer IP address
     16-bit integer TCP port
     """
-    async def _announce(self, info_hash, peer_id, dowloaded, left, uploaded, event, key, port, ip=0, num_want=-1, extensions=""):
+    async def _announce(self, info_hash, peer_id, uploaded, downloaded, left, event, key, port, ip=0, num_want=-1, extensions=""):
         # update cid if expired / not existing
         if time() > self.cid_expiry_date:
             cid = await self.connect()
@@ -239,7 +243,7 @@ class UDPTracker:
             ip = 0
         
         msg = pack('!QII', cid, Actions.ANNOUNCE.value, TID)
-        msg += pack('!20s20sQ', info_hash, peer_id, dowloaded)
+        msg += pack('!20s20sQ', info_hash, peer_id, downloaded)
         msg += pack('!QQI', left, uploaded, event)
         msg += pack('!IIIH', ip, key, num_want, port)
         
@@ -300,6 +304,7 @@ class UDPTracker:
     async def _scrape(self, info_hashes: list):
         # update cid if expired / not existing
         if time() > self.cid_expiry_date:
+            print('need to connect')
             cid = await self.connect()
         
         # create message
@@ -314,6 +319,7 @@ class UDPTracker:
             msg += pack('!20s', info_hashes)
             
         # send and receive scrape packet
+        print(msg)
         recv = await self._sendrecv(msg)
         
         if len(recv) < 8:

@@ -1,6 +1,7 @@
+from abc import abstractmethod
 from enum import Enum
-from .HTTPTracker import HTTPTracker
-from .UDPTracker import UDPTracker
+from src.backend.trackers.HTTPTracker import HTTPTracker
+from src.backend.trackers.UDPTracker import UDPTracker
 
 # exception catching
 from ..exceptions import *
@@ -9,6 +10,23 @@ class TrackerType(Enum):
     HTTP = 0
     UDP = 1
     UNSUPPORTED = 2
+
+class Tracker(object):
+    def __init__(self) -> None:
+        self.address = ''
+        self.leechers = 0
+        self.seeders = 0
+        self.peers = list()
+        self.status = None
+        self.error = None
+    
+    @abstractmethod
+    def announce(self):
+        pass
+    
+    @abstractmethod
+    def scrape(self):
+        pass
 
 """
 parse URL according to URI (Uniform Resource Identifiers) schemes
@@ -38,17 +56,17 @@ def parse_url(announce_url: str):
     return (tracker_type, tracker_address)
 
 
-def give_object(announce_url: str, info_hash: bytes, start_queue):
-    typ, address = parse_url(announce_url)
+def give_object(announce, info_hash, peer_id, port, semaphore):
+    typ, address = parse_url(announce)
     
     tracker = None
     
     if typ == TrackerType.HTTP:
-        tracker = HTTPTracker(address, info_hash, start_queue)
+        tracker = HTTPTracker(address, info_hash, peer_id, port, semaphore)
     elif typ == TrackerType.UDP:
         host, port, extension = address
         addr = host, port
-        tracker = UDPTracker(addr, extension, info_hash, start_queue)
+        tracker = UDPTracker(addr, extension, info_hash, peer_id, port, semaphore)
     elif typ == TrackerType.UNSUPPORTED:
         # TODO tracker type not recognized
         pass
