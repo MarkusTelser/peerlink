@@ -19,6 +19,60 @@ set timeout new every time
 use sched library
 select should work, especially for client server model (maybe problems with win comptability)
 """
+import asyncio
+
+class PPeer(asyncio.Protocol):
+    
+        
+    def connection_made(self, transport: asyncio.transports.BaseTransport) -> None:
+        self._transport = transport
+        
+        #msg = bld_handshake(self.info_hash, self.peer_id)
+        #transport.write(msg)
+        #print(msg)
+        
+        #print('success connection', msg)
+        #print(dir(transport))
+        #self.send_msg(msg, expected_len=68)
+        
+    def data_received(self, data: bytes):
+        print('received data', data)
+    
+    def eof_received(self):
+        print('connection closed: eof')
+        self._transport.close()
+    
+    def connection_lost(self, exc):
+        print('connection lost')
+        
+        
+class MPeer:
+    def __init__(self, address, info_hash, peer_id):
+        super().__init__()
+        self.address = address
+        self.info_hash = info_hash
+        self.peer_id = bytes(peer_id, 'utf-8')
+        
+    async def start(self):
+        try:
+            loop = asyncio.get_running_loop() 
+            
+            # create connection peer
+            host, port = self.address
+            reader, writer = await loop.create_connection(lambda: PPeer(), host=host, port=port)
+            
+            # send and receive handshake
+            HANDSHAKE_TIMEOUT = 10
+            msg = bld_handshake(self.info_hash, self.peer_id)
+            reader.write(msg)
+            socket = reader.get_extra_info('socket')
+            handshake = await asyncio.wait_for(loop.sock_recv(socket, PeerMessageLengths.HANDSHAKE), timeout=HANDSHAKE_TIMEOUT)
+            print(handshake)
+            
+        except Exception as e:
+            print(e)
+                    
+    
 
 """
 implement peer protocol
@@ -241,3 +295,9 @@ class Peer(Thread):
 
     def close_con(self):
         self.sock.close()
+        
+        
+"""
+['__class__', '__del__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', '__weakref__', '_add_reader', '_buffer', '_buffer_factory', '_call_connection_lost', '_closing', '_conn_lost', '_empty_waiter', '_eof', '_extra', '_fatal_error', '_force_close', '_high_water', '_loop', '_low_water', '_make_empty_waiter', '_maybe_pause_protocol', '_maybe_resume_protocol', '_paused', '_protocol', '_protocol_connected', '_protocol_paused', '_read_ready', '_read_ready__data_received', '_read_ready__get_buffer', '_read_ready__on_eof', '_read_ready_cb', '_reset_empty_waiter', '_sendfile_compatible', '_server', '_set_write_buffer_limits', '_sock', '_sock_fd', '_start_tls_compatible', '_write_ready', 'abort', 'can_write_eof', 'close', 'get_extra_info', 'get_protocol', 'get_write_buffer_limits', 'get_write_buffer_size', 'is_closing', 'is_reading', 'max_size', 'pause_reading', 'resume_reading', 'set_protocol', 'set_write_buffer_limits', 'write', 'write_eof', 'writelines'] ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', '__weakref__', '_transport', 'connection_lost', 'connection_made', 'data_received', 'eof_received', 'pause_writing', 'resume_writing']
+
+"""

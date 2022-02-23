@@ -7,7 +7,7 @@ from .peer_protocol.PeerIDs import PeerIDs
 from .peer_protocol.PieceManager import PieceManager
 from .FileHandler import FileHandler
 from .trackers.Tracker import give_object
-from .peer_protocol.Peer import Peer
+from .peer_protocol.Peer import MPeer, PPeer, Peer
 import asyncio
 
 class Swarm:
@@ -89,15 +89,22 @@ class Swarm:
             print('peers', future.get_name(), len(future.result()))
             for peer in future.result():
                 if self.peer_in_list(peer[0], peer[1]):
-                    print('already in peer list', peer, len(self.peer_list))
+                    #print('already in peer list', peer, len(self.peer_list))
+                    continue
+                
+                
+                
+                m = MPeer(peer, self.data.info_hash, self.peer_id)
+                asyncio.create_task(m.start())
+                
                 
                 address = (peer[0], peer[1])
                 if len(peer) == 2:
-                    peer = Peer(address, self.data, self.piece_manager, self.file_handler)
+                    p = Peer(address, self.data, self.piece_manager, self.file_handler)
                 elif len(peer) == 3:
-                    peer = Peer(address, self.data, self.piece_manager, self.file_handler, peer[2])
-                # peer.start()
-                self.peer_list.append(peer)
+                    p = Peer(address, self.data, self.piece_manager, self.file_handler, peer[2])
+                
+                self.peer_list.append(p)
     
     def peer_in_list(self, ip, port):
         for peer in self.peer_list:
