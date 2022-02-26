@@ -1,3 +1,4 @@
+from distutils import extension
 import errno
 import socket
 import select
@@ -14,6 +15,8 @@ from src.backend.exceptions import *
 from .PeerIDs import PeerIDs
 from src.backend.peer_protocol.ReservedExtensions import get_extensions, ReservedExtensions
 from src.backend.peer_protocol.ExtensionProtocol import ExtensionProtocol
+
+from src.backend.peer_protocol import PeerMessages
 """
 set timeout new every time
 use sched library
@@ -26,14 +29,6 @@ class PPeer(asyncio.Protocol):
         
     def connection_made(self, transport: asyncio.transports.BaseTransport) -> None:
         self._transport = transport
-        
-        #msg = bld_handshake(self.info_hash, self.peer_id)
-        #transport.write(msg)
-        #print(msg)
-        
-        #print('success connection', msg)
-        #print(dir(transport))
-        #self.send_msg(msg, expected_len=68)
         
     def data_received(self, data: bytes):
         print('received data', data)
@@ -55,6 +50,32 @@ class MPeer:
         
     async def start(self):
         try:
+            loop = asyncio.get_running_loop()
+            
+            # connect to socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setblocking(False)
+            await loop.sock_connect(sock, self.address)
+            
+            # send and receive handshake
+            HANDSHAKE_TIMEOUT = 10
+            msg = bld_handshake(self.info_hash, self.peer_id)
+            co = loop.sock_sendall(sock, msg)
+            await asyncio.wait_for(co, timeout=HANDSHAKE_TIMEOUT)
+            co = loop.sock_recv(sock, PeerMessageLengths.HANDSHAKE)
+            recv = await asyncio.wait_for(co, timeout=HANDSHAKE_TIMEOUT)
+            handshake = PeerMessages.val_handshake(recv, self.info_hash, self.peer_id)
+            extensions = get_extensions(handshake.reserved)
+            print(handshake, extensions)
+            
+            # create transport and start asnychrono communication
+            transport, protocol = await loop.create_connection(lambda: PPeer(), sock=sock)
+            #print('result22', transport, protocol)
+        except Exception as e:
+            print(e)
+        
+        """
+        try:
             loop = asyncio.get_running_loop() 
             
             # create connection peer
@@ -66,11 +87,13 @@ class MPeer:
             msg = bld_handshake(self.info_hash, self.peer_id)
             reader.write(msg)
             socket = reader.get_extra_info('socket')
+            
             handshake = await asyncio.wait_for(loop.sock_recv(socket, PeerMessageLengths.HANDSHAKE), timeout=HANDSHAKE_TIMEOUT)
             print(handshake)
             
         except Exception as e:
             print(e)
+        """
                     
     
 

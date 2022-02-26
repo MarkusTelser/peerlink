@@ -2,6 +2,7 @@ import socket
 from os import stat
 from struct import pack, unpack
 from collections import namedtuple
+from src.backend.exceptions import MessageExceptions
 
 from src.backend.metadata.Bencoder import bencode
 
@@ -48,6 +49,7 @@ class PeerMessageLengths:
     CANCEL = 17
 
 class PeerMessageStructures:
+    Handshake = namedtuple('Handshake', 'peer_id reserved')
     KeepAlive = namedtuple('KeepAlive', '')
     Choke = namedtuple('Choke', '')
     Unchoke = namedtuple('Unchoke', '')
@@ -82,6 +84,28 @@ def bld_handshake(info_hash, peer_id):
     msg += pack('!20s', peer_id)
 
     return msg
+
+def val_handshake(recv, info_hash, peer_id):
+    if len(recv) != PeerMessageLengths.HANDSHAKE:
+        raise MessageExceptions("Error: Handshake message has wrong size", len(recv), recv)
+    
+    pstrlen, pstr = unpack("!B19s", recv[:20])
+    if pstrlen != 19 or pstr != b'BitTorrent protocol':
+        raise MessageExceptions("Error: Only BitTorrent protocol supported", pstrlen, pstr)
+
+    reserved = unpack("!8s", recv[20:28])[0]
+
+    recv_info_hash = unpack("!20s", recv[28:48])[0]
+    if recv_info_hash != info_hash:
+        raise MessageExceptions("Error: Received info hash does not match")
+
+    recv_peer_id = unpack("!20s", recv[48:68])[0]
+    if peer_id == "" or recv_peer_id == peer_id:
+        print('not unique', recv_peer_id, peer_id)
+        raise MessageExceptions("Error: Peer didn't return unique peer id")
+    
+    ret = PeerMessageStructures.Handshake(recv_peer_id, reserved)
+    return ret
 
 """
 keep-alive: <len=0000>
