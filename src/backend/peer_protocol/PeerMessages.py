@@ -2,6 +2,7 @@ import socket
 from os import stat
 from struct import pack, unpack
 from collections import namedtuple
+from src.backend.dht.DHT import DHT
 from src.backend.exceptions import MessageExceptions
 
 from src.backend.metadata.Bencoder import bencode
@@ -73,13 +74,13 @@ implemented, because we don't always know what we receive
 """
 handshake: <pstrlen><pstr><reserved><info_hash><peer_id>
 """
-def bld_handshake(info_hash, peer_id):
+def bld_handshake(info_hash, peer_id, reserved):
     pstrlen = 19
     pstr = b'BitTorrent protocol'
     
     msg = pack('!B', pstrlen)
     msg += pack('!19s', pstr)
-    msg += pack('!8x')
+    msg += pack('!8s', reserved)
     msg += pack('!20s', info_hash)
     msg += pack('!20s', peer_id)
 
@@ -236,16 +237,17 @@ def val_cancel(recv):
 """
 port: <len=0003><id=9><listen-port>
 """
-def bld_port(listen_port):
-    length = 3
-    id = PeerMessageIDs.PORT
+def bld_port():
+    length, id, listen_port = 3, PeerMessageIDs.PORT, DHT.PORT
 
     msg = pack("!IB", length, id)
-    msg += pack("!I", listen_port)
+    msg += pack("!H", listen_port)
+    print('sending port', msg)
     return msg
 
 def val_port(recv):    
-    listen_port = unpack("!I", recv[5:9])[0]
+    listen_port = unpack("!H", recv[5:9])[0]
     ret = PeerMessageStructures.Port(listen_port)
+    print('received port', recv)
     return ret
         

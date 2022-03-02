@@ -45,7 +45,19 @@ def get_extensions(reserved_bytes: bytes):
                 extensions.append(extension)
     return extensions
 
+def gen_extensions(dht=False):
+    return b'\x00\x00\x00\x00\x00\x00\x00\x01'
+
+def or_bytes(abytes, bbytes):
+    return bytes([a | b for a, b in zip(abytes[::-1], bbytes[::-1])][::-1])
+
+def pad_bytes(bytes, length):
+    if len(bytes) >= length:
+        return bytes
+    return (length - len(bytes)) * b'0' + bytes
+    
 if __name__ == "__main__":
     b = b'\x00\x00\x00\x00\x00\x10\x00\x05'
+    b = b'\x00\x00\x00\x00\x00\x00\x00\x01'
     e = get_extensions(b)
     print(b, e)

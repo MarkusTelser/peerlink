@@ -1,6 +1,7 @@
 import asyncio
 import threading
 from typing import List
+from src.backend.dht.DHT import DHT
 
 from src.backend.swarm import Swarm
 
@@ -12,11 +13,15 @@ class Session(threading.Thread):
         self.start()
         
         self.swarm_list = list()
+        self.dht = DHT()
     
     def run(self):
         asyncio.run(self._run(), debug=True)
     
     async def _run(self):
+        # start DHT up
+        asyncio.create_task(self.dht.start())
+        
         while True:
             func, args, kargs = await self.queue.get()
             asyncio.create_task(func(*args, **kargs))

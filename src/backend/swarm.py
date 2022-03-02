@@ -92,19 +92,9 @@ class Swarm:
                     #print('already in peer list', peer, len(self.peer_list))
                     continue
                 
-                
-                
-                m = MPeer(peer, self.data.info_hash, self.peer_id)
+                m = MPeer(peer, self.data.info_hash, self.peer_id, self.piece_manager, self.file_handler)
                 asyncio.create_task(m.start())
-                
-                
-                address = (peer[0], peer[1])
-                if len(peer) == 2:
-                    p = Peer(address, self.data, self.piece_manager, self.file_handler)
-                elif len(peer) == 3:
-                    p = Peer(address, self.data, self.piece_manager, self.file_handler, peer[2])
-                
-                self.peer_list.append(p)
+                self.peer_list.append(m)
     
     def peer_in_list(self, ip, port):
         for peer in self.peer_list:
