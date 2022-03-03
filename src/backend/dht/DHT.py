@@ -33,7 +33,8 @@ class DHT:
     async def start(self):
         loop = asyncio.get_running_loop()
         protocol_factory = lambda: DHTServer()
-        await loop.create_datagram_endpoint(protocol_factory, local_addr=('0.0.0.0', self.PORT))
+        transport, protocol  = await loop.create_datagram_endpoint(protocol_factory, local_addr=('127.0.0.1', self.PORT))
+        print(transport, protocol)
         await asyncio.sleep(3600)
     
     @staticmethod

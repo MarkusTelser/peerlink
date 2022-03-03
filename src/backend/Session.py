@@ -10,27 +10,50 @@ class Session(threading.Thread):
     def __init__(self):
         super(Session, self).__init__()
         self.queue = asyncio.Queue(maxsize=10)
-        self.start()
+        self.loop = asyncio.new_event_loop()
+        self.loop.set_debug(True)
         
         self.swarm_list = list()
         self.dht = DHT()
+        
+        self.start()
     
     def run(self):
-        asyncio.run(self._run(), debug=True)
+        print('started')
+        
+        print('created event loop')
+        asyncio.set_event_loop(self.loop)
+        
+
+        self.loop.run_until_complete(self._run())
+        #self.loop.call_soon(self._run())
+        #self.loop.run_forever()
+        #asyncio.run(self._run(), debug=True)
     
     async def _run(self):
+        #print(asyncio.get_running_loop())
+        #self.loop = asyncio.get_running_loop()
+        
         # start DHT up
         asyncio.create_task(self.dht.start())
         
         while True:
             func, args, kargs = await self.queue.get()
+            print(func, args, kargs)
             asyncio.create_task(func(*args, **kargs))
     
     def resume(self, *args, **kargs):
-        self.queue.put_nowait((self._resume, args, kargs))
+        print(threading.current_thread(), self.loop)
+        f = self.queue.put((self._resume, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+        #self.queue.put_nowait((self._resume, args, kargs))
     
     def stop(self, *args, **kargs):
-        self.queue.put_nowait((self._stop, args, kargs))
+        print(threading.current_thread(), self.loop)
+        f = self.queue.put((self._stop, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+        
+        print('after putting')
     
     def resume_all(self, *args, **kargs):
         self.queue.put_nowait((self._resume_all, args, kargs))
@@ -51,7 +74,8 @@ class Session(threading.Thread):
     
     async def _stop(self, index: int):
         if len(self.swarm_list) > index:
-            self.swarm_list[index].start()
+            print('paused', index)
+            await self.swarm_list[index].pause()
             
     async def _resume_all(self):
         for torrent in self.swarm_list:

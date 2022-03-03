@@ -50,8 +50,26 @@ class HTTPTracker:
         self.semaphore = semaphore
         
         self.status = TrackerStatus.NOCONTACT
+        self.announce_task = None
+        self.scrape_task = None
         self.error = None
 
+    def announce_wrap(self, func, name='', callback=None):
+        self.announce_task = asyncio.create_task(func)
+        self.announce_task.add_done_callback(callback)
+        self.announce_task.set_name(name)
+    
+    def scrape_wrap(self, func, name='', callback=None):
+        self.scrape_task = asyncio.create_task(func)
+        self.scrape_task.add_done_callback(callback)
+        self.scrape_task.set_name(name)
+    
+    def pause(self):
+        if self.announce_task != None:
+            self.announce_task.cancel()
+        if self.scrape_task != None:
+            self.scrape_task.cancel()
+    
     async def announce(self, event, uploaded, downloaded, left):
         # optional
         ip = 0
