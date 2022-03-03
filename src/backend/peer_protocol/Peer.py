@@ -26,10 +26,11 @@ select should work, especially for client server model (maybe problems with win 
 import asyncio
 
 class PPeer(asyncio.Protocol):
-    def __init__(self, peer_id, piece_manager: PieceManager, file_handler: FileHandler) -> None:
+    def __init__(self, peer_id, piece_manager: PieceManager, file_handler: FileHandler):
         super().__init__()
         piece_length, full_size = file_handler.data.piece_length, file_handler.data.files.length
         
+        self.transport = None
         self.stream = PeerStreamIterator()
         self.file_handler = file_handler
         self.piece_manager = piece_manager
@@ -45,7 +46,7 @@ class PPeer(asyncio.Protocol):
         self.peer_id = peer_id
         
     def connection_made(self, transport: asyncio.transports.BaseTransport) -> None:
-        self._transport = transport
+        self.transport = transport
         
     def data_received(self, data: bytes):
         recv = self.stream.parse(data)
@@ -56,6 +57,12 @@ class PPeer(asyncio.Protocol):
             self.am_choking = True
         elif isinstance(recv, PeerMessageStructures.Unchoke):
             self.am_choking = False
+            if self.am_interested:
+                requests = self.block_manager.fill_request()
+                print('UNCHOKED + INTERSTED', len(requests))
+                for request in requests:
+                    msg = bld_request(request.piece_id, request.startbit, request.length)
+                    self.transport.write(msg)
         elif isinstance(recv, PeerMessageStructures.Interested):
             self.am_interested = True
         elif isinstance(recv, PeerMessageStructures.NotInterested):
@@ -74,23 +81,30 @@ class PPeer(asyncio.Protocol):
             # TODO implement with seeding
             pass
         elif isinstance(recv, PeerMessageStructures.Piece):
-            pass#full_piece = self.block_manager.add_block(recv.index, recv.begin, recv.block)
-            #if full_piece:
-            #    data = self.block_manager.get_piece_data(recv.index)
-            #    if self.file_handler.verify_piece(recv.index, data):
-            #        self.piece_manager.finished_piece(recv.index)
-            #        self.file_handler.write_piece(recv.index, data)
-            #    else:
-            #        raise Exception('piece wrong hash', data)
-            #    print("FULLPIECE", recv.index)
-            #    print(f"{self.piece_manager.downloaded}% {self.piece_manager.health}% {self.piece_manager.availability}")
-            #    
+            print('RECEIVED BLOCK ', recv.index, 'AT', recv.begin)
+            is_last_block = self.block_manager.add_block(recv.index, recv.begin, recv.block)
+            if is_last_block:
+                data = self.block_manager.get_piece_data(recv.index)
+                if self.file_handler.verify_piece(recv.index, data):
+                    self.piece_manager.finished_piece(recv.index)
+                    self.file_handler.write_piece(recv.index, data)
+                else:
+                    print('wrong hash' * 100)
+            
+                print('FULL PIECE', recv.index)
+                print(f"{self.piece_manager.downloaded}% {self.piece_manager.health}% {self.piece_manager.availability}")
+            
+            # requests outstanding piece
+            requests = self.block_manager.fill_request()
+            for request in requests:
+                msg = bld_request(request.piece_id, request.startbit, request.length)
+                self.transport.write(msg)
         elif isinstance(recv, PeerMessageStructures.Cancel):
             pass
         # TODO implement with DHT
         elif isinstance(recv, PeerMessageStructures.Port):
             print("dht port received", recv.listen_port)
-            asyncio.create_task(DHT.ping(self._transport.get_extra_info('peername')))
+            asyncio.create_task(DHT.ping(self.transport.get_extra_info('peername')))
         else:
             print(recv)
         
@@ -99,7 +113,7 @@ class PPeer(asyncio.Protocol):
     
     def eof_received(self):
         print('connection closed: eof')
-        self._transport.close()
+        self.transport.close()
     
     def connection_lost(self, exc):
         print('connection lost')
@@ -114,8 +128,20 @@ class MPeer:
         
         self.piece_manager = piece_manager
         self.file_handler = file_handler
+        
+        self.start_task = None
+        self.transport = None
     
-    async def start(self):
+    def start(self):
+        self.start_task = asyncio.create_task(self._start())
+    
+    def pause(self):
+        if self.start_task != None:
+            self.start_task.cancel()
+        if self.transport != None:    
+            self.transport.close()
+    
+    async def _start(self):
         try:
             loop = asyncio.get_running_loop()
             
@@ -138,15 +164,16 @@ class MPeer:
             
             # create transport and start asnychrono communication
             protocol_factory = lambda: PPeer(self.peer_id, self.piece_manager, self.file_handler)
-            transport, protocol = await loop.create_connection(protocol_factory, sock=sock)
+            self.transport, protocol = await loop.create_connection(protocol_factory, sock=sock)
             
             # send interested message and start downloading
-            transport.write(bld_interested())
+            protocol.am_interested = True
+            self.transport.write(bld_interested())
             
             # send udp port, if supported
             if ReservedExtensions.BitTorrentDHT in extensions:
                 print('supports DHT')
-                transport.write(bld_port())
+                self.transport.write(bld_port())
             
             await asyncio.sleep(3600)
         except Exception as e:
@@ -160,7 +187,7 @@ class Peer(Thread):
     MAX_INCOMING_CON = 5
     TIMEOUT = 2 * 60
 
-    def __init__(self, address, data, piece_manager, file_handler: FileHandler, peer_id=""):
+    def __init__(self, address, data, piece_manager: PieceManager, file_handler: FileHandler, peer_id=""):
         super().__init__()
         self.sock = None
         self.address = address #  => (ip, port)
@@ -374,9 +401,3 @@ class Peer(Thread):
 
     def close_con(self):
         self.sock.close()
-        
-        
-"""
-['__class__', '__del__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', '__weakref__', '_add_reader', '_buffer', '_buffer_factory', '_call_connection_lost', '_closing', '_conn_lost', '_empty_waiter', '_eof', '_extra', '_fatal_error', '_force_close', '_high_water', '_loop', '_low_water', '_make_empty_waiter', '_maybe_pause_protocol', '_maybe_resume_protocol', '_paused', '_protocol', '_protocol_connected', '_protocol_paused', '_read_ready', '_read_ready__data_received', '_read_ready__get_buffer', '_read_ready__on_eof', '_read_ready_cb', '_reset_empty_waiter', '_sendfile_compatible', '_server', '_set_write_buffer_limits', '_sock', '_sock_fd', '_start_tls_compatible', '_write_ready', 'abort', 'can_write_eof', 'close', 'get_extra_info', 'get_protocol', 'get_write_buffer_limits', 'get_write_buffer_size', 'is_closing', 'is_reading', 'max_size', 'pause_reading', 'resume_reading', 'set_protocol', 'set_write_buffer_limits', 'write', 'write_eof', 'writelines'] ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', '__weakref__', '_transport', 'connection_lost', 'connection_made', 'data_received', 'eof_received', 'pause_writing', 'resume_writing']
-
-"""

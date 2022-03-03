@@ -85,7 +85,7 @@ class PeerStreamIterator:
                 self.data = self.data[self.HEADER_LENGTH + length:]
                 return ret
             else:
-                print("Info: don't have all parts of message")
+                pass#print("Info: don't have all parts of message")
         else:
             print("Info: message too small")
         return None

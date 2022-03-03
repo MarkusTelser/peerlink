@@ -131,4 +131,4 @@ class PieceManager:
         raise Exception('piece already rejected')
     
     def is_last_piece(self, index):
-        return index == self.piece_count - 1 
+        return index == self.piece_count - 1

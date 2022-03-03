@@ -44,11 +44,7 @@ class Swarm:
         try:
             if len(self.start_date) == 0:
                 self.start_date = datetime.now().isoformat()
-
-            #await self.scrape_trackers()
             await self.announce_trackers(HTTPEvents.STARTED)
-            
-            #self.connect_peers()
         except Exception as e:
             logging.exception('error in swarm')
             print(e)
@@ -56,6 +52,13 @@ class Swarm:
     
     async def pause(self):
         self.start_task.cancel()
+        
+        for tracker in self.tracker_list:
+            tracker.pause()
+        
+        for peer in self.peer_list:
+            peer.pause()
+        
         await self.announce_trackers(HTTPEvents.STOPPED)
     
     async def announce_trackers(self, event=None):
@@ -66,9 +69,9 @@ class Swarm:
             left = self.piece_manager.left_bytes
             
             task_name = ':'.join([str(t) for t in tracker.address ]) if len(tracker.address) == 2 else tracker.address
-            task = asyncio.create_task(tracker.announce(event, uploaded, downloaded, left), name=task_name)
-            task.add_done_callback(self.connect_peers)
-            tasks.append(task)
+            func = tracker.announce(event, uploaded, downloaded, left)
+            tracker.announce_wrap(func, name=task_name, callback=self.connect_peers)
+            tasks.append(tracker.announce_task)
         
         await asyncio.gather(*[t for t in tasks])
         
@@ -76,8 +79,8 @@ class Swarm:
         tasks = list()
         for tracker in self.tracker_list:
             task_name = ':'.join([str(t) for t in tracker.address ]) if len(tracker.address) == 2 else tracker.address
-            task = asyncio.create_task(tracker.scrape(), name=task_name)
-            tasks.append(task)
+            tracker.scrape_wrap(tracker.scrape(), name=task_name)
+            tasks.append(tracker.scrape_task)
         
         await asyncio.gather(*[t for t in tasks])
     
@@ -93,7 +96,7 @@ class Swarm:
                     continue
                 
                 m = MPeer(peer, self.data.info_hash, self.peer_id, self.piece_manager, self.file_handler)
-                asyncio.create_task(m.start())
+                m.start()
                 self.peer_list.append(m)
     
     def peer_in_list(self, ip, port):
