@@ -3,7 +3,7 @@ from os import stat
 from struct import pack, unpack
 from collections import namedtuple
 from src.backend.dht.DHT import DHT
-from src.backend.exceptions import MessageExceptions
+from src.backend.exceptions import MessageExceptions, NetworkExceptions
 
 from src.backend.metadata.Bencoder import bencode
 
@@ -87,6 +87,9 @@ def bld_handshake(info_hash, peer_id, reserved):
     return msg
 
 def val_handshake(recv, info_hash, peer_id):
+    if recv == b'':
+        raise NetworkExceptions('Connection was closed by other peer')
+    
     if len(recv) != PeerMessageLengths.HANDSHAKE:
         raise MessageExceptions("Error: Handshake message has wrong size", len(recv), recv)
     

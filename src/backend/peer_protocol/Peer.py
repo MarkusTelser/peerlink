@@ -26,16 +26,16 @@ select should work, especially for client server model (maybe problems with win 
 import asyncio
 
 class PPeer(asyncio.Protocol):
-    def __init__(self, peer_id, piece_manager: PieceManager, file_handler: FileHandler):
+    def __init__(self, peer_id, piece_manager: PieceManager, file_handler: FileHandler, extension: ExtensionProtocol):
         super().__init__()
         piece_length, full_size = file_handler.data.piece_length, file_handler.data.files.length
         
         self.transport = None
-        self.stream = PeerStreamIterator()
+        self.stream = PeerStreamIterator(extension)
         self.file_handler = file_handler
         self.piece_manager = piece_manager
         self.block_manager = BlockManager(piece_manager, piece_length, full_size)
-        self.extension = ExtensionProtocol()
+        self.extension = extension
         
         self.am_choking = True
         self.am_interested = False
@@ -126,6 +126,7 @@ class MPeer:
         self.info_hash = info_hash
         self.peer_id = bytes(peer_id, 'utf-8')
         
+        self.extension = ExtensionProtocol()
         self.piece_manager = piece_manager
         self.file_handler = file_handler
         
@@ -163,12 +164,16 @@ class MPeer:
             #print(handshake, extensions)
             
             # create transport and start asnychrono communication
-            protocol_factory = lambda: PPeer(self.peer_id, self.piece_manager, self.file_handler)
+            protocol_factory = lambda: PPeer(self.peer_id, self.piece_manager, self.file_handler, self.extension)
             self.transport, protocol = await loop.create_connection(protocol_factory, sock=sock)
             
             # send interested message and start downloading
             protocol.am_interested = True
             self.transport.write(bld_interested())
+            
+            # send libtorrent extension handshake if supported
+            if ReservedExtensions.LibtorrentExtensionProtocol in extensions:
+                pass
             
             # send udp port, if supported
             if ReservedExtensions.BitTorrentDHT in extensions:

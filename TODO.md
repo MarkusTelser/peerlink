@@ -4,16 +4,15 @@ To keep track of all the BEPs I have already implemented and which will be imple
 
 ## In Progress: 
 - [x] [Explanation of Protocol (BEP 3)](http://bittorrent.org/beps/bep_0003.html)
-- [x] [Extension Protocol (BEP 10)](http://bittorrent.org/beps/bep_0010.html)
 - [ ] [Magnet Links (BEP 9)](http://bittorrent.org/beps/bep_0009.html)
 
 ## Near Future:
 - [ ] [DHT (BEP 5)](http://bittorrent.org/beps/bep_0005.html)
 - [ ] [PEX (BEP 11)](http://bittorrent.org/beps/bep_0011.html)
-- [ ] [LSD (BEP 14)](http://bittorrent.org/beps/bep_0014.html)
-- [ ] [Webseeding over HTTP/FTP (BEP 19)](http://bittorrent.org/beps/bep_0019.html)
 - [ ] [Fast Extension (BEP 6)](http://bittorrent.org/beps/bep_0006.html)
 - [ ] [uTorrent Transport Protocol (BEP 29)](http://bittorrent.org/beps/bep_0029.html)
+- [ ] [LSD (BEP 14)](http://bittorrent.org/beps/bep_0014.html)
+- [ ] [Webseeding over HTTP/FTP (BEP 19)](http://bittorrent.org/beps/bep_0019.html)
 
 ## Finished:
 - [x] [Index of BEP (BEP 0)](http://bittorrent.org/beps/bep_0000.html)
@@ -28,6 +27,7 @@ To keep track of all the BEPs I have already implemented and which will be imple
 - [x] [UDP Tracker (BEP 15)](http://bittorrent.org/beps/bep_0015.html)
 - [x] [UDP Tracker Protocol Extensions (BEP 41)](https://www.bittorrent.org/beps/bep_0041.html)
 - [x] [Reserved MID and Fields (BEP 4)](http://bittorrent.org/beps/bep_0004.html)
+- [x] [Extension Protocol (BEP 10)](http://bittorrent.org/beps/bep_0010.html)
 
 ## Review:
 - [ ] [Superseeding (BEP 16)](http://bittorrent.org/beps/bep_0016.html)

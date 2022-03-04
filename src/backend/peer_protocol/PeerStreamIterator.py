@@ -8,8 +8,9 @@ from ..exceptions import *
 class PeerStreamIterator:
     HEADER_LENGTH = 4
     
-    def __init__(self):
+    def __init__(self, extension_protocol):
         super().__init__()
+        self.extension = extension_protocol
         self.data = b''
     
     """def recv(self):
@@ -75,7 +76,7 @@ class PeerStreamIterator:
                 # libtorrent extension protocol 
                 elif mid == 20:
                     print("6"*100)
-                    #ret = self.extension_protocol.val_handshake(msg)
+                    ret = self.extension.val_handshake(msg)
                     print("finally", ret)
                 else:
                     self.data = self.data[self.HEADER_LENGTH + length:]

@@ -46,7 +46,7 @@ def get_extensions(reserved_bytes: bytes):
     return extensions
 
 def gen_extensions(dht=False):
-    return b'\x00\x00\x00\x00\x00\x00\x00\x01'
+    return b'\x00\x00\x00\x00\x00\x10\x00\x01'
 
 def or_bytes(abytes, bbytes):
     return bytes([a | b for a, b in zip(abytes[::-1], bbytes[::-1])][::-1])
