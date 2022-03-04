@@ -75,9 +75,7 @@ class PeerStreamIterator:
                     ret = val_port(msg)
                 # libtorrent extension protocol 
                 elif mid == 20:
-                    print("6"*100)
-                    ret = self.extension.val_handshake(msg)
-                    print("finally", ret)
+                    ret = self.extension.val_extension_msg(msg)
                 else:
                     self.data = self.data[self.HEADER_LENGTH + length:]
                     raise MessageExceptions("Unknown message id", mid)

@@ -6,9 +6,12 @@ class Bencoder:
         self.i = 0
 
     # clean function call
-    def decode(self, byte_string: bytes):
+    def decode(self, byte_string: bytes, spare_bytes):
         self.i = 0
-        return self._decode(byte_string)
+        dec = self._decode(byte_string)
+        if not spare_bytes:
+            return dec
+        return dec, byte_string[self.i:]
     
     """
     dictionary "d...e"
@@ -157,8 +160,8 @@ class Bencoder:
 
 b = Bencoder()
 
-def bdecode(byte_string: bytes):
-    return b.decode(byte_string)
+def bdecode(byte_string: bytes, spare_bytes=False):
+    return b.decode(byte_string, spare_bytes)
 
 def bencode(data):
     return b.encode(data)

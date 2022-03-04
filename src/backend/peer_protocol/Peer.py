@@ -7,6 +7,7 @@ from struct import unpack
 from threading import Thread
 
 from src.backend.peer_protocol.BlockManager import BlockManager
+from src.backend.peer_protocol.Metadata import MetadataData, MetadataReject, bld_metadata_request
 from src.backend.peer_protocol.PieceManager import PieceManager
 
 from .PeerMessages import *
@@ -15,7 +16,7 @@ from src.backend.FileHandler import FileHandler
 from src.backend.exceptions import *
 from .PeerIDs import PeerIDs
 from src.backend.peer_protocol.ReservedExtensions import gen_extensions, get_extensions, ReservedExtensions
-from src.backend.peer_protocol.ExtensionProtocol import ExtensionProtocol
+from src.backend.peer_protocol.ExtensionProtocol import ExtensionHandshakeMessage, ExtensionProtocol
 
 from src.backend.peer_protocol import PeerMessages
 """
@@ -57,10 +58,12 @@ class PPeer(asyncio.Protocol):
             self.am_choking = True
         elif isinstance(recv, PeerMessageStructures.Unchoke):
             self.am_choking = False
-            if self.am_interested:
+            if self.am_interested and False:
                 requests = self.block_manager.fill_request()
                 print('UNCHOKED + INTERSTED', len(requests))
+                
                 for request in requests:
+                    print(request.piece_id, request.startbit, request.length)
                     msg = bld_request(request.piece_id, request.startbit, request.length)
                     self.transport.write(msg)
         elif isinstance(recv, PeerMessageStructures.Interested):
@@ -105,6 +108,24 @@ class PPeer(asyncio.Protocol):
         elif isinstance(recv, PeerMessageStructures.Port):
             print("dht port received", recv.listen_port)
             asyncio.create_task(DHT.ping(self.transport.get_extra_info('peername')))
+        elif isinstance(recv, ExtensionHandshakeMessage):
+            # send handshake back
+            msg = self.extension.bld_handshake()
+            self.transport.write(msg)
+            
+            # send first metadata request 
+            mid = self.extension.extensions['ut_metadata']
+            msg = bld_metadata_request(mid, 0)
+            self.transport.write(msg)
+            
+            # send first metadata request 
+            mid = self.extension.extensions['ut_metadata']
+            msg = bld_metadata_request(mid, 1)
+            self.transport.write(msg)
+        elif isinstance(recv, MetadataData):
+            print('R'* 100, recv.total_size, recv.piece, len(recv.data),recv.data[:50])
+        elif isinstance(recv, MetadataReject):
+            print('RJ' * 100,  recv.piece)
         else:
             print(recv)
         
@@ -161,7 +182,6 @@ class MPeer:
             recv = await asyncio.wait_for(co, timeout=HANDSHAKE_TIMEOUT)
             handshake = PeerMessages.val_handshake(recv, self.info_hash, self.peer_id)
             extensions = get_extensions(handshake.reserved)
-            #print(handshake, extensions)
             
             # create transport and start asnychrono communication
             protocol_factory = lambda: PPeer(self.peer_id, self.piece_manager, self.file_handler, self.extension)
@@ -173,7 +193,8 @@ class MPeer:
             
             # send libtorrent extension handshake if supported
             if ReservedExtensions.LibtorrentExtensionProtocol in extensions:
-                pass
+                #msg = self.extension.bld_handshake()
+                pass#self.transport.write(msg)
             
             # send udp port, if supported
             if ReservedExtensions.BitTorrentDHT in extensions:

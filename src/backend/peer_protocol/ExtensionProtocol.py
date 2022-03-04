@@ -3,9 +3,10 @@ from struct import unpack, pack
 from dataclasses import dataclass
 from ipaddress import IPv6Address, ip_address
 from src.backend.metadata.Bencoder import bdecode, bencode
+from src.backend.peer_protocol.Metadata import val_metadata_msg
 
 @dataclass
-class HandshakeMessage:
+class ExtensionHandshakeMessage:
     listen_port: int = -1
     client: str = ""
     yourip: str = ""
@@ -19,20 +20,31 @@ class ExtensionProtocol:
     
     def __init__(self):
         self.extensions = dict()
-    
-    def val_handshake(self, bdata: bytes):
+        self.supported_ext = {
+            'ut_metadata': 1
+        }
+        
+    def val_extension_msg(self, bdata: bytes):
         # check which extended message id
         extended_id = unpack("!B", bdata[5:6])[0]
+        print('/'*50, extended_id, self.supported_ext)
         if extended_id < 0:
             raise Exception('Extended message id smaller than zero')
         elif extended_id == self.HANDSHAKE_ID:
-            print("handshake")
+            return self.val_handshake(bdata)
+        elif extended_id in self.supported_ext.values():
+            ext_name = [k for k, v in self.supported_ext.items() if v == extended_id][0]
+            
+            # parse different messages implemented through extension protocol
+            if ext_name == 'ut_metadata':
+                return val_metadata_msg(bdata)
+            
         else:
-            print("no handhsake")
-        
-        msg = HandshakeMessage()
-        payload = unpack(f"!{len(bdata) - 6}s", bdata[6:])[0]
-        data = bdecode(payload)
+            raise Exception('Invalid extended id, not matching any registered names', extended_id, self.extensions, self.supported_ext)
+    
+    def val_handshake(self, bdata: bytes):
+        msg = ExtensionHandshakeMessage()
+        data = bdecode(bdata[6:])
         
         # check if no one/two char names in top-level dict
         """
@@ -67,11 +79,22 @@ class ExtensionProtocol:
         if "v" in data:
             msg.client = data['v']
         if "yourip" in data:
-            msg.yourip = data['yourip']
+            if type(data['yourip']) == str:
+                data['yourip'] = bytes(data['yourip'], 'utf-8')
+            if len(data['yourip']) == 4:
+                msg.yourip = socket.inet_ntop(socket.AF_INET, data['yourip'])
+            elif len(data['yourip']) == 16:
+                msg.yourip = socket.inet_ntop(socket.AF_INET6, data['yourip'])
+            else:
+                pass# TODO console.log(yourip field invalid size)
         if "ipv4" in data:
-            msg.ipv4 = data['ipv4']
+            if type(data['ipv4']) == str:
+                data['ipv4'] = bytes(data['ipv4'], 'utf-8')
+            msg.ipv4 = socket.inet_ntop(socket.AF_INET, data['ipv4'])
         if "ipv6" in data:
-            msg.ipv6 = data['ipv6']
+            if type(data['ipv6']) == str:
+                data['ipv6'] = bytes(data['ipv6'], 'utf-8')
+            msg.ipv6 = socket.inet_ntop(socket.AF_INET6, data['ipv6'])
         if "reqq" in data:
             msg.max_requests = data['reqq']
         
@@ -79,7 +102,18 @@ class ExtensionProtocol:
         for extension in self.extensions:
             if extension in data:
                 self.extensions[extension] = data[extension]
+                
+        return msg
+    
+    @staticmethod
+    def bld_extension_msg(ext_id: int, payload: bytes):
+        length = 2 + len(payload)
+
+        msg = pack("!IB", length, ExtensionProtocol.MESSAGE_ID)
+        msg += pack("!B", ext_id)
+        msg += pack(f"!{len(payload)}s", payload)
         
+        return  msg
 
     def bld_handshake(self, client=None, yourip=None, listen_port=None, ipv4=None, ipv6=None, max_requests=None):
         payload = {}
@@ -95,27 +129,16 @@ class ExtensionProtocol:
         if listen_port != None:
             payload['p'] = listen_port
         if ipv4 != None:
-            compact = socket.inet_pton(socket.AF_INET, ipv4)
-            payload['ipv4'] = compact
+            payload['ipv4'] = socket.inet_pton(socket.AF_INET, ipv4)
         if ipv6 != None:
-            compact = socket.inet_pton(socket.AF_INET6, ipv6)
-            payload['ipv6'] = compact
+            payload['ipv6'] = socket.inet_pton(socket.AF_INET6, ipv6)
         if max_requests != None:
             payload['reqq'] = max_requests
         
         # supported extension based on this
-        payload['m'] = {
-            'LT_metadata': 1,
-            'ut_pex':	2
-        }
+        payload['m'] = self.supported_ext
         
         # data to binary
-        index = self.MESSAGE_ID
-        extended_id = self.HANDSHAKE_ID
+        id = ExtensionProtocol.HANDSHAKE_ID
         payload = bencode(payload)
-        length = 2 + len(payload)
-        msg = pack("!IB", length, index)
-        msg += pack("!B", extended_id)
-        msg += pack(f"!{len(payload)}s", payload)
-        
-        return msg
+        return ExtensionProtocol.bld_extension_msg(id, payload)
