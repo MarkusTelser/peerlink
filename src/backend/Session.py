@@ -43,17 +43,16 @@ class Session(threading.Thread):
             asyncio.create_task(func(*args, **kargs))
     
     def resume(self, *args, **kargs):
-        print(threading.current_thread(), self.loop)
         f = self.queue.put((self._resume, args, kargs))
         asyncio.run_coroutine_threadsafe(f, self.loop)
-        #self.queue.put_nowait((self._resume, args, kargs))
     
     def stop(self, *args, **kargs):
-        print(threading.current_thread(), self.loop)
         f = self.queue.put((self._stop, args, kargs))
         asyncio.run_coroutine_threadsafe(f, self.loop)
-        
-        print('after putting')
+    
+    def download_meta(self, *args, **kargs):
+        f = self.queue.put((self._download_meta, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
     
     def resume_all(self, *args, **kargs):
         self.queue.put_nowait((self._resume_all, args, kargs))
@@ -76,6 +75,10 @@ class Session(threading.Thread):
         if len(self.swarm_list) > index:
             print('paused', index)
             await self.swarm_list[index].pause()
+    
+    async def _download_meta(self, index: int):
+        if len(self.swarm_list) > index:
+            await self.swarm_list[index].download_metadata()
             
     async def _resume_all(self):
         for torrent in self.swarm_list:

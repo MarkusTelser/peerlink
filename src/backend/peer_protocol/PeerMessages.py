@@ -149,7 +149,7 @@ def bld_interested():
 """
 not interested: <len=0001><id=3>
 """
-def bld_not_interested():
+def bld_uninterested():
     length = 1
     id = PeerMessageIDs.NOTINTERESTED
     msg = pack("!IB", length, id)

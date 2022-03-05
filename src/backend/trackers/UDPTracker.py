@@ -143,7 +143,7 @@ class UDPTracker:
         elif event == HTTPEvents.COMPLETED:
             event = UDPEvents.COMPLETED.value
         else:
-            event = UDPEvents.NONE
+            event = UDPEvents.NONE.value
 
         # if not given
         ip = 0

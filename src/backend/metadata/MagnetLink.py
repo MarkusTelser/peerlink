@@ -6,7 +6,8 @@ from ..exceptions import *
 class MagnetLink:
     name: str = ""
     size: int = 0
-    info_hash: str = ""
+    info_hash: bytes = b''
+    info_hash_hex: str = ""
     tagged_info_hash: str = ""
     trackers = set()
     webseeds = set()
@@ -27,7 +28,6 @@ class MagnetParser:
         data = unquote_plus(link[8:])
         elements = data.split("&")
         ret = MagnetLink()
-        print(elements)
 
         for element in elements:
             key, value = element.split("=")
@@ -46,7 +46,8 @@ class MagnetParser:
                 
                 if elems[1] == "btih":
                     # TODO check if 40 byte or 32 byte base 32 encoded
-                    ret.info_hash = elems[2]
+                    ret.info_hash = bytes.fromhex(elems[2])
+                    ret.info_hash_hex = elems[2]
                 elif elems[1] == "btmh":
                     # TODO multihash formatted hex encoded infohash format
                     pass
