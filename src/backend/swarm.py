@@ -1,4 +1,5 @@
 import logging
+from src.backend.metadata import MagnetLink
 from src.backend.trackers.HTTPTracker import HTTPEvents, HTTPTracker
 from asyncio import BoundedSemaphore
 from datetime import datetime
@@ -15,26 +16,29 @@ class Swarm:
     MAX_PEERS = 70
     LISTEN_PORT = 6881
     
-    def __init__(self, data, path) -> None:
-        self.data = data
-        
-        self.path = path
+    def __init__(self) -> None:
+        self.data = None
+        self.path = ""
         self.peer_id = PeerIDs.generate()
         self.category = ""
         self.backup_name = ""
         self.start_date = ""
         self.finish_date = ""
         
-        self.piece_manager = PieceManager(data.pieces_count, data.piece_length)
-        self.file_handler = FileHandler(data, path)
+        self.piece_manager = None
+        self.file_handler = None
         
         self.start_task = None
-        
         self.tracker_limit = BoundedSemaphore(value=Swarm.MAX_TRACKER)
         self.peer_limit = BoundedSemaphore(value=Swarm.MAX_PEERS)
         self.tracker_list = list()
         self.peer_list = list()
-        
+    
+    def set_meta_data(self, data, path):
+        self.piece_manager = PieceManager(data.pieces_count, data.piece_length)
+        self.file_handler = FileHandler(data, path)
+        self.data = data
+        self.path = path
         self._create_tracker()
     
     def start(self):
@@ -49,6 +53,9 @@ class Swarm:
             logging.exception('error in swarm')
             print(e)
             raise Exception('crashed')
+    
+    def download_metadata(self, magnet_link: MagnetLink):
+        pass
     
     async def pause(self):
         self.start_task.cancel()
