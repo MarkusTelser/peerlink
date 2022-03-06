@@ -98,12 +98,14 @@ class PPeer(asyncio.Protocol):
             print('RECEIVED BLOCK ', recv.index, 'AT', recv.begin)
             is_last_block = self.block_manager.add_block(recv.index, recv.begin, recv.block)
             if is_last_block:
+                print('LAST'* 100)
                 data = self.block_manager.get_piece_data(recv.index)
                 if self.file_handler.verify_piece(recv.index, data):
                     self.piece_manager.finished_piece(recv.index)
                     self.file_handler.write_piece(recv.index, data)
                 else:
-                    print('wrong hash' * 100)
+                    self.piece_manager.reject_piece(recv.index)
+                    print('hash' * 100)
             
                 print('FULL PIECE', recv.index)
                 print(f"{self.piece_manager.downloaded_percent}% {self.piece_manager.health}% {self.piece_manager.availability}")

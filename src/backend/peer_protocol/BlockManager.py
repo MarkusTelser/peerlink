@@ -88,6 +88,11 @@ class BlockManager:
     def _get_blocks(self):
         # get piece from piece manager, calculate size
         piece = self.piece_manager.get_piece()
+        
+        # no more pieces to download
+        if piece == None:
+            return
+        
         piece_size = self.piece_size
         if self.piece_manager.is_last_piece(piece):
             piece_size = min(piece_size, self.full_size % piece_size) 

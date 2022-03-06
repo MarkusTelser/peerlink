@@ -67,6 +67,7 @@ class PieceManager:
         
         leftover_pieces = [x for x in self.pieces if x.status == 'PENDING']
         if len(leftover_pieces) > 0:
+            
             if self.download_strategy == DownloadStrategy.SEQUENTIAL:
                 sorted(leftover_pieces, key=lambda x: x.index)
                 piece = leftover_pieces[0]
@@ -78,13 +79,12 @@ class PieceManager:
                 piece = leftover_pieces[0]
             piece.status = 'STARTED'
             return piece.index
-            
+        else:
             # enter SUPERSEEDING mode
             inuse_pieces = [x for x in self.pieces if x.status == 'STARTED']
             if len(inuse_pieces) > 0:
                 r = randint(0, len(inuse_pieces) - 1)
                 return inuse_pieces[r].index
-            
             return None    
             
     def add_bitfield(self, peer_id, bitfield):
