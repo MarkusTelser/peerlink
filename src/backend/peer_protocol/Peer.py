@@ -9,6 +9,7 @@ from threading import Thread
 
 from src.backend.peer_protocol.BlockManager import BlockManager
 from src.backend.peer_protocol.Metadata import MetadataData, MetadataReject, bld_metadata_request
+from src.backend.peer_protocol.MetadataManager import MetadataManager
 from src.backend.peer_protocol.PieceManager import PieceManager
 
 from .PeerMessages import *
@@ -34,8 +35,10 @@ class PPeer(asyncio.Protocol):
         self.file_handler = None
         self.block_manager = None
         self.piece_manager = None
+        self.metadata_manager = None
         self.extension = extension
         self.stream = PeerStreamIterator(extension)
+        self._bitfield = b''
         
         self.am_choking = True
         self.am_interested = False
@@ -56,6 +59,7 @@ class PPeer(asyncio.Protocol):
         self.piece_manager = piece_manager
         piece_length, full_size = file_handler.data.piece_length, file_handler.data.files.length
         self.block_manager = BlockManager(piece_manager, piece_length, full_size)
+        self.piece_manager.add_bitfield(self.peer_id, self._bitfield)
     
     def resume_downloading(self):
         self.resume_download.set()
@@ -87,8 +91,12 @@ class PPeer(asyncio.Protocol):
             #    self.pieces.append(int(recv.piece_index))
         elif isinstance(recv, PeerMessageStructures.Bitfield):
             #if self.first_message: 
-            self.piece_manager.add_bitfield(self.peer_id, recv.bitfield)
-            print(self.piece_manager.availability)
+            if self.piece_manager:
+                self.piece_manager.add_bitfield(self.peer_id, recv.bitfield)
+                print(self.piece_manager.availability)
+            # save bitfield in temporary variable until metadata is retrieved and piece manager can be created
+            else:
+                self._bitfield = recv.bitfield
             #else:
             #    print("bitfield is not first message after handshake")
         elif isinstance(recv, PeerMessageStructures.Request):
@@ -120,13 +128,21 @@ class PPeer(asyncio.Protocol):
             print("dht port received", recv.listen_port)
             asyncio.create_task(DHT.ping(self.transport.get_extra_info('peername')))
         elif isinstance(recv, ExtensionHandshakeMessage):
+            self.succ_ext_handshake.set()
+            
             # send handshake back
             msg = self.extension.bld_handshake()
             self.transport.write(msg)
             
-            self.succ_ext_handshake.set()
+            if 'ut_metadata' in self.extension.extensions:
+                self.metadata_manager.set_full_size(recv.raw['metadata_size'])
         elif isinstance(recv, MetadataData):
-            print('R'* 100, recv.total_size, recv.piece, len(recv.data),recv.data[:50])
+            self.metadata_manager.finished_block(recv.piece, recv.data)
+            
+            for block in self.metadata_manager.request_blocks():
+                mid = self.extension.extensions['ut_metadata']
+                msg = bld_metadata_request(mid, block)
+                self.transport.write(msg)
         elif isinstance(recv, MetadataReject):
             print('RJ' * 100,  recv.piece)
         else:
@@ -226,7 +242,8 @@ class MPeer:
             
             if self.piece_manager and self.file_handler:
                 self.protocol.set_torrent(self.piece_manager, self.file_handler)
-            
+            if self.metadata_manager:
+                self.protocol.metadata_manager = self.metadata_manager
             # send interested message and start downloading
             # self.protocol.am_interested = True
             # self.transport.write(bld_interested())
@@ -261,23 +278,21 @@ class MPeer:
         if self.transport != None:    
             self.transport.close()
       
-    async def request_metadata(self):
+    async def request_metadata(self, metadata_manager: MetadataManager):
+        self.metadata_manager = metadata_manager
         await self.succ_conn.wait()
         if self.transport and self.protocol:
+            self.protocol.metadata_manager = metadata_manager
             await self.protocol.succ_ext_handshake.wait()
             
-            # send first metadata request 
-            mid = self.extension.extensions['ut_metadata']
-            msg = bld_metadata_request(mid, 0)
-            self.transport.write(msg)
-            
-            # send second metadata request 
-            mid = self.extension.extensions['ut_metadata']
-            msg = bld_metadata_request(mid, 1)
-            self.transport.write(msg)
-
-            print('ABBA' * 100)
-            
+            # send first chunk of metadata requests
+            for block in metadata_manager.request_blocks():
+                mid = self.extension.extensions['ut_metadata']
+                msg = bld_metadata_request(mid, block)
+                self.transport.write(msg)
+                
+            await metadata_manager.finished.wait()
+      
     def set_torrent(self, piece_manager, file_handler):
         self.piece_manager = piece_manager
         self.file_handler = file_handler

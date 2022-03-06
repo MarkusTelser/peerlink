@@ -1,5 +1,6 @@
 import logging
 from src.backend.metadata import MagnetLink
+from src.backend.peer_protocol.MetadataManager import MetadataManager
 from src.backend.trackers.HTTPTracker import HTTPEvents
 from asyncio import BoundedSemaphore
 from datetime import datetime
@@ -31,6 +32,7 @@ class Swarm:
         
         self.piece_manager = None
         self.file_handler = None
+        self.metadata_manager = None
         
         self.start_task = None
         self.tracker_limit = BoundedSemaphore(value=Swarm.MAX_TRACKER)
@@ -39,19 +41,22 @@ class Swarm:
         self.peer_list = list()
     
     def set_meta_data(self, data, path):
+        self.data = data
+        self.path = path
         self.piece_manager = PieceManager(data.pieces_count, data.piece_length)
         self.file_handler = FileHandler(data, path)
         self.speed_measurer = SpeedMeasurer(self.piece_manager)
-        self.data = data
-        self.path = path
         self._create_tracker(self.data.announces, self.data.info_hash)
     
     def set_magnet_link(self, magnet_link: MagnetLink):
         self.magnet_link = magnet_link
-        
-        # initialize trackers for usage
-        wrap_trackers = [list(self.magnet_link.trackers)]
-        self._create_tracker(wrap_trackers, self.magnet_link.info_hash)
+        self.metadata_manager = MetadataManager(self.magnet_link.info_hash, self.finished_metadata)
+        self._create_tracker([list(self.magnet_link.trackers)], self.magnet_link.info_hash)
+    
+    def finished_metadata(self):
+        print('PENIS' * 100)
+        print(len(self.metadata_manager._data), self.metadata_manager.full_size)
+        pass
     
     def start(self):
         self.start_task = asyncio.create_task(self._start())
@@ -137,7 +142,7 @@ class Swarm:
                 
                 m = MPeer(address, info_hash, self.peer_id)
                 if self.magnet_link:
-                    asyncio.create_task(m.request_metadata())
+                    asyncio.create_task(m.request_metadata(self.metadata_manager))
                 else:
                     m.set_torrent(self.piece_manager, self.file_handler)
                     asyncio.create_task(m.resume())

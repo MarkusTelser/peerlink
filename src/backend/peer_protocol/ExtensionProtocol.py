@@ -13,6 +13,7 @@ class ExtensionHandshakeMessage:
     ipv4: str = ""
     ipv6: str = ""
     max_requests: str = -1
+    raw = {}
 
 class ExtensionProtocol:
     MESSAGE_ID = 20
@@ -45,6 +46,7 @@ class ExtensionProtocol:
     def val_handshake(self, bdata: bytes):
         msg = ExtensionHandshakeMessage()
         data = bdecode(bdata[6:])
+        msg.raw = data
         
         # check if no one/two char names in top-level dict
         """
