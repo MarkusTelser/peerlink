@@ -184,6 +184,7 @@ def bld_bitfield(bitfield):
 
 def val_bitfield(recv):
     bitfield = recv[5:]
+    print(len(bitfield))
     ret = PeerMessageStructures.Bitfield(bitfield)
     return ret
 

@@ -3,6 +3,7 @@ from math import ceil
 from threading import RLock
 from random import randint
 from dataclasses import dataclass
+import time
 
 class DownloadStrategy(Enum):
     SEQUENTIAL = 0
@@ -29,7 +30,7 @@ class PieceManager:
         self.pieces = list()
     
     @property
-    def downloaded(self):
+    def downloaded_percent(self):
         finished_pieces = [x for x in self.pieces if x.status == 'FINISHED']
         return round(len(finished_pieces) / self.piece_count * 100, 2)
     
@@ -90,7 +91,8 @@ class PieceManager:
         # check if size is correct, account for extra bits at the end
         if len(bitfield) != ceil(self.piece_count / 8):
             raise Exception("bitfield wrong size")
-
+        t = time.time()
+        print('before adding  bitfield')
         for i, byte in enumerate(bitfield):
             bits = '{0:08b}'.format(byte)
             for j, bit in enumerate(bits):
@@ -99,6 +101,7 @@ class PieceManager:
                     if index >= self.piece_count:
                         return
                     self.add_piece(peer_id, index)
+        print('after adding  bitfield', time.time() - t)
 
     def add_piece(self, peer_id, index):
         if len(self.pieces) != 0:

@@ -2,6 +2,7 @@ from distutils import extension
 import errno
 import socket
 import select
+import concurrent
 from math import ceil
 from struct import unpack
 from threading import Thread
@@ -72,12 +73,9 @@ class PPeer(asyncio.Protocol):
             return
         elif isinstance(recv, PeerMessageStructures.Choke):
             self.am_choking = True
-            print('CHOKE' * 100)
         elif isinstance(recv, PeerMessageStructures.Unchoke):
             self.am_choking = False
-            print('UNCHOKE' * 100)
             if self.am_interested and self.resume_download.is_set():
-                print('UNCHOKE' * 100)
                 self._send_requests()
         elif isinstance(recv, PeerMessageStructures.Interested):
             self.am_interested = True
@@ -97,7 +95,6 @@ class PPeer(asyncio.Protocol):
             # TODO implement with seeding
             pass
         elif isinstance(recv, PeerMessageStructures.Piece):
-            print('1'*200)
             print('RECEIVED BLOCK ', recv.index, 'AT', recv.begin)
             is_last_block = self.block_manager.add_block(recv.index, recv.begin, recv.block)
             if is_last_block:
@@ -109,7 +106,7 @@ class PPeer(asyncio.Protocol):
                     print('wrong hash' * 100)
             
                 print('FULL PIECE', recv.index)
-                print(f"{self.piece_manager.downloaded}% {self.piece_manager.health}% {self.piece_manager.availability}")
+                print(f"{self.piece_manager.downloaded_percent}% {self.piece_manager.health}% {self.piece_manager.availability}")
             
             # requests outstanding piece
             if self.resume_download.is_set():
@@ -147,6 +144,13 @@ class PPeer(asyncio.Protocol):
         for request in requests:
             msg = bld_request(request.piece_id, request.startbit, request.length)
             self.transport.write(msg)
+    
+    async def _add_bitfield_process(self, recv):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+                
+                f = self.piece_manager.add_bitfield
+                r = await loop.run_in_executor(pool, f, self.peer_id, recv.bitfield)
     
     def _send_choke(self):
         if self.transport and not self.peer_choking:

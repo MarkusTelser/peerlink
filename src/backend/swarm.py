@@ -4,6 +4,8 @@ from src.backend.trackers.HTTPTracker import HTTPEvents
 from asyncio import BoundedSemaphore
 from datetime import datetime
 
+from src.backend.utils.SpeedMeasurer import SpeedMeasurer
+
 from .peer_protocol.PeerIDs import PeerIDs
 from .peer_protocol.PieceManager import PieceManager
 from .FileHandler import FileHandler
@@ -39,6 +41,7 @@ class Swarm:
     def set_meta_data(self, data, path):
         self.piece_manager = PieceManager(data.pieces_count, data.piece_length)
         self.file_handler = FileHandler(data, path)
+        self.speed_measurer = SpeedMeasurer(self.piece_manager)
         self.data = data
         self.path = path
         self._create_tracker(self.data.announces, self.data.info_hash)
@@ -57,11 +60,21 @@ class Swarm:
         try:
             if len(self.start_date) == 0:
                 self.start_date = datetime.now().isoformat()
+            asyncio.create_task(self.speed_measurer.execute())
+            asyncio.create_task(self._print_speed())
             await self.announce_trackers(HTTPEvents.STARTED)
         except Exception as e:
             logging.exception('error in swarm')
             print(e)
-            raise Exception('crashed')
+            raise Exception('crashed') 
+    
+    async def _print_speed(self):
+        while True:
+            print('-' * 100)
+            print(self.speed_measurer.avg_down_speed)
+            print('-' * 100)
+            await asyncio.sleep(1)
+        
     
     async def download_metadata(self):
         print(self.magnet_link.trackers)
