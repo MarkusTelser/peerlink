@@ -1,8 +1,8 @@
 sources.txt
-trackers.txt
 *.pyc
 __pycache__
 data/
 .vscode
 .venv
+.idea
 *.egg-info
