@@ -62,66 +62,73 @@ class TorrentParser:
             info = data.get("info")
             torrent.info_hash = TorrentData.gen_info_hash(info)
             torrent.info_hash_hex = TorrentData.gen_info_hash_hex(info)
-
-            if "pieces" not in info:
-                raise MissingRequiredField("Pieces not in torrent")
-            if "piece length" not in info:
-                raise MissingRequiredField("Piece length not in torrent")
-            
-            torrent.pieces = info["pieces"]
-            torrent.pieces_count = int(len(info["pieces"]) / 20)
-            torrent.piece_length = int(info["piece length"])
-            #del info["pieces"]
-
-            # TODO BEP-0030 merkle trees
-            
-            # either single or multiple file mode, otherwise error
-            if "files" in info:
-                if "name" not in info:
-                    raise MissingRequiredField("Name not in torrent")
-                
-                torrent.has_multi_file = True
-                root = TorrentFile(info["name"])
-                torrent.files = root
-
-                for file in info["files"]:
-                    if "path" not in file:
-                        raise MissingRequiredField("Path not in torrent")
-                    if "length" not in file:
-                        raise MissingRequiredField("Length not in torrent")
-                    
-                    f = TorrentFile(length=file["length"])
-                    
-                    # optional fields
-                    if all(enc in file for enc in ["md5", "md5sum"]):
-                        f.encoding = "md5"
-                        f.checksum = file["md5"] if "md5" in file else file["md5sum"]
-                    if "crc32" in file:
-                        f.encoding = "crc32"
-                        f.checksum = file["crc32"]
-                    if "sha1" in file:
-                        f.encoding = "sha1"
-                        f.checksum = file["sha1"]
-                    
-                    add_node(root, file["path"], f)
-                
-                calc_folder_size(root)
-                calc_bitstart_fullpath(root)
-            elif "length" in info:
-                if "name" not in info:
-                    raise MissingRequiredField("Name not in torrent")
-                if "length" not in info:
-                    raise MissingRequiredField("Length not in torrent")
-                torrent.has_multi_file = False
-                f = TorrentFile(info["name"], info["length"], info["name"], 0)
-                torrent.files = f
-            else:
-                raise MissingRequiredField("Neither single or multiple file mode")
-
-            # optional fields
-            if "private" in info:
-                torrent.private = bool(info["private"] == 1)
+            TorrentParser._parse_info(info, torrent)
         else:
             raise MissingRequiredField("info key not in torrent")
-    
+
+        return torrent
+
+    @staticmethod
+    def _parse_info(info: dict, existing_obj: TorrentData = None):        
+        torrent = existing_obj or TorrentData()
+
+        if "pieces" not in info:
+            raise MissingRequiredField("Pieces not in torrent")
+        if "piece length" not in info:
+            raise MissingRequiredField("Piece length not in torrent")
+        
+        torrent.pieces = info["pieces"]
+        torrent.pieces_count = int(len(info["pieces"]) / 20)
+        torrent.piece_length = int(info["piece length"])
+        #del info["pieces"]
+
+        # TODO BEP-0030 merkle trees
+        
+        # either single or multiple file mode, otherwise error
+        if "files" in info:
+            if "name" not in info:
+                raise MissingRequiredField("Name not in torrent")
+            
+            torrent.has_multi_file = True
+            root = TorrentFile(info["name"])
+            torrent.files = root
+
+            for file in info["files"]:
+                if "path" not in file:
+                    raise MissingRequiredField("Path not in torrent")
+                if "length" not in file:
+                    raise MissingRequiredField("Length not in torrent")
+                
+                f = TorrentFile(length=file["length"])
+                
+                # optional fields
+                if all(enc in file for enc in ["md5", "md5sum"]):
+                    f.encoding = "md5"
+                    f.checksum = file["md5"] if "md5" in file else file["md5sum"]
+                if "crc32" in file:
+                    f.encoding = "crc32"
+                    f.checksum = file["crc32"]
+                if "sha1" in file:
+                    f.encoding = "sha1"
+                    f.checksum = file["sha1"]
+                
+                add_node(root, file["path"], f)
+            
+            calc_folder_size(root)
+            calc_bitstart_fullpath(root)
+        elif "length" in info:
+            if "name" not in info:
+                raise MissingRequiredField("Name not in torrent")
+            if "length" not in info:
+                raise MissingRequiredField("Length not in torrent")
+            torrent.has_multi_file = False
+            f = TorrentFile(info["name"], info["length"], info["name"], 0)
+            torrent.files = f
+        else:
+            raise MissingRequiredField("Neither single or multiple file mode")
+
+        # optional fields
+        if "private" in info:
+            torrent.private = bool(info["private"] == 1)
+        
         return torrent
