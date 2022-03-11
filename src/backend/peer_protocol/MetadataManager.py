@@ -71,3 +71,10 @@ class MetadataManager:
         # hash with sha1 and compare
         hash = sha1(bdata).digest()
         return hash == self.info_hash
+    
+    @property
+    def bdata(self):
+        ret = b''
+        for i in range(ceil(self.full_size / self.BLOCK_SIZE)):
+            ret += self._data[i]
+        return ret

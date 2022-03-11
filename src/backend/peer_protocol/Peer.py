@@ -106,7 +106,6 @@ class PPeer(asyncio.Protocol):
             print('RECEIVED BLOCK ', recv.index, 'AT', recv.begin)
             is_last_block = self.block_manager.add_block(recv.index, recv.begin, recv.block)
             if is_last_block:
-                print('LAST'* 100)
                 data = self.block_manager.get_piece_data(recv.index)
                 if self.file_handler.verify_piece(recv.index, data):
                     self.piece_manager.finished_piece(recv.index)
@@ -134,7 +133,7 @@ class PPeer(asyncio.Protocol):
             msg = self.extension.bld_handshake()
             self.transport.write(msg)
             
-            if 'ut_metadata' in self.extension.extensions:
+            if 'ut_metadata' in self.extension.extensions and self.metadata_manager:
                 self.metadata_manager.set_full_size(recv.raw['metadata_size'])
         elif isinstance(recv, MetadataData):
             self.metadata_manager.finished_block(recv.piece, recv.data)

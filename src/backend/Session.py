@@ -4,6 +4,7 @@ from typing import List
 from src.backend.dht.DHT import DHT
 
 from src.backend.swarm import Swarm
+from src.backend.peer_protocol.TCPServer import TCPServer
 
 
 class Session(threading.Thread):
@@ -14,7 +15,9 @@ class Session(threading.Thread):
         self.loop.set_debug(True)
         
         self.swarm_list = list()
+        self.server = TCPServer()
         self.dht = DHT()
+
         
         self.start()
     
@@ -35,6 +38,7 @@ class Session(threading.Thread):
         #self.loop = asyncio.get_running_loop()
         
         # start DHT up
+        await self.server.start()
         asyncio.create_task(self.dht.start())
         
         while True:
@@ -89,6 +93,7 @@ class Session(threading.Thread):
             torrent.stop()
     
     async def _add(self, swarm: Swarm):
+        swarm.LISTEN_PORT = self.server.port
         self.swarm_list.append(swarm)
         
     async def _add_all(self, swarms: List[Swarm]):

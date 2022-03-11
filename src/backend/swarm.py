@@ -1,7 +1,8 @@
 import logging
-from src.backend.metadata import MagnetLink
+from src.backend.metadata import MagnetLink, TorrentData, TorrentParser
 from src.backend.peer_protocol.MetadataManager import MetadataManager
 from src.backend.trackers.HTTPTracker import HTTPEvents
+from src.backend.metadata.Bencoder import bdecode
 from asyncio import BoundedSemaphore
 from datetime import datetime
 
@@ -43,7 +44,7 @@ class Swarm:
     def set_meta_data(self, data, path):
         self.data = data
         self.path = path
-        self.piece_manager = PieceManager(data.pieces_count, data.piece_length)
+        self.piece_manager = PieceManager(data.pieces_count, data.piece_length, self.finished_torrent)
         self.file_handler = FileHandler(data, path)
         self.speed_measurer = SpeedMeasurer(self.piece_manager)
         self._create_tracker(self.data.announces, self.data.info_hash)
@@ -55,9 +56,29 @@ class Swarm:
     
     def finished_metadata(self):
         print('PENIS' * 100)
-        print(len(self.metadata_manager._data), self.metadata_manager.full_size)
-        pass
+        #print(len(self.metadata_manager._data), self.metadata_manager.full_size)
+        
+        # assign existing info in magnet link to obj
+        data = TorrentData()
+        data.announces = self.magnet_link.trackers
+
+        # parse info part and append to existing obj
+        dec = bdecode(self.metadata_manager.bdata)
+        TorrentParser._parse_info(dec, data)
+        
+        self.data = data
+        self.magnet_link = None
+        self.metadata_manager = None
+        
+        # remove old connection, somehow not starting normal downloading
+        self.set_meta_data(data, '/home/carlos/Desktop')
+        asyncio.create_task(self.announce_trackers())
     
+    def finished_torrent(self):
+        print('FINALLLY' * 100)
+        print('PORT', self.LISTEN_PORT)
+        asyncio.create_task(self.announce_trackers(HTTPEvents.COMPLETED))
+
     def start(self):
         self.start_task = asyncio.create_task(self._start())
     
@@ -100,6 +121,7 @@ class Swarm:
     async def announce_trackers(self, event=None):
         tasks = list()
         for tracker in self.tracker_list:
+
             if self.magnet_link:
                 uploaded =  0
                 downloaded = 0

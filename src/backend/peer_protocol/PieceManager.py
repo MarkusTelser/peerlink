@@ -23,9 +23,10 @@ when you get one it takes the one it would give you
 and then checks if it is in your object, peer_list
 """
 class PieceManager:
-    def __init__(self, piece_count, piece_size, download_strategy=DownloadStrategy.RARESTFIRST):
+    def __init__(self, piece_count, piece_size, cb, download_strategy=DownloadStrategy.RARESTFIRST):
         self.piece_count = piece_count
         self.piece_size = piece_size
+        self._done_callback = cb
         self.download_strategy = download_strategy
         self.pieces = list()
     
@@ -52,7 +53,7 @@ class PieceManager:
 
     @property
     def left_bytes(self): 
-        return str((self.piece_count - self.finished_pieces) * self.piece_size)
+        return (self.piece_count - self.finished_pieces) * self.piece_size
     
     @property
     def downloaded_bytes(self):
@@ -120,6 +121,9 @@ class PieceManager:
         for piece in used_pieces:
             if piece.index == index:
                 piece.status = 'FINISHED'
+                if self.left_bytes == 0:
+                    print('FINISHEEEEEEd')
+                    self._done_callback()
                 return
         
         # raise Exception('piece already downloaded')
