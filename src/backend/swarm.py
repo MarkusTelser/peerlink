@@ -54,6 +54,10 @@ class Swarm:
         self.metadata_manager = MetadataManager(self.magnet_link.info_hash, self.finished_metadata)
         self._create_tracker([list(self.magnet_link.trackers)], self.magnet_link.info_hash)
     
+    async def download_metadata(self):
+        print(self.magnet_link.trackers)
+        await self.announce_trackers()
+
     def finished_metadata(self):
         print('PENIS' * 100)
         #print(len(self.metadata_manager._data), self.metadata_manager.full_size)
@@ -70,10 +74,17 @@ class Swarm:
         self.magnet_link = None
         self.metadata_manager = None
         
+        
+
         # remove old connection, somehow not starting normal downloading
+        print(self.tracker_list)
+        print(self.peer_list)
         self.set_meta_data(data, '/home/carlos/Desktop')
-        asyncio.create_task(self.announce_trackers())
-    
+        for peer in self.peer_list:
+            peer.set_torrent(self.piece_manager, self.file_handler)
+            asyncio.create_task(peer.resume())
+        asyncio.create_task(self._start())
+
     def finished_torrent(self):
         print('FINALLLY' * 100)
         print('PORT', self.LISTEN_PORT)
@@ -100,11 +111,6 @@ class Swarm:
             print(self.speed_measurer.avg_down_speed)
             print('-' * 100)
             await asyncio.sleep(1)
-        
-    
-    async def download_metadata(self):
-        print(self.magnet_link.trackers)
-        await self.announce_trackers()
     
     async def pause(self):
         if self.start_task:
@@ -180,4 +186,5 @@ class Swarm:
         for tiers in trackers: 
             for announce in tiers:
                 tracker = give_object(announce, info_hash, self.peer_id, Swarm.LISTEN_PORT, self.tracker_limit)
-                self.tracker_list.append(tracker)
+                if tracker != None:
+                    self.tracker_list.append(tracker)
