@@ -44,6 +44,7 @@ from src.frontend.windows.IpFilterWindow import IpFilterWindow
 from src.frontend.windows.PreviewWindow import PreviewWindow
 
 from src.backend.swarm import Swarm
+from src.backend.Session import Session
 from src.backend.metadata.Bencoder import bencode
 from src.backend.metadata.TorrentParser import TorrentParser
 from src.frontend.windows.SpeedLimitWindow import SpeedLimitWindow
@@ -58,6 +59,7 @@ class ApplicationWindow(QMainWindow):
     def __init__(self, config_loader):
         super(ApplicationWindow, self).__init__()
         
+        self.session = Session()
         self.config_loader = config_loader
         self.appdata_loader = AppDataLoader()
         self.show_launch = self.config_loader.show_launch
@@ -130,7 +132,7 @@ class ApplicationWindow(QMainWindow):
         
         # add main torrent table model / view
         self.table_model = TorrentListModel()
-        self.filter_model = SortFilterProxyModel(self.table_model)
+        self.filter_model = SortFilterProxyModel(self.table_model, self.session)
         self.table_view = TorrentListView(self.filter_model, self.config_loader.table_tabs)
         self.vert_splitter.addWidget(self.table_view)
         
@@ -211,7 +213,7 @@ class ApplicationWindow(QMainWindow):
     @pyqtSlot(QModelIndex)
     def select_torrent(self, index: QModelIndex):
         real_index = index.siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
-        data = self.table_model.torrent_list[real_index]
+        data = self.session.swarm_list[real_index] # self.table_model.torrent_list[real_index]
         self.detail_view._update(data)
     
     @pyqtSlot()
@@ -220,7 +222,7 @@ class ApplicationWindow(QMainWindow):
         if len(indexes) == 0:
             return
         real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
-        Thread(target=self.table_model.torrent_list[real_index].start).start()
+        self.session.resume(real_index) #Thread(target=self.table_model.torrent_list[real_index].start).start()
     
     @pyqtSlot()
     def pause_torrent(self):
@@ -228,7 +230,7 @@ class ApplicationWindow(QMainWindow):
         if len(indexes) == 0:
             return
         real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
-        self.table_model.torrent_list[real_index].pause()
+        self.session.stop(real_index) #self.table_model.torrent_list[real_index].pause()
     
     @pyqtSlot()
     def move_torrent(self):
@@ -371,7 +373,7 @@ class ApplicationWindow(QMainWindow):
     @pyqtSlot(QModelIndex)
     def doubleclick_torrent(self, index: QModelIndex):
         if self.vert_splitter.sizes()[1] == 0:
-            data = self.table_model.torrent_list[index.row()]
+            data = self.session.swarm_list[index.row()] #self.table_model.torrent_list[index.row()]
             self.detail_view._update(data)
             fsize = self.vert_splitter.size().height()
             self.vert_splitter.setSizes([int(fsize * 0.7),int(fsize * 0.3)])
@@ -386,7 +388,7 @@ class ApplicationWindow(QMainWindow):
             return
         index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         
-        txt = self.table_model.torrent_list[index].data.files.name
+        txt = self.session.swarm_list[index].data.files.name #self.table_model.torrent_list[index].data.files.name
         clipboard = QApplication.clipboard()
         clipboard.clear(mode=clipboard.Mode.Clipboard)
         clipboard.setText(txt ,mode=clipboard.Mode.Clipboard)
@@ -398,7 +400,7 @@ class ApplicationWindow(QMainWindow):
             return
         index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         
-        txt = self.table_model.torrent_list[index].data.info_hash_hex
+        txt = self.session.swarm_list[index].data.info_hash_hex #self.table_model.torrent_list[index].data.info_hash_hex
         clipboard = QApplication.clipboard()
         clipboard.clear(mode=clipboard.Mode.Clipboard)
         clipboard.setText(txt ,mode=clipboard.Mode.Clipboard)
@@ -410,8 +412,8 @@ class ApplicationWindow(QMainWindow):
             return
         index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
         
-        root_path = self.table_model.torrent_list[index].data.files.name
-        txt = join(self.table_model.torrent_list[index].path, root_path) 
+        root_path = self.session.swarm_list[index].data.files.name #self.table_model.torrent_list[index].data.files.name
+        txt = join(self.session.swarm_list[index].path, root_path) #self.table_model.torrent_list[index].path
         clipboard = QApplication.clipboard()
         clipboard.clear(mode=clipboard.Mode.Clipboard)
         clipboard.setText(txt ,mode=clipboard.Mode.Clipboard)
@@ -423,8 +425,8 @@ class ApplicationWindow(QMainWindow):
             full_path = self.config_loader.default_path
         else:
             index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
-            rel_path = self.table_model.torrent_list[index].data.files.name
-            full_path = join(self.table_model.torrent_list[index].path, rel_path)
+            rel_path = self.session.swarm_list[index].data.files.name #self.table_model.torrent_list[index].data.files.name
+            full_path = join(self.session.swarm_list[index].path, rel_path) #self.table_model.torrent_list[index].path
             if not isdir(full_path):
                 full_path = dirname(full_path)
         
@@ -448,17 +450,20 @@ class ApplicationWindow(QMainWindow):
     
     def _delete_torrent(self, index, remove_files):
         if remove_files:
-            self.table_model.torrent_list[index].file_handler.remove_files()
+            self.session.swarm_list[index].file_handler.remove_files() #self.table_model.torrent_list[index].file_handler.remove_files()
         
         # remove backed up meta files
-        backup_name = self.table_model.torrent_list[index].backup_name
+        backup_name = self.session.swarm_list[index].backup_name #self.table_model.torrent_list[index].backup_name
         self.appdata_loader.remove_torrent(backup_name)
         
         # remove from category
-        category_name = self.table_model.torrent_list[index].category
+        category_name = self.session.swarm_list[index].category #self.table_model.torrent_list[index].category
         self.side_panel.tabs[1][0].remove(category_name)
         
+        del self.session.swarm_list[index] 
         self.table_model.remove(index)
+        self.table_model._update(self.session.swarm_list)
+
     
     @pyqtSlot()
     def delete_torrent(self):
@@ -470,19 +475,20 @@ class ApplicationWindow(QMainWindow):
         dialog = DeleteDialog()
         if dialog.exec():
             real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+            print(indexes[0].siblingAtColumn(0).data())
             self._delete_torrent(real_index, dialog.checkbox.isChecked())
             self._update()
     
     @pyqtSlot()
     def delete_alltorrents(self):
-        if self.table_model.rowCount() == 0:
+        if len(self.session.swarm_list) == 0: #self.table_model.rowCount() == 0:
             showError('Torrent list is empty', self)
             return
         
         dialog = DeleteDialog(all_torrents=True)
         if dialog.exec():
             if dialog.checkbox.isChecked():
-                for row in reversed(range(self.table_model.rowCount())):
+                for row in reversed(range(len(self.session.swarm_list))): # self.table_model.rowCount()
                     self._delete_torrent(row, dialog.checkbox.isChecked())
                 self._update()
                 
@@ -516,20 +522,20 @@ class ApplicationWindow(QMainWindow):
     def rename_category(self, old_cat, new_cat):
         self.config_loader.categorys.remove(old_cat)
         self.config_loader.categorys.append(new_cat)
-        for torrent in self.table_model.torrent_list:
+        for torrent in self.session.swarm_list: #self.table_model.torrent_list:
             if torrent.category == old_cat:
                 torrent.category = new_cat
     
     @pyqtSlot(str)
     def delete_category(self, category):
         self.config_loader.categorys.remove(category)
-        for torrent in self.table_model.torrent_list:
+        for torrent in self.session.swarm_list: #self.table_model.torrent_list:
             if torrent.category == category:
                 torrent.category = ''
     
     def appendRowEnd(self, data, extras={}):
         # dont't add if info_hash is same as in list
-        if data.info_hash in [x.data.info_hash for x in self.table_model.torrent_list]:
+        if data.info_hash in [x.data.info_hash for x in self.session.swarm_list]: # self.table_model.torrent_list
             showError('Torrent is already in list', self)
             return
         
@@ -567,8 +573,9 @@ class ApplicationWindow(QMainWindow):
         if 'pad_files' not in extras:
             extras['pad_files'] = self.config_loader.padd_files
         
-        swarm = Swarm(data, extras['path'])
-        
+        swarm = Swarm()
+        swarm.set_meta_data(data, extras['path'])
+
         # add into backup files
         swarm.category = extras['category']
         swarm.backup_name = self.appdata_loader.backup_torrent(data.raw_data)
@@ -585,21 +592,24 @@ class ApplicationWindow(QMainWindow):
         if extras['pad_files']:
             Thread(target=swarm.file_handler.padd_files).start()
         
-        self.table_model.append(swarm)
+        self.session.swarm_list.append(swarm) #self.table_model.append(swarm)
         self.side_panel.tabs[1][0].append(swarm)
+        self.table_model.append(swarm)
     
     def load_torrents(self, torrent_list):
         for torrent_data, extras in torrent_list:        
-            swarm = Swarm(torrent_data, extras['save_path'])
+            swarm = Swarm()
+            swarm.set_meta_data(torrent_data, extras['save_path'])
             swarm.category = extras['category']
             swarm.backup_name = extras['backup_name']
             swarm.start_date = extras['start_date']
-            self.table_model.append(swarm)
             
+            self.session.swarm_list.append(swarm) #self.table_model.append(swarm)
             self.side_panel.tabs[1][0].append(swarm)
+            self.table_model.append(swarm)
     
     def save_torrents(self):
-        for torrent in self.table_model.torrent_list:
+        for torrent in self.session.swarm_list: #self.table_model.torrent_list:
             save_data = {
                 'save_path': torrent.path,
                 'category': torrent.category,
@@ -672,8 +682,10 @@ class ApplicationWindow(QMainWindow):
                 self.detail_view._clear()
             else:
                 real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
-                data = self.table_model.torrent_list[real_index]
+                data = self.session.swarm_list[real_index] #self.table_model.torrent_list[real_index]
                 self.detail_view._update(data)
+        
+       # self.table_model._update(self.session.swarm_list)
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)

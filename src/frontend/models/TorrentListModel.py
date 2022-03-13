@@ -8,59 +8,62 @@ from src.frontend.utils.utils import convert_bits
 class TorrentListModel(QStandardItemModel):
     def __init__(self):
         super().__init__()
-        self.data = list()
-        self.torrent_list = list()
         self.setHorizontalHeaderLabels(["name", "size", "progress", "health", "availability", "share ratio", "start date", "creation date"])
-        self._update()
     
-    def remove(self, index=-1):
-        if index == -1:
-            self.torrent_list = list()
-            self.data = list()
-        else:
-            del self.torrent_list[index]
-            del self.data[index]
-        self._update()
+    def remove(self, index):
+        self.removeRow(index)
     
-    def append(self, torrent_swarm):
-        name = torrent_swarm.data.files.name
-        size = convert_bits(torrent_swarm.data.files.length)
-        self.data.append([name, size])
-        self.torrent_list.append(torrent_swarm)
-        self._update()
-    
-    def _update(self):
+    def remove_all(self):
         self.setRowCount(0)
-        for i, torrent in enumerate(self.torrent_list):
-            name = torrent.data.files.name
-            item = QStandardItem(name)
-            item.setData(i, Qt.ItemDataRole.InitialSortOrderRole + 69)
-            self.setItem(i, 0, item)
-            
-            size = convert_bits(torrent.data.files.length)
-            item = QStandardItem(size)
-            self.setItem(i, 1, item)
-            
-            progress = f"{torrent.piece_manager.downloaded}%"
-            item = QStandardItem(progress)
-            self.setItem(i, 2, item)
-            
-            health = f"{torrent.piece_manager.health}%"
-            item = QStandardItem(health)
-            self.setItem(i, 3, item)
-            
-            availability = str(torrent.piece_manager.availability)
-            item = QStandardItem(availability)
-            self.setItem(i, 4, item)
-            
-            if len(torrent.start_date) > 0:
-                start_date = datetime.fromisoformat(torrent.start_date)
-                local_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
-            else:
-                local_date = "not yet"
-            item = QStandardItem(local_date)
-            self.setItem(i, 6, item)
-            
-            creation_date = torrent.data.creation_date
-            item = QStandardItem(creation_date)
-            self.setItem(i, 7, item)
+
+    def append(self, swarm):
+        row = self._get_row(swarm)
+        self.appendRow(row)
+
+    def _update(self, swarm_list):
+        self.remove_all()
+        for swarm in swarm_list:
+            row = self._get_row(swarm)
+            self.appendRow(row)
+
+    def _get_row(self, swarm):
+        row = list()
+
+        name = swarm.data.files.name
+        item = QStandardItem(name)
+        item.setData(self.rowCount(), Qt.ItemDataRole.InitialSortOrderRole + 69)
+        row.append(item)
+        
+        size = convert_bits(swarm.data.files.length)
+        item = QStandardItem(size)
+        row.append(item)
+        
+        progress = f"{swarm.piece_manager.downloaded_percent}%"
+        item = QStandardItem(progress)
+        row.append(item)
+        
+        health = f"{swarm.piece_manager.health}%"
+        item = QStandardItem(health)
+        row.append(item)
+        
+        availability = str(swarm.piece_manager.availability)
+        item = QStandardItem(availability)
+        row.append(item)
+        
+        share_ratio = str()
+        item = QStandardItem(share_ratio)
+        row.append(item)
+
+        if len(swarm.start_date) > 0:
+            start_date = datetime.fromisoformat(swarm.start_date)
+            local_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            local_date = "not yet"
+        item = QStandardItem(local_date)
+        row.append(item)
+        
+        creation_date = swarm.data.creation_date
+        item = QStandardItem(creation_date)
+        row.append(item)
+
+        return row

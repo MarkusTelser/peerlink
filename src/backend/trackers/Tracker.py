@@ -37,7 +37,7 @@ def parse_url(announce_url: str):
     
     tracker_type = None
     tracker_address = None
-    print(announce_url)
+    
     if typ in ["http", "https"]:
         tracker_type = TrackerType.HTTP
         tracker_address = (announce_url)
