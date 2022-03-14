@@ -30,13 +30,17 @@ class SpeedMeasurer:
     
     @property
     def avg_down_speed(self):
+        return self._convert_mibps(self.raw_down_speed)
+    
+    @property
+    def raw_down_speed(self):
         if len(self.down_measurements) > 1:
             diff_time = (len(self.down_measurements) - 1) * SpeedMeasurer.MEASURE_INTERVAL
             diff_bytes = self.down_measurements[-1] - self.down_measurements[0]
             avg_down_speed = diff_bytes / diff_time
-            return self._convert_mibps(avg_down_speed)
-        return self._convert_mibps(0)
-    
+            return avg_down_speed
+        return 0
+
     @property
     def eta(self):
         pass

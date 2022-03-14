@@ -13,7 +13,20 @@ def convert_bits(bits: int):
         return f"{round(bits / (1024 ** 4), 2)} TiB"
     elif bits / (1024 ** 5) < 1000:
         return f"{round(bits / (1024 ** 5), 3)} PiB"
-    
+
+def convert_bitsps(bits: int):
+    if bits < 1000:
+        return f"{int(bits)} B/s"
+    if bits / 1024 < 1000:
+        return f"{int(round(bits / 1024, 0))} KiB/s"
+    elif bits / (1024 ** 2) < 1000:
+        return f"{round(bits / (1024 ** 2), 1)} MiB/s"
+    elif bits  / (1024 ** 3) < 1000:
+        return f"{round(bits / (1024 ** 3), 2)} GiB/s"
+    elif bits / (1024 ** 4) < 1000: 
+        return f"{round(bits / (1024 ** 4), 2)} TiB/s"
+    elif bits / (1024 ** 5) < 1000:
+        return f"{round(bits / (1024 ** 5), 3)} PiB/s"
     
 def showError(error, parent=None):
     error_window = QMessageBox(parent)

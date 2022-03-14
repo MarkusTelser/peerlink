@@ -132,3 +132,10 @@ class TorrentListView(QTableView):
                 else:
                     self.showColumn(i)
                 i += 1
+
+    
+    def _update(self, swarm_list):
+        indexes = self.selectedIndexes()
+        self.model.source_model._update(swarm_list)
+        if len(indexes):
+            self.selectRow(indexes[0].row())

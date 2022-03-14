@@ -8,7 +8,7 @@ from src.frontend.utils.utils import convert_bits
 class TorrentListModel(QStandardItemModel):
     def __init__(self):
         super().__init__()
-        self.setHorizontalHeaderLabels(["name", "size", "progress", "health", "availability", "share ratio", "start date", "creation date"])
+        self.setHorizontalHeaderLabels(["name", "size", "download speed", "downloaded", "progress", "health", "availability", "share ratio", "creation date", "start date", "finish date"])
     
     def remove(self, index):
         self.removeRow(index)
@@ -38,6 +38,14 @@ class TorrentListModel(QStandardItemModel):
         item = QStandardItem(size)
         row.append(item)
         
+        download_speed = str(swarm.speed_measurer.avg_down_speed)
+        item = QStandardItem(download_speed)
+        row.append(item)
+
+        downloaded = convert_bits(swarm.piece_manager.downloaded_bytes)
+        item = QStandardItem(downloaded)
+        row.append(item)
+
         progress = f"{swarm.piece_manager.downloaded_percent}%"
         item = QStandardItem(progress)
         row.append(item)
@@ -52,6 +60,10 @@ class TorrentListModel(QStandardItemModel):
         
         share_ratio = str()
         item = QStandardItem(share_ratio)
+        row.append(item)    
+
+        creation_date = swarm.data.creation_date
+        item = QStandardItem(creation_date)
         row.append(item)
 
         if len(swarm.start_date) > 0:
@@ -61,9 +73,13 @@ class TorrentListModel(QStandardItemModel):
             local_date = "not yet"
         item = QStandardItem(local_date)
         row.append(item)
-        
-        creation_date = swarm.data.creation_date
-        item = QStandardItem(creation_date)
-        row.append(item)
+
+        if len(swarm.finish_date) > 0:
+            finish_date = datetime.fromisoformat(swarm.finish_date)
+            local_date = finish_date.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            local_date = "not yet"
+        item = QStandardItem(local_date)
+        row.append(item)        
 
         return row

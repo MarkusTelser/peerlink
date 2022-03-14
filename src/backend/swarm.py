@@ -86,6 +86,8 @@ class Swarm:
         asyncio.create_task(self._start())
 
     def finished_torrent(self):
+        if len(self.finish_date) == 0:
+            self.finish_date = datetime.now().isoformat()
         print('FINALLLY' * 100)
         print('PORT', self.LISTEN_PORT)
         asyncio.create_task(self.announce_trackers(HTTPEvents.COMPLETED))
@@ -181,6 +183,18 @@ class Swarm:
             if peer.address == (ip, port):
                 return True
         return False
+
+    @property
+    def peers(self):
+        return self.seeders + self.leechers
+
+    @property
+    def seeders(self):
+        return sum([t.seeders for t in self.tracker_list])
+
+    @property
+    def leechers(self):
+        return sum([t.leechers for t in self.tracker_list])
 
     def _create_tracker(self, trackers: list, info_hash):
         for tiers in trackers: 

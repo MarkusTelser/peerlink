@@ -8,7 +8,8 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QLabel,
     QGridLayout,
-    QScrollArea
+    QScrollArea,
+    QAbstractItemView
 )
 from PyQt6.QtGui import (
     QColor, 
@@ -61,8 +62,8 @@ class GeneralTab(QWidget):
         information_layout = QGridLayout()
         information_box.setLayout(information_layout)
         
-        self.leecher = QLabel("Leecher: ")
-        self.seeder = QLabel("Seeder: ")
+        self.leechers = QLabel("Leecher: ")
+        self.seeders = QLabel("Seeder: ")
         self.downloaded = QLabel("Downloaded: ")
         self.uploaded = QLabel("Uploaded: ")
         self.share_ratio = QLabel("Share ratio: ")
@@ -76,8 +77,8 @@ class GeneralTab(QWidget):
         self.time_active = QLabel("Time active: ")
         self.reannounce_in = QLabel("Reaannounce in: ")
         
-        information_layout.addWidget(self.leecher, 0, 0)
-        information_layout.addWidget(self.seeder, 0, 1)
+        information_layout.addWidget(self.leechers, 0, 0)
+        information_layout.addWidget(self.seeders, 0, 1)
         information_layout.addWidget(self.downloaded, 1, 0)
         information_layout.addWidget(self.uploaded, 1, 1)
         information_layout.addWidget(self.share_ratio, 2, 0)
@@ -125,7 +126,21 @@ class GeneralTab(QWidget):
         start_date = datetime.fromisoformat(swarm.start_date).strftime("%Y-%m-%d %H:%M:%S") if  len(swarm.start_date) else "not yet" 
         finish_date = datetime.fromisoformat(swarm.finish_date).strftime("%Y-%m-%d %H:%M:%S") if  len(swarm.finish_date) else "not yet" 
         
+        self.leechers.setText(f"Leechers: {swarm.leechers}")
+        self.seeders.setText(f"Seeders: {swarm.seeders}")
+        self.downloaded.setText(f"Downloaded: {convert_bits(swarm.piece_manager.downloaded_bytes)}")
+        #self.uploaded = QLabel("Uploaded: ")
+        #self.share_ratio = QLabel("Share ratio: ")
+        self.progress.setText(f"Progress: {swarm.piece_manager.downloaded_percent}%")
+        self.download_speed.setText(f"Download speed: {swarm.speed_measurer.avg_down_speed}")
+        #self.upload_speed = QLabel("Upload speed: ")
         self.pieces.setText(f"Pieces: {swarm.data.pieces_count} x {piece_size} (have {swarm.piece_manager.finished_pieces})")
+        #self.eta = QLabel("ETA: ")
+        self.health.setText(f"Health: {swarm.piece_manager.health}%")
+        self.availability.setText(f"Availability: {swarm.piece_manager.availability}")
+        #self.time_active = QLabel("Time active: ")
+        #self.reannounce_in = QLabel("Reaannounce in: ")
+        
         self.info_hash.setText(f"Info hash: {swarm.data.info_hash_hex}")
         self.save_path.setText(f"Save Path: {swarm.path}")
         self.size.setText(f"Size: {torrent_size} (of {free_space} on local disk)")
@@ -136,8 +151,8 @@ class GeneralTab(QWidget):
         self.finish_date.setText(f"Finish date: {finish_date}")
     
     def _clear(self):
-        self.leecher.setText("Leecher: ")
-        self.seeder.setText("Seeder: ")
+        self.leechers.setText("Leecher: ")
+        self.seeders.setText("Seeder: ")
         self.downloaded.setText("Downloaded: ")
         self.uploaded.setText("Uploaded: ")
         self.share_ratio.setText("Share ratio: ")
@@ -210,7 +225,8 @@ class TrackersTab(QWidget):
         self.model = QStandardItemModel()
         self.table_widget.setModel(self.model)
         
-        #self.table_widget.verticalHeader().hide()
+        self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table_widget.verticalHeader().hide()
         self.table_widget.setSortingEnabled(True)
         self.table_widget.horizontalHeader().setStretchLastSection(True)
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -219,19 +235,23 @@ class TrackersTab(QWidget):
         self._clear()
     
     def _update(self, tracker_list: list = []):
+        indexes = self.table_widget.selectedIndexes()
         self._clear()
         for tracker in tracker_list:
-            a = tracker.address if type(tracker.address) == str else f'{tracker.address[0]}:{tracker.address[1]}'
-            addr = QStandardItem(a)
-            states = ['no contact', 'connecting...', 'finished', 'stopped with error']
-            colors = [QColor('black'), QColor('yellow'), QColor('green'), QColor('red')]
-            status = QStandardItem(states[tracker.status.value])
-            status.setForeground(colors[tracker.status.value])
-            error = QStandardItem(tracker.error)
-            peers = QStandardItem(str(len(tracker.peers)))
-            leechers = QStandardItem(str(tracker.leechers))
-            seeders = QStandardItem(str(tracker.seeders))
-            self.model.appendRow([addr, status, peers, leechers, seeders, error])
+            if tracker:
+                a = tracker.address if type(tracker.address) == str else f'{tracker.address[0]}:{tracker.address[1]}'
+                addr = QStandardItem(a)
+                states = ['no contact', 'connecting...', 'finished', 'stopped with error']
+                colors = [QColor('black'), QColor('yellow'), QColor('green'), QColor('red')]
+                status = QStandardItem(states[tracker.status.value])
+                status.setForeground(colors[tracker.status.value])
+                error = QStandardItem(tracker.error)
+                peers = QStandardItem(str(len(tracker.peers)))
+                leechers = QStandardItem(str(tracker.leechers))
+                seeders = QStandardItem(str(tracker.seeders))
+                self.model.appendRow([addr, status, peers, leechers, seeders, error])
+        if len(indexes):
+            self.table_widget.selectRow(indexes[0].row())
     
     def _clear(self):
         self.model.clear()

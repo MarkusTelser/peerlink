@@ -603,6 +603,7 @@ class ApplicationWindow(QMainWindow):
             swarm.category = extras['category']
             swarm.backup_name = extras['backup_name']
             swarm.start_date = extras['start_date']
+            swarm.finish_date = extras['finish_date']
             
             self.session.swarm_list.append(swarm) #self.table_model.append(swarm)
             self.side_panel.tabs[1][0].append(swarm)
@@ -614,7 +615,8 @@ class ApplicationWindow(QMainWindow):
                 'save_path': torrent.path,
                 'category': torrent.category,
                 'backup_name': torrent.backup_name,
-                'start_date': torrent.start_date   
+                'start_date': torrent.start_date   ,
+                'finish_date': torrent.finish_date
             }
             bdata = bencode(save_data)
             f = open(join(f'/home/carlos/.local/share/peerlink/torrents/{torrent.backup_name}.ben'), 'wb')
@@ -685,7 +687,8 @@ class ApplicationWindow(QMainWindow):
                 data = self.session.swarm_list[real_index] #self.table_model.torrent_list[real_index]
                 self.detail_view._update(data)
         
-       # self.table_model._update(self.session.swarm_list)
+        self.table_view._update(self.session.swarm_list)
+        self.status_bar._update(self.session)
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)

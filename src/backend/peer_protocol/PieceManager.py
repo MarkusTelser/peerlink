@@ -57,7 +57,7 @@ class PieceManager:
     
     @property
     def downloaded_bytes(self):
-        return str(self.finished_pieces * self.piece_size)
+        return self.finished_pieces * self.piece_size
     
     @property
     def uploaded_bytes(self):

@@ -99,3 +99,19 @@ class Session(threading.Thread):
     async def _add_all(self, swarms: List[Swarm]):
         for swarm in swarms:
             self.swarm_list.append(swarm)
+
+    @property
+    def upload_speed(self):
+        pass
+
+    @property
+    def download_speed(self):
+        return sum([s.speed_measurer.raw_down_speed for s in self.swarm_list]) / len(self.swarm_list)
+
+    @property
+    def peers(self):
+        return sum(s.peers for s in self.swarm_list)
+
+    @property
+    def nodes(self):
+        pass
