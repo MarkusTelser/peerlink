@@ -52,6 +52,7 @@ from src.frontend.windows.StatisticsWindow import StatisticsWindow
 
 
 class ApplicationWindow(QMainWindow):
+    UPDATE_DELAY = 1500
     DONATE_LINK = 'www.google.com'
     BUG_LINK = 'https://github.com/MarkusTelser/peerlink/issues'
     THANKS_LINK = 'https://saythanks.io/to/MarkusTelser'
@@ -95,7 +96,7 @@ class ApplicationWindow(QMainWindow):
         
         timer = QTimer(self)
         timer.timeout.connect(self._update)
-        timer.start(1500)
+        timer.start(self.UPDATE_DELAY)
         
         super().show()
     

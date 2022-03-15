@@ -20,12 +20,11 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtCore import QSize, Qt
 
-from src.backend.metadata import TorrentParser
+from src.backend.metadata import TorrentParser, MagnetParser
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
 from src.frontend.windows.PreviewWindow import PreviewWindow
 from src.frontend.widgets.dialogs import FileDialog, MagnetLinkDialog
-
 
 class LaunchWindow(QMainWindow):
     def __init__(self, conf: ConfigLoader):
@@ -156,10 +155,15 @@ class LaunchWindow(QMainWindow):
         
         if magnet_dialog.exec():
             magnet_link = magnet_dialog.text_box.text()
-            # TODO implement when Magnet Link is ready
+            
+            #s = Session()
+            #s.add(Swarm())
+            magnet = MagnetParser.parse(magnet_link)
+            #s.download_meta(0, magnet)
             #data = TorrentParser.parse_magnet_link(magnet_link)
-            #window = PreviewWindow(self)
-            #window.show(data)
+            window = PreviewWindow(self.conf, self)
+            window.add_data.connect(self.open_mainwindow)
+            window.show(magnet)
     
     def dropEvent(self, event: QDropEvent):
         for url in event.mimeData().urls():

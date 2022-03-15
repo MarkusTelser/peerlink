@@ -49,13 +49,11 @@ class Swarm:
         self.speed_measurer = SpeedMeasurer(self.piece_manager)
         self._create_tracker(self.data.announces, self.data.info_hash)
     
-    def set_magnet_link(self, magnet_link: MagnetLink):
+    async def download_metadata(self, magnet_link: MagnetLink):
         self.magnet_link = magnet_link
         self.metadata_manager = MetadataManager(self.magnet_link.info_hash, self.finished_metadata)
         self._create_tracker([list(self.magnet_link.trackers)], self.magnet_link.info_hash)
-    
-    async def download_metadata(self):
-        print(self.magnet_link.trackers)
+
         await self.announce_trackers()
 
     def finished_metadata(self):

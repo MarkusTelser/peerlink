@@ -2,4 +2,4 @@
 from .TorrentParser import TorrentParser
 from .Bencoder import Bencoder
 from .TorrentData import TorrentData
-from .MagnetLink import MagnetLink
+from .MagnetLink import MagnetParser

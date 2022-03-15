@@ -13,17 +13,19 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QApplication,
-    QSizePolicy
+    QSizePolicy,
+    QProgressBar
 )
 from PyQt6.QtGui import QGuiApplication, QIcon
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import pyqtSignal, QTimer, QSize, Qt
 from os.path import expanduser
 from psutil import disk_usage
 from os.path import exists, isdir
 import sys
 
 from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
+from src.backend import Swarm, Session
+from src.backend.metadata.MagnetLink import MagnetLink
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
@@ -32,6 +34,7 @@ from src.frontend.utils.utils import convert_bits, showError
 
 class PreviewWindow(QMainWindow):
     add_data = pyqtSignal(TorrentData, dict)
+    UPDATE_DELAY = 500
     
     def __init__(self, conf: ConfigLoader, parent=None):
         super(PreviewWindow, self).__init__(parent=parent)
@@ -57,6 +60,10 @@ class PreviewWindow(QMainWindow):
             self.move(qtRectangle.topLeft())
 
         self.addWidgets()
+
+        timer = QTimer(self)
+        timer.timeout.connect(self._update)
+        timer.start(self.UPDATE_DELAY)
     
     def addWidgets(self):
         # set layout and create central widget
@@ -175,7 +182,7 @@ class PreviewWindow(QMainWindow):
         
         #button_box.layout().setDirection(QBoxLayout.Direction.LeftToRight)
         button_box.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.main_layout.addWidget(button_box, 1, 0)
+        self.main_layout.addWidget(button_box, 1, 1)
         
         # create tree view of file struct
         self.model = TorrentTreeModel()
@@ -189,10 +196,17 @@ class PreviewWindow(QMainWindow):
         hor_splitter.addWidget(self.tree_view)
         hor_splitter.setStretchFactor(1, 80)
         hor_splitter.setCollapsible(1, False)
-        self.main_layout.addWidget(hor_splitter, 0, 0)
+        self.main_layout.addWidget(hor_splitter, 0, 0, 1, 2)
         super().show()
 
-    def show(self, torrent_data: TorrentData):
+    def show(self, data: TorrentData | MagnetLink):
+        if type(data) == TorrentData:
+            self._show_torrent(data)
+        elif type(data) == MagnetLink:
+            self._show_magnet(data)
+        super().show()
+    
+    def _show_torrent(self, torrent_data):
         self.torrent_data = torrent_data
         free_space = lambda: convert_bits(disk_usage('/').free)
         torrent_size = lambda: convert_bits(torrent_data.files.length)
@@ -204,8 +218,17 @@ class PreviewWindow(QMainWindow):
         
         self.setWindowTitle(torrent_data.files.name)
         self.model.update(torrent_data.files)
-        super().show()
-   
+
+    def _show_magnet(self, magnet_link):
+        self.session = Session()
+        self.session.add(Swarm())
+        self.session.download_meta(0, magnet_link)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        self.progress_bar.setFixedSize(250, 25)
+        self.progress_bar.setRange(0, 100)
+        self.main_layout.addWidget(self.progress_bar, 1, 0)
     
     """ the following methods are all slots """
     def pressedPathSelect(self):
@@ -267,6 +290,18 @@ class PreviewWindow(QMainWindow):
     
     def reject(self):
         self.close()
+
+    def _update(self):
+        if not self.torrent_data and not self.progress_bar:
+            if self.session.swarm_list[0].metadata_manager:
+                value = self.session.swarm_list[0].metadata_manager.downloaded
+            else:
+                value = 100
+
+            if value == 100 and not self.torrent_data:
+                torrent = self.session.swarm_list[0].data
+                self._show_torrent(torrent)
+            self.progress_bar.setValue(value)
 
 
 if __name__ == "__main__":

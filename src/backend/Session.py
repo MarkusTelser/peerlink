@@ -80,9 +80,9 @@ class Session(threading.Thread):
             print('paused', index)
             await self.swarm_list[index].pause()
     
-    async def _download_meta(self, index: int):
+    async def _download_meta(self, index: int, magnet):
         if len(self.swarm_list) > index:
-            await self.swarm_list[index].download_metadata()
+            await self.swarm_list[index].download_metadata(magnet)
             
     async def _resume_all(self):
         for torrent in self.swarm_list:
@@ -106,7 +106,7 @@ class Session(threading.Thread):
 
     @property
     def download_speed(self):
-        return sum([s.speed_measurer.raw_down_speed for s in self.swarm_list]) / len(self.swarm_list)
+        return sum([s.speed_measurer.raw_down_speed for s in self.swarm_list]) / (len(self.swarm_list) or 1)
 
     @property
     def peers(self):

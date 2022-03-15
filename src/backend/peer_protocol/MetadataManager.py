@@ -1,4 +1,5 @@
 
+import asyncio
 from asyncio import Event
 from random import randrange
 from hashlib import sha1
@@ -71,7 +72,13 @@ class MetadataManager:
         # hash with sha1 and compare
         hash = sha1(bdata).digest()
         return hash == self.info_hash
-    
+
+    @property
+    def downloaded(self):
+        piece_count = ceil(self.full_size / self.BLOCK_SIZE)
+        print(piece_count, self.full_size, self.BLOCK_SIZE)
+        return int(len(self.downloaded_pieces) / (piece_count or 1) * 100)
+
     @property
     def bdata(self):
         ret = b''
