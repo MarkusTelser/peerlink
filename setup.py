@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
+from __version__ import __version__
 
 setup(
     name="peerlink",
-    version="0.1",
+    version=__version__,
     license="GPL v3.0",
     author="Markus Telser",
     author_email="markus.telser99@gmail.com",
@@ -14,8 +15,10 @@ setup(
     packages=find_packages(),
     python_requires='>=3.10',
     install_requires=[], # define after testing versions
+    include_package_data=True,
     package_data={  # Optional
-       
+        'LICENSE.txt',
+        'data/'
     },
     entry_points={
         'console_scripts': [
