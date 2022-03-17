@@ -12,7 +12,8 @@ from PyQt6.QtGui import (
     QCloseEvent, 
     QDesktopServices, 
     QDragEnterEvent, 
-    QDropEvent
+    QDropEvent,
+    QKeySequence
 )
 from PyQt6.QtCore import (
     QRegularExpression, 
@@ -46,7 +47,7 @@ from src.frontend.windows.PreviewWindow import PreviewWindow
 from src.backend.swarm import Swarm
 from src.backend.Session import Session
 from src.backend.metadata.Bencoder import bencode
-from src.backend.metadata.TorrentParser import TorrentParser
+from src.backend.metadata import TorrentParser, MagnetParser
 from src.frontend.windows.SpeedLimitWindow import SpeedLimitWindow
 from src.frontend.windows.StatisticsWindow import StatisticsWindow
 
@@ -534,6 +535,19 @@ class ApplicationWindow(QMainWindow):
             if torrent.category == category:
                 torrent.category = ''
     
+
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.StandardKey.Paste):
+            try:
+                magnet_link = QApplication.clipboard().text()
+                magnet = MagnetParser.parse(magnet_link)
+                window = PreviewWindow(self.config_loader, self)
+                window.add_data.connect(self.appendRowEnd)
+                window.show(magnet)
+            except Exception as e:
+                pass
+        super(ApplicationWindow, self).keyPressEvent(event)
+
     def appendRowEnd(self, data, extras={}):
         # dont't add if info_hash is same as in list
         if data.info_hash in [x.data.info_hash for x in self.session.swarm_list]: # self.table_model.torrent_list

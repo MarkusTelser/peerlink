@@ -1,4 +1,5 @@
-from PyQt6.QtCore import QSettings
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QSettings, QStandardPaths
 from os.path import dirname, exists, isfile, splitext
 from argparse import ArgumentParser
 from sys import exit
@@ -9,14 +10,14 @@ from src.backend.metadata.TorrentParser import TorrentParser
 
 def args_parser():
     prog = "peerlink"
-    description = "client written in python that implements the bittorrent protocol from scratch"
+    description = "bittorrent client from scratch for linux, mac, win"
     usage = "peerlink [options] [(<file-path> | <magnet-link>)]"
     
     parser = ArgumentParser(prog, description=description, usage=usage, add_help=False)
     
     arg_opts = parser.add_argument_group('args (mutually exclusive)')
     args_opt = arg_opts.add_mutually_exclusive_group()
-    args_opt.add_argument('-p', metavar="FILE-PATH")
+    args_opt.add_argument('-t', metavar="FILE-PATH")
     args_opt.add_argument('-m', metavar="MAGNET-LINK")
 
     options = parser.add_argument_group('options')
@@ -24,7 +25,7 @@ def args_parser():
     options.add_argument('-l', '--license', help="show license terms", action="store_true")
     options.add_argument('-v', '--version', help="show program version", action="store_true")
     options.add_argument('-r', '--repository', help="output source git repository url", action="store_true")
-    options.add_argument('-c', '--config', help="output local application config path", action="store_true")
+    options.add_argument('-d', '--directorys', help="output local application config/data path", action="store_true")
     options.add_argument('-h', '--help', help="show this help message and exit", action="store_true")
     
     group_opt = parser.add_argument_group('torrent options')
@@ -42,7 +43,7 @@ def args_parser():
     
     args = vars(args)
     
-    if not args['p'] and not args['m']:
+    if not args['t'] and not args['m']:
         optional_par = False
         if args['author']:
             print('the author of this software is Markus Telser')
@@ -51,13 +52,14 @@ def args_parser():
             print(open('LICENSE.txt').read(), end="")
             optional_par = True
         if args['version']:
-            print('peerlink 0.1')
+            print(f"peerlink {QApplication.applicationVersion()}")
             optional_par = True
         if args['repository']:
             print('https://github.com/MarkusTelser/peerlink')
             optional_par = True
-        if args['config']:
-            print(dirname(QSettings().fileName()))
+        if args['directorys']:
+            print(QSettings(QApplication.applicationName(), QApplication.applicationName()).fileName())
+            print(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation))
             optional_par = True
         if optional_par:
            exit()
@@ -70,15 +72,15 @@ def args_torrent(parser):
     args = vars(parser.parse_args())
     
     # check if valid path, else throw error
-    if args['p']:
-        if not exists(args['p']):
+    if args['t']:
+        if not exists(args['t']):
             parser.error('path doesnt exist')
-        if not isfile(args['p']):
+        if not isfile(args['t']):
             parser.error('path is not a file')
-        if not splitext(args['p'])[1] == '.torrent':
+        if not splitext(args['t'])[1] == '.torrent':
             parser.error('file is not a torrent')
         
-        torrent = TorrentParser.parse_filepath(args['p'])
+        torrent = TorrentParser.parse_filepath(args['t'])
         extras = dict()
        
         extras['pad_files'] = args['pad_files']

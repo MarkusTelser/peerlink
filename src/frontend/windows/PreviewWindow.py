@@ -292,7 +292,7 @@ class PreviewWindow(QMainWindow):
         self.close()
 
     def _update(self):
-        if not self.torrent_data and not self.progress_bar:
+        if not self.torrent_data and self.progress_bar:
             if self.session.swarm_list[0].metadata_manager:
                 value = self.session.swarm_list[0].metadata_manager.downloaded
             else:

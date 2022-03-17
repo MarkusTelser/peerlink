@@ -16,7 +16,8 @@ from PyQt6.QtGui import (
     QIcon, 
     QPixmap, 
     QDragEnterEvent,
-    QCloseEvent
+    QCloseEvent,
+    QKeySequence
 )
 from PyQt6.QtCore import QSize, Qt
 
@@ -155,16 +156,23 @@ class LaunchWindow(QMainWindow):
         
         if magnet_dialog.exec():
             magnet_link = magnet_dialog.text_box.text()
-            
-            #s = Session()
-            #s.add(Swarm())
             magnet = MagnetParser.parse(magnet_link)
-            #s.download_meta(0, magnet)
-            #data = TorrentParser.parse_magnet_link(magnet_link)
             window = PreviewWindow(self.conf, self)
             window.add_data.connect(self.open_mainwindow)
             window.show(magnet)
     
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.StandardKey.Paste):
+            try:
+                magnet_link = QApplication.clipboard().text()
+                magnet = MagnetParser.parse(magnet_link)
+                window = PreviewWindow(self.conf, self)
+                window.add_data.connect(self.open_mainwindow)
+                window.show(magnet)
+            except Exception as e:
+                pass
+        super(LaunchWindow, self).keyPressEvent(event)
+
     def dropEvent(self, event: QDropEvent):
         for url in event.mimeData().urls():
             if url.isLocalFile() and url.path().endswith('.torrent'):

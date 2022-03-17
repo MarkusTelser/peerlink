@@ -6,7 +6,8 @@ from PyQt6.QtWidgets import (
     QTabWidget,
     QWidget,
     QDialogButtonBox,
-    QPlainTextEdit
+    QPlainTextEdit,
+    QApplication
 )
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QSize
@@ -61,7 +62,7 @@ class AboutDialog(QDialog):
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         
-        ver_label = QLabel('peerlink 0.1')
+        ver_label = QLabel(f"peerlink {QApplication.applicationVersion()}")
         main_layout.addWidget(ver_label)
         
         tab_widget = QTabWidget()
