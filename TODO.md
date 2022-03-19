@@ -4,7 +4,7 @@ To keep track of all the BEPs I have already implemented and which will be imple
 
 ## In Progress: 
 - [x] [Explanation of Protocol (BEP 3)](http://bittorrent.org/beps/bep_0003.html)
-- [ ] [Magnet Links (BEP 9)](http://bittorrent.org/beps/bep_0009.html)
+- [x] [Magnet Links (BEP 9)](http://bittorrent.org/beps/bep_0009.html)
 
 ## Near Future:
 - [ ] [DHT (BEP 5)](http://bittorrent.org/beps/bep_0005.html)
