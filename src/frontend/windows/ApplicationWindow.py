@@ -47,7 +47,7 @@ from src.frontend.windows.PreviewWindow import PreviewWindow
 from src.backend.swarm import Swarm
 from src.backend.Session import Session
 from src.backend.metadata.Bencoder import bencode
-from src.backend.metadata import TorrentParser, MagnetParser
+from src.backend.metadata import TorrentParser, MagnetParser, TorrentData
 from src.frontend.windows.SpeedLimitWindow import SpeedLimitWindow
 from src.frontend.windows.StatisticsWindow import StatisticsWindow
 
@@ -534,19 +534,6 @@ class ApplicationWindow(QMainWindow):
         for torrent in self.session.swarm_list: #self.table_model.torrent_list:
             if torrent.category == category:
                 torrent.category = ''
-    
-
-    def keyPressEvent(self, event):
-        if event.matches(QKeySequence.StandardKey.Paste):
-            try:
-                magnet_link = QApplication.clipboard().text()
-                magnet = MagnetParser.parse(magnet_link)
-                window = PreviewWindow(self.config_loader, self)
-                window.add_data.connect(self.appendRowEnd)
-                window.show(magnet)
-            except Exception as e:
-                pass
-        super(ApplicationWindow, self).keyPressEvent(event)
 
     def appendRowEnd(self, data, extras={}):
         # dont't add if info_hash is same as in list
@@ -594,23 +581,30 @@ class ApplicationWindow(QMainWindow):
         # add into backup files
         swarm.category = extras['category']
         swarm.backup_name = self.appdata_loader.backup_torrent(data.raw_data)
+
+        self.session.swarm_list.append(swarm)
         
         # actions if key true
         if extras['start']:
-            swarm.start()
+            self.session.resume(len(self.session.swarm_list) - 1)
         """
         if extras['startegy']:
             pass
         """
-        if extras['check_hash']:
-            pass
+        if not extras['check_hash']:
+            swarm.file_handler.check_hashes = False
         if extras['pad_files']:
             Thread(target=swarm.file_handler.padd_files).start()
         
-        self.session.swarm_list.append(swarm) #self.table_model.append(swarm)
+        #self.table_model.append(swarm)
         self.side_panel.tabs[1][0].append(swarm)
         self.table_model.append(swarm)
     
+    def appendMagnet(self, magnet, extras):
+        s = Swarm()
+        self.session.swarm_list.append(s)
+        self.session.download_meta(len(self.session.swarm_list), magnet)
+
     def load_torrents(self, torrent_list):
         for torrent_data, extras in torrent_list:        
             swarm = Swarm()
@@ -649,6 +643,18 @@ class ApplicationWindow(QMainWindow):
             if url.isLocalFile() and url.path().endswith('.torrent'):
                 self._open_file([url.path()])
     
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.StandardKey.Paste):
+            try:
+                magnet_link = QApplication.clipboard().text()
+                magnet = MagnetParser.parse(magnet_link)
+                window = PreviewWindow(self.config_loader, self)
+                window.add_data.connect(self.appendRowEnd)
+                window.show(magnet)
+            except Exception as e:
+                pass
+        super(ApplicationWindow, self).keyPressEvent(event)
+
     def closeEvent(self, event: QCloseEvent):
         # general
         self.config_loader.settings.setValue('win_size', self.size())

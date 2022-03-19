@@ -47,15 +47,15 @@ class GeneralTab(QWidget):
         scroll_area.setWidget(central_widget)
         central_layout.addWidget(scroll_area)
         
-        progress_bar = QProgressBar()
-        progress_bar.setValue(0)
-        progress_bar.setRange(0, 100)
-        main_layout.addWidget(progress_bar)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        self.progress_bar.setRange(0, 100)
+        main_layout.addWidget(self.progress_bar)
         
-        health_bar = QProgressBar()
-        health_bar.setValue(0)
-        health_bar.setRange(0, 100)
-        main_layout.addWidget(health_bar)
+        self.health_bar = QProgressBar()
+        self.health_bar.setValue(0)
+        self.health_bar.setRange(0, 100)
+        main_layout.addWidget(self.health_bar)
         
         information_box = QGroupBox()
         information_box.setTitle('Information')
@@ -120,12 +120,17 @@ class GeneralTab(QWidget):
         main_layout.addStretch()
     
     def _update(self, swarm):
+        
+        self.progress_bar.setValue(int(swarm.piece_manager.downloaded_percent))
+        self.health_bar.setValue(swarm.piece_manager.health)
+
         free_space = convert_bits(disk_usage('/').free)
         torrent_size = convert_bits(swarm.data.files.length)
         piece_size = convert_bits(swarm.data.piece_length)
         start_date = datetime.fromisoformat(swarm.start_date).strftime("%Y-%m-%d %H:%M:%S") if  len(swarm.start_date) else "not yet" 
         finish_date = datetime.fromisoformat(swarm.finish_date).strftime("%Y-%m-%d %H:%M:%S") if  len(swarm.finish_date) else "not yet" 
         
+        # update General Information fields
         self.leechers.setText(f"Leechers: {swarm.leechers}")
         self.seeders.setText(f"Seeders: {swarm.seeders}")
         self.downloaded.setText(f"Downloaded: {convert_bits(swarm.piece_manager.downloaded_bytes)}")
@@ -141,6 +146,7 @@ class GeneralTab(QWidget):
         #self.time_active = QLabel("Time active: ")
         #self.reannounce_in = QLabel("Reaannounce in: ")
         
+        # update Torrent Information fields
         self.info_hash.setText(f"Info hash: {swarm.data.info_hash_hex}")
         self.save_path.setText(f"Save Path: {swarm.path}")
         self.size.setText(f"Size: {torrent_size} (of {free_space} on local disk)")
@@ -235,7 +241,10 @@ class TrackersTab(QWidget):
         self._clear()
     
     def _update(self, tracker_list: list = []):
+        scroll = self.table_widget.verticalScrollBar().value()
         indexes = self.table_widget.selectedIndexes()
+        
+        self.model.beginResetModel()
         self._clear()
         for tracker in tracker_list:
             if tracker:
@@ -250,8 +259,14 @@ class TrackersTab(QWidget):
                 leechers = QStandardItem(str(tracker.leechers))
                 seeders = QStandardItem(str(tracker.seeders))
                 self.model.appendRow([addr, status, peers, leechers, seeders, error])
+        self.model.endResetModel()
+        
         if len(indexes):
             self.table_widget.selectRow(indexes[0].row())
+        else:
+            self.table_widget.selectRow(0)
+        self.table_widget.verticalScrollBar().setValue(scroll)
+       
     
     def _clear(self):
         self.model.clear()
@@ -278,6 +293,9 @@ class PeersTab(QWidget):
         self._clear()
     
     def _update(self, peer_list: list = []):
+        indexes = self.table_widget.selectedIndexes()
+        scroll = self.table_widget.verticalScrollBar().value()
+        
         self._clear()
         for peer in peer_list:
             ip = QStandardItem(peer.address[0])
@@ -289,6 +307,12 @@ class PeersTab(QWidget):
             con_type.setEditable(False)
             status.setEditable(False)
             self.model.appendRow([ip, port, con_type, status])
+
+        if len(indexes) != 0:
+            self.table_widget.selectRow(indexes[0].row())
+        else:
+            self.table_widget.selectRow(0) # so scroll gets udated, otherwise is not already set
+        self.table_widget.verticalScrollBar().setValue(scroll)
     
     def _clear(self):
         self.model.clear()

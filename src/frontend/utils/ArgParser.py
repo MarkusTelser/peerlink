@@ -1,11 +1,10 @@
+from sys import exit
+from argparse import ArgumentParser
+from os.path import dirname, exists, isfile, splitext
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QSettings, QStandardPaths
-from os.path import dirname, exists, isfile, splitext
-from argparse import ArgumentParser
-from sys import exit
 
-from src.backend.metadata.MagnetLink import MagnetLink
-from src.backend.metadata.TorrentParser import TorrentParser
+from src.backend.metadata import TorrentParser, MagnetParser
 
 
 def args_parser():
@@ -36,7 +35,7 @@ def args_parser():
     group_opt.add_argument('--dont-check-pieces', help="pieces aren't compared with hash for integrity", action="store_true")
     group_opt.add_argument('--download-strategy', choices=['rarest-first(default)', 'sequential', 'random'], default='rarest-first')
     args = parser.parse_args()
-
+    
     if args.help:
         print(parser.format_help(), end="")
         exit()
@@ -98,12 +97,26 @@ def args_torrent(parser):
             
 def args_magnet(parser):
     magnets = list()
-    args = parser.parse()
+
+    args = vars(parser.parse_args())
     
     # check if valid magnet link, else throw error
     if args['m']:
         try:
-            MagnetLink().parse(args['m'])
+            magnet = MagnetParser.parse(args['m'])
+            extras = dict()
+            
+            extras['pad_files'] = args['pad_files']
+            extras['start'] = not args['dont_autostart']
+            extras['check_hash'] = not args['dont_check_pieces']
+            extras['strategy'] = args['download_strategy']
+            
+            if args['save_path'] != None:
+                extras['path'] = args['save_path']
+            if args['category'] != None:
+                extras['category'] = args['category']
+            
+            magnets.append((magnet, extras))
         except Exception as e:
             parser.error(str(e))
     

@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QApplication
 from __version__ import __version__
 from src.frontend.windows.LaunchWindow import LaunchWindow
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
-from src.frontend.utils.ArgParser import args_parser, args_torrent
+from src.frontend.utils.ArgParser import args_parser, args_torrent, args_magnet
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.utils.AppDataLoader import AppDataLoader
 
@@ -25,8 +25,8 @@ def run():
     app_data  = AppDataLoader()
     torrent_list = app_data.load_torrents()
     arg_torrents = args_torrent(args)
-    
-    
+    arg_magnets = args_magnet(args)
+
     # decide which window to load depending on settings
     if conf.show_launch and len(torrent_list) == 0 and len(arg_torrents) == 0:
         window = LaunchWindow(conf)
@@ -40,6 +40,11 @@ def run():
         if len(arg_torrents) != 0:
             for torrent, extras in arg_torrents:
                 window.appendRowEnd(torrent, extras)
+
+        # load console argument magnet links
+        if len(arg_magnets) != 0:
+            for magnet, extras in arg_magnets:
+                window.appendRowEnd(magnet, extras)
     
     window.show()
 
