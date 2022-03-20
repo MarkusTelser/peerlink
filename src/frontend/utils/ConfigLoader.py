@@ -11,7 +11,7 @@ class ConfigLoader():
         self.win_loc = self.settings.value('win_loc', None, QPoint)
         self.show_toolbar = self.settings.value('show_toolbar', True, bool)
         self.show_statusbar = self.settings.value('show_statusbar', True, bool)
-        self.hori_splitter = [int(x) for x in self.settings.value('hori_splitter', [1, 100], list)]
+        self.hori_splitter = [int(x) for x in self.settings.value('hori_splitter', [300, 700], list)]
         self.vert_splitter = [int(x) for x in self.settings.value('vert_splitter', [1, 0], list)]
         
         self.side_current = self.settings.value('side_current', 0, int)
