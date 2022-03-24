@@ -26,6 +26,7 @@ from PyQt6.QtCore import (
 )
 from os.path import join, exists, dirname, isdir
 from threading import Thread
+from multiprocessing import Process
 import subprocess
 import sys
 
@@ -584,19 +585,18 @@ class ApplicationWindow(QMainWindow):
 
         self.session.swarm_list.append(swarm)
         
+        print(extras)
+
         # actions if key true
-        if extras['start']:
-            self.session.resume(len(self.session.swarm_list) - 1)
-        """
-        if extras['startegy']:
-            pass
-        """
+        if extras['strategy']:
+            swarm.piece_manager.set_strategy(extras['strategy'])
         if not extras['check_hash']:
             swarm.file_handler.check_hashes = False
         if extras['pad_files']:
-            Thread(target=swarm.file_handler.padd_files).start()
+            Process(target=swarm.file_handler.padd_files).start()
+        if extras['start']:
+            self.session.resume(len(self.session.swarm_list) - 1)
         
-        #self.table_model.append(swarm)
         self.side_panel.tabs[1][0].append(swarm)
         self.table_model.append(swarm)
     
@@ -614,7 +614,8 @@ class ApplicationWindow(QMainWindow):
             swarm.start_date = extras['start_date']
             swarm.finish_date = extras['finish_date']
             
-            self.session.swarm_list.append(swarm) #self.table_model.append(swarm)
+            self.session.swarm_list.append(swarm) 
+            
             self.side_panel.tabs[1][0].append(swarm)
             self.table_model.append(swarm)
     

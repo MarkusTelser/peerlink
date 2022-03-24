@@ -27,6 +27,7 @@ from psutil import disk_usage
 from src.backend.swarm import Swarm
 from src.backend.metadata.TorrentData import TorrentFile
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
+from src.frontend.widgets.PartProgress import PartProgress
 from src.frontend.views.TorrentTreeView import TorrentTreeView
 from src.frontend.utils.utils import convert_bits
 
@@ -47,14 +48,10 @@ class GeneralTab(QWidget):
         scroll_area.setWidget(central_widget)
         central_layout.addWidget(scroll_area)
         
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setValue(0)
-        self.progress_bar.setRange(0, 100)
+        self.progress_bar = PartProgress()
         main_layout.addWidget(self.progress_bar)
         
-        self.health_bar = QProgressBar()
-        self.health_bar.setValue(0)
-        self.health_bar.setRange(0, 100)
+        self.health_bar = PartProgress()
         main_layout.addWidget(self.health_bar)
         
         information_box = QGroupBox()
@@ -120,9 +117,9 @@ class GeneralTab(QWidget):
         main_layout.addStretch()
     
     def _update(self, swarm):
-        
-        self.progress_bar.setValue(int(swarm.piece_manager.downloaded_percent))
-        self.health_bar.setValue(swarm.piece_manager.health)
+        self.progress_bar.setRange(0, swarm.data.pieces_count)
+        self.progress_bar.setValues(int(swarm.piece_manager.downloaded_percent), [x for x in swarm.piece_manager.pieces])
+        self.health_bar.setValues(int(swarm.piece_manager.health), [x.index for x in swarm.piece_manager.pieces if x.count_peers != 0])
 
         free_space = convert_bits(disk_usage('/').free)
         torrent_size = convert_bits(swarm.data.files.length)
