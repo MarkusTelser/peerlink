@@ -27,7 +27,17 @@ def convert_bitsps(bits: int):
         return f"{round(bits / (1024 ** 4), 2)} TiB/s"
     elif bits / (1024 ** 5) < 1000:
         return f"{round(bits / (1024 ** 5), 3)} PiB/s"
-    
+
+def convert_seconds(seconds: int):
+    if seconds < 60:
+        return f"{seconds} s"
+    elif seconds < 3600:
+        return f"{int(seconds / 60)} min"
+    elif seconds < 86400:
+        return f"{round(seconds / 3600, 2)} h"
+    else:
+        return f"{round(seconds / 86400, 1)} d"
+
 def showError(error, parent=None):
     error_window = QMessageBox(parent)
     error_window.setIcon(QMessageBox.Icon.Critical)

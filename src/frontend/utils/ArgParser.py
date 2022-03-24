@@ -25,15 +25,15 @@ def args_parser():
     options.add_argument('-v', '--version', help="show program version", action="store_true")
     options.add_argument('-r', '--repository', help="output source git repository url", action="store_true")
     options.add_argument('-d', '--directorys', help="output local application config/data path", action="store_true")
-    options.add_argument('-h', '--help', help="show this help message and exit", action="store_true")
+    options.add_argument('-h', '--help', help="shows this help message", action="store_true")
     
     group_opt = parser.add_argument_group('torrent options')
     group_opt.add_argument('--save-path', help="path where downloaded files are saved", metavar="PATH", action="store")
     group_opt.add_argument('--category', help="sets existing or new category for torrent", action="store")
     group_opt.add_argument('--pad-files', help="fill all files with null bytes", action="store_true")
-    group_opt.add_argument('--dont-autostart', help="doesn't start torrent after adding to list", action="store_true")
+    group_opt.add_argument('--dont-start', help="doesn't start torrent after adding to list", action="store_true")
     group_opt.add_argument('--dont-check-pieces', help="pieces aren't compared with hash for integrity", action="store_true")
-    group_opt.add_argument('--download-strategy', choices=['rarest-first(default)', 'sequential', 'random'], default='rarest-first')
+    group_opt.add_argument('--download-strategy', choices=['rarest-first', 'sequential', 'random'], default='rarest-first')
     args = parser.parse_args()
     
     if args.help:
@@ -83,7 +83,7 @@ def args_torrent(parser):
         extras = dict()
        
         extras['pad_files'] = args['pad_files']
-        extras['start'] = not args['dont_autostart']
+        extras['start'] = not args['dont_start']
         extras['check_hash'] = not args['dont_check_pieces']
         extras['strategy'] = args['download_strategy']
         if args['save_path'] != None:
@@ -107,7 +107,7 @@ def args_magnet(parser):
             extras = dict()
             
             extras['pad_files'] = args['pad_files']
-            extras['start'] = not args['dont_autostart']
+            extras['start'] = not args['dont_start']
             extras['check_hash'] = not args['dont_check_pieces']
             extras['strategy'] = args['download_strategy']
             

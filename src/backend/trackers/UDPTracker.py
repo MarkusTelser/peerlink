@@ -53,6 +53,7 @@ class UDPTracker:
         self.semaphore = semaphore
         
         self.peers = list()
+        self.interval = 0
         self.leechers = 0
         self.seeders = 0
         
@@ -291,6 +292,7 @@ class UDPTracker:
             return None
 
         interval, leechers, seeders = unpack('!III', recv[8:20])
+        self.interval = interval
         self.leechers = leechers
         self.seeders = seeders
         

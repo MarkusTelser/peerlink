@@ -17,7 +17,8 @@ from PyQt6.QtGui import (
     QPainter, 
     QStandardItem, 
     QStandardItemModel, 
-    QBrush
+    QBrush,
+    QPalette
 )
 from PyQt6.QtCharts import QChart, QChartView, QSplineSeries, QValueAxis
 from PyQt6.QtCore import Qt
@@ -29,7 +30,7 @@ from src.backend.metadata.TorrentData import TorrentFile
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.widgets.PartProgress import PartProgress
 from src.frontend.views.TorrentTreeView import TorrentTreeView
-from src.frontend.utils.utils import convert_bits
+from src.frontend.utils.utils import convert_bits, convert_seconds
 
 
 class GeneralTab(QWidget):
@@ -247,15 +248,17 @@ class TrackersTab(QWidget):
             if tracker:
                 a = tracker.address if type(tracker.address) == str else f'{tracker.address[0]}:{tracker.address[1]}'
                 addr = QStandardItem(a)
-                states = ['no contact', 'connecting...', 'finished', 'stopped with error']
-                colors = [QColor('black'), QColor('yellow'), QColor('green'), QColor('red')]
+                states = ['not contacted', 'connecting...', 'finished', 'stopped with error']
+                colors = [None, QColor('yellow'), QColor('green'), QColor('red')]
                 status = QStandardItem(states[tracker.status.value])
-                status.setForeground(colors[tracker.status.value])
-                error = QStandardItem(tracker.error)
+                if tracker.status.value != 0:
+                    status.setForeground(colors[tracker.status.value])
                 peers = QStandardItem(str(len(tracker.peers)))
                 leechers = QStandardItem(str(tracker.leechers))
                 seeders = QStandardItem(str(tracker.seeders))
-                self.model.appendRow([addr, status, peers, leechers, seeders, error])
+                interval = QStandardItem(convert_seconds(tracker.interval))
+                error = QStandardItem(tracker.error)
+                self.model.appendRow([addr, status, peers, leechers, seeders, interval, error])
         self.model.endResetModel()
         
         if len(indexes):
@@ -267,7 +270,7 @@ class TrackersTab(QWidget):
     
     def _clear(self):
         self.model.clear()
-        headers = ["address", "status", "peers", "leechers", "seeders", "error"]
+        headers = ["address", "status", "peers", "leechers", "seeders", "interval", "error"]
         self.model.setHorizontalHeaderLabels(headers)
     
 class PeersTab(QWidget):
