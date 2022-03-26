@@ -138,10 +138,10 @@ class GeneralTab(QWidget):
         self.download_speed.setText(f"Download speed: {swarm.speed_measurer.avg_down_speed}")
         #self.upload_speed = QLabel("Upload speed: ")
         self.pieces.setText(f"Pieces: {swarm.data.pieces_count} x {piece_size} (have {swarm.piece_manager.finished_pieces})")
-        #self.eta = QLabel("ETA: ")
+        self.eta.setText(f"ETA: {chr(0x221E) if swarm.speed_measurer.eta == -1 else convert_seconds(swarm.speed_measurer.eta)}")
         self.health.setText(f"Health: {swarm.piece_manager.health}%")
         self.availability.setText(f"Availability: {swarm.piece_manager.availability}")
-        #self.time_active = QLabel("Time active: ")
+        self.time_active.setText(f"Time active: {convert_seconds(swarm.time_active)}")
         #self.reannounce_in = QLabel("Reaannounce in: ")
         
         # update Torrent Information fields
@@ -155,6 +155,9 @@ class GeneralTab(QWidget):
         self.finish_date.setText(f"Finish date: {finish_date}")
     
     def _clear(self):
+        self.progress_bar.setValues(0, [])
+        self.health_bar.setValues(0, [])
+
         self.leechers.setText("Leecher: ")
         self.seeders.setText("Seeder: ")
         self.downloaded.setText("Downloaded: ")

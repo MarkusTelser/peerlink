@@ -15,6 +15,9 @@ from .trackers.Tracker import give_object
 from .peer_protocol.Peer import MPeer
 import asyncio
 
+import time
+from threading import Thread
+
 class Swarm:
     MAX_TRACKER = 100
     MAX_PEERS = 70
@@ -30,6 +33,8 @@ class Swarm:
         self.backup_name = ""
         self.start_date = ""
         self.finish_date = ""
+        self._time_active = 0
+        self._last_date = None
         
         self.piece_manager = None
         self.file_handler = None
@@ -72,15 +77,13 @@ class Swarm:
         self.magnet_link = None
         self.metadata_manager = None
         
-        
-
         # remove old connection, somehow not starting normal downloading
         print(self.tracker_list)
         print(self.peer_list)
         self.set_meta_data(data, '/home/carlos/Desktop')
         for peer in self.peer_list:
             peer.set_torrent(self.piece_manager, self.file_handler)
-            asyncio.create_task(peer.resume())
+            peer.resume()
         asyncio.create_task(self._start())
 
     def finished_torrent(self):
@@ -92,27 +95,28 @@ class Swarm:
 
     def start(self):
         self.start_task = asyncio.create_task(self._start())
-    
+        self.speed_task = asyncio.create_task(self.speed_measurer.execute())
+
     async def _start(self):
+        self._last_date = datetime.now()
+        if len(self.start_date) == 0:
+            self.start_date = datetime.now().isoformat()
+
+        for peer in self.peer_list:
+            peer.resume()
+        
         try:
-            if len(self.start_date) == 0:
-                self.start_date = datetime.now().isoformat()
-            asyncio.create_task(self.speed_measurer.execute())
-            asyncio.create_task(self._print_speed())
             await self.announce_trackers(HTTPEvents.STARTED)
         except Exception as e:
             logging.exception('error in swarm')
             print(e)
-            raise Exception('crashed') 
-    
-    async def _print_speed(self):
-        while True:
-            print('-' * 100)
-            print(self.speed_measurer.avg_down_speed)
-            print('-' * 100)
-            await asyncio.sleep(1)
+            raise Exception('crashed')
     
     async def pause(self):
+        if self._last_date != None:
+            diff_dt = datetime.now() - self._last_date
+            self._time_active += diff_dt.seconds 
+
         if self.start_task:
             self.start_task.cancel()
         
@@ -124,6 +128,10 @@ class Swarm:
         
         await self.announce_trackers(HTTPEvents.STOPPED)
     
+    async def stop(self):
+        for peer in self.peer_list:
+            peer.stop()
+
     async def announce_trackers(self, event=None):
         tasks = list()
         for tracker in self.tracker_list:
@@ -173,7 +181,7 @@ class Swarm:
                     asyncio.create_task(m.request_metadata(self.metadata_manager))
                 else:
                     m.set_torrent(self.piece_manager, self.file_handler)
-                    asyncio.create_task(m.resume())
+                    m.resume()
                 self.peer_list.append(m)
     
     def peer_in_list(self, ip, port):
@@ -181,6 +189,14 @@ class Swarm:
             if peer.address == (ip, port):
                 return True
         return False
+
+    @property
+    def time_active(self):
+        if self.start_task == None or self.start_task.cancelled():
+            return self._time_active
+        
+        diff_dt = (datetime.now() - self._last_date).seconds
+        return self._time_active + diff_dt
 
     @property
     def peers(self):

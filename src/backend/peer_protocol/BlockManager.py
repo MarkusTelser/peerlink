@@ -35,7 +35,8 @@ class BlockManager:
         if len(self.requests) < self.MAX_REQUESTS:
             missing = self.MAX_REQUESTS - len(self.requests)
             while len(self.outstanding) < missing:
-                self._get_blocks()
+                if not self._get_blocks():
+                    break
             
             requests = self.outstanding[:missing]
             for request in requests:
@@ -91,7 +92,7 @@ class BlockManager:
         
         # no more pieces to download
         if piece == None:
-            return
+            return False
         
         piece_size = self.piece_size
         if self.piece_manager.is_last_piece(piece):
@@ -110,6 +111,7 @@ class BlockManager:
             self.outstanding.append(r)
             remaining_size -= BlockManager.BLOCK_SIZE
             block_id += 1
+        return True
         
 
 if __name__ == "__main__":

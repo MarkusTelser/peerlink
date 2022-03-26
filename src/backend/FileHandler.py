@@ -9,10 +9,11 @@ class FileHandler:
     def __init__(self, data, path):
         self.lock = RLock()
         
+        self.check_hashes = True
         self.data = data
         self._path = path
-
     
+
     def write_piece(self, index, data):
         bit_start = index * self.data.piece_length
         piece_length = min(self.data.piece_length, self.data.files.length - self.data.piece_length * index)
@@ -56,6 +57,9 @@ class FileHandler:
         if index < 0 or index >= self.data.pieces_count:
             raise Exception('wrong piece id')
         
+        if not self.check_hashes:
+            return True
+
         piece_hash = sha1(data).digest()
         reference_hash = self.data.pieces[20 * index: 20 + 20 * index]
         return piece_hash == reference_hash
@@ -144,7 +148,6 @@ class FileHandler:
         with self.lock:
             if current_node == None:
                 current_node = self.data.files
-            print("padding files")
             if current_node.has_children():
                 if not exists(join(self.path, current_node.fullpath)):
                     mkdir(join(self.path, current_node.fullpath))
@@ -158,6 +161,7 @@ class FileHandler:
                     for _ in range(ceil(current_node.length / BLOCK_SIZE)):
                         f.write(b'\x00' * min(write_size, BLOCK_SIZE))
                         write_size -= BLOCK_SIZE
+                    print('finished', f.name)
                     
     @property 
     def path(self):

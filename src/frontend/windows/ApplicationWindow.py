@@ -184,6 +184,9 @@ class ApplicationWindow(QMainWindow):
         self.tool_bar.open_file.clicked.connect(self.open_file)
         self.tool_bar.open_link.clicked.connect(self.open_magnetlink)
         self.tool_bar.resume.clicked.connect(self.start_torrent)
+        self.tool_bar.resume_all.clicked.connect(lambda: self.session.resume_all())
+        self.tool_bar.pause.clicked.connect(self.pause_torrent)
+        self.tool_bar.pause_all.clicked.connect(lambda: self.session.pause_all())
         self.tool_bar.remove.clicked.connect(self.delete_torrent)
         self.tool_bar.remove_all.clicked.connect(self.delete_alltorrents)
         self.tool_bar.search_bar.textChanged.connect(self.search_torrents)
@@ -192,6 +195,7 @@ class ApplicationWindow(QMainWindow):
         self.table_view.doubleClicked.connect(self.doubleclick_torrent)
         self.table_view.menu_resume.triggered.connect(self.start_torrent)
         self.table_view.menu_pause.triggered.connect(self.pause_torrent)
+        self.table_view.menu_stop.triggered.connect(self.stop_torrent)
         self.table_view.menu_move.triggered.connect(self.move_torrent)
         self.table_view.menu_copyname.triggered.connect(self.copy_name)
         self.table_view.menu_copyhash.triggered.connect(self.copy_hash)
@@ -233,8 +237,16 @@ class ApplicationWindow(QMainWindow):
         if len(indexes) == 0:
             return
         real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
-        self.session.stop(real_index) #self.table_model.torrent_list[real_index].pause()
+        self.session.pause(real_index)
     
+    @pyqtSlot()
+    def stop_torrent(self):
+        indexes = self.table_view.selectedIndexes()
+        if len(indexes) == 0:
+            return
+        real_index = indexes[0].siblingAtColumn(0).data(Qt.ItemDataRole.InitialSortOrderRole + 69)
+        self.session.stop(real_index)
+
     @pyqtSlot()
     def move_torrent(self):
         pass

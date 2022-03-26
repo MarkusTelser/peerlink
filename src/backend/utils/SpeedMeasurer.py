@@ -1,5 +1,6 @@
 import asyncio
 from collections import deque
+from math import ceil
 import time
 from src.backend.peer_protocol.PieceManager import PieceManager
 
@@ -14,18 +15,22 @@ class SpeedMeasurer:
     
     
     async def execute(self):
-        while True:
-            t = time.time()
-            
-            self.down_measurements.append(int(self.piece_manager.downloaded_bytes))
-            
-            # pop oldest measurement if queue is too big
-            if len(self.down_measurements) > SpeedMeasurer.MAX_ITEMS:
-                self.down_measurements.popleft()
-            
-            delta_time = SpeedMeasurer.MEASURE_INTERVAL - (time.time() - t)
-            print("\\" * 100, delta_time, self.down_measurements)
-            await asyncio.sleep(delta_time)
+        try:
+            while True:
+                print('MEASURE CIRCLE')
+                t = time.time()
+                
+                self.down_measurements.append(int(self.piece_manager.downloaded_bytes))
+                
+                # pop oldest measurement if queue is too big
+                if len(self.down_measurements) > SpeedMeasurer.MAX_ITEMS:
+                    self.down_measurements.popleft()
+                
+                delta_time = SpeedMeasurer.MEASURE_INTERVAL - (time.time() - t)
+                print("\\" * 100, delta_time, self.down_measurements)
+                await asyncio.sleep(delta_time)
+        except Exception as e:
+            print('EEE' * 100, str(e))
     
     
     @property
@@ -34,16 +39,21 @@ class SpeedMeasurer:
     
     @property
     def raw_down_speed(self):
-        if len(self.down_measurements) > 1:
-            diff_time = (len(self.down_measurements) - 1) * SpeedMeasurer.MEASURE_INTERVAL
-            diff_bytes = self.down_measurements[-1] - self.down_measurements[0]
-            avg_down_speed = diff_bytes / diff_time
-            return avg_down_speed
+        try:
+            if len(self.down_measurements) > 1:
+                diff_time = (len(self.down_measurements) - 1) * SpeedMeasurer.MEASURE_INTERVAL
+                diff_bytes = self.down_measurements[-1] - self.down_measurements[0]
+                avg_down_speed = diff_bytes / diff_time
+                return avg_down_speed
+        except Exception as e:
+            print('E' * 100, str(e))
         return 0
 
     @property
     def eta(self):
-        pass
+        if self.raw_down_speed == 0:
+            return -1
+        return ceil(self.piece_manager.left_bytes / self.raw_down_speed)
     
     def _convert_mibps(self, bits: int):
         if bits < 1000:

@@ -7,7 +7,7 @@ class DHTServer:
         self.transport = transport
 
     def datagram_received(self, data, addr):
-        print('peniss'* 100)
+        print('-------'* 100)
         print('dht recv', data, 'from', addr)
 
 

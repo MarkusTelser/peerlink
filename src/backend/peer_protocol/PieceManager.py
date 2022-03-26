@@ -31,13 +31,20 @@ class PieceManager:
         self.pieces = list()
     
     @property
-    def downloaded_percent(self):
-        finished_pieces = [x for x in self.pieces if x.status == 'FINISHED']
-        return round(len(finished_pieces) / self.piece_count * 100, 2)
-    
-    @property
     def finished_pieces(self):
         return len([x for x in self.pieces if x.status == 'FINISHED'])
+
+    @property
+    def downloaded_percent(self):
+        return round(self.finished_pieces / self.piece_count * 100, 2)
+    
+    @property
+    def downloaded_bytes(self):
+        return self.finished_pieces * self.piece_size
+
+    @property
+    def left_bytes(self): 
+        return (self.piece_count - self.finished_pieces) * self.piece_size
     
     @property
     def health(self):
@@ -50,14 +57,6 @@ class PieceManager:
         count_lowest = len([x for x in self.pieces if x.count_peers == full_availability])
         part_availability = (self.piece_count - count_lowest) / self.piece_count 
         return round(full_availability + part_availability, 2)
-
-    @property
-    def left_bytes(self): 
-        return (self.piece_count - self.finished_pieces) * self.piece_size
-    
-    @property
-    def downloaded_bytes(self):
-        return self.finished_pieces * self.piece_size
     
     @property
     def uploaded_bytes(self):
@@ -90,6 +89,7 @@ class PieceManager:
             
     def add_bitfield(self, peer_id, bitfield):
         # check if size is correct, account for extra bits at the end
+        print(len(bitfield), ceil(self.piece_count / 8))
         if len(bitfield) != ceil(self.piece_count / 8):
             raise Exception("bitfield wrong size")
         t = time.time()
@@ -137,5 +137,17 @@ class PieceManager:
 
         raise Exception('piece already rejected')
     
+    def set_strategy(self, startegy: DownloadStrategy | str):
+        s = startegy.upper()
+        if s == "RAREST-FIRST":
+            self.download_strategy = DownloadStrategy.RARESTFIRST
+        elif s == "SEQUENTIAL":
+            self.download_strategy = DownloadStrategy.SEQUENTIAL
+        elif s == "RANDOM":
+            self.download_strategy = DownloadStrategy.RANDOM
+        else:
+            # TODO LOG warnings invalid strategy
+            pass
+
     def is_last_piece(self, index):
         return index == self.piece_count - 1

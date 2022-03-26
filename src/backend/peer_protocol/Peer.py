@@ -6,6 +6,7 @@ import concurrent
 from math import ceil
 from struct import unpack
 from threading import Thread
+import logging
 
 from src.backend.peer_protocol.BlockManager import BlockManager
 from src.backend.peer_protocol.Metadata import MetadataData, MetadataReject, bld_metadata_request
@@ -59,8 +60,23 @@ class PPeer(asyncio.Protocol):
         self.piece_manager = piece_manager
         piece_length, full_size = file_handler.data.piece_length, file_handler.data.files.length
         self.block_manager = BlockManager(piece_manager, piece_length, full_size)
-        self.piece_manager.add_bitfield(self.peer_id, self._bitfield)
+        try:
+            self.piece_manager.add_bitfield(self.peer_id, self._bitfield)
+        except Exception as e:
+            print('EX HERE', str(e))
     
+    async def download_meta(self, metadata_manager):
+        self.metadata_manager = metadata_manager
+        await self.succ_ext_handshake.wait()
+        
+        # send first chunk of metadata requests
+        for block in metadata_manager.request_blocks():
+            mid = self.extension.extensions['ut_metadata']
+            msg = bld_metadata_request(mid, block)
+            self.transport.write(msg)
+            
+        await metadata_manager.finished.wait()
+
     def resume_downloading(self):
         self.resume_download.set()
         self._send_interested()
@@ -103,7 +119,7 @@ class PPeer(asyncio.Protocol):
             # TODO implement with seeding
             pass
         elif isinstance(recv, PeerMessageStructures.Piece):
-            print('RECEIVED BLOCK ', recv.index, 'AT', recv.begin)
+            print('RECEIVED BLOCK ', recv.index, 'AT', recv.begin, self.block_manager.outstanding)
             is_last_block = self.block_manager.add_block(recv.index, recv.begin, recv.block)
             if is_last_block:
                 data = self.block_manager.get_piece_data(recv.index)
@@ -153,11 +169,13 @@ class PPeer(asyncio.Protocol):
         self.first_message = False
     
     def _send_requests(self):
+        print('REQUESTING NEW BLOCKS')
         # don't request if paused by client or other peer
         if not self.resume_download.is_set() or self.am_choking:
             return
         
         requests = self.block_manager.fill_request()
+        print('GOT REQUEST NEW BLOCKS')
         for request in requests:
             msg = bld_request(request.piece_id, request.startbit, request.length)
             self.transport.write(msg)
@@ -208,10 +226,11 @@ class MPeer:
         self.peer_id = bytes(peer_id, 'utf-8')
         
         self.extension = ExtensionProtocol()
+        self.metadata_manager = None
         self.piece_manager = None
         self.file_handler = None
         
-        self.succ_conn = asyncio.Event()
+        self._resume = False
         self.transport, self.protocol = None, None
         self.conn_task = asyncio.create_task(self.init_conn())
     
@@ -242,10 +261,14 @@ class MPeer:
             if self.piece_manager and self.file_handler:
                 self.protocol.set_torrent(self.piece_manager, self.file_handler)
             if self.metadata_manager:
-                self.protocol.metadata_manager = self.metadata_manager
+                asyncio.create_task(self.protocol.download_meta(self.metadata_manager))
+            
             # send interested message and start downloading
-            # self.protocol.am_interested = True
-            # self.transport.write(bld_interested())
+            print('||' * 30)
+            if self._resume:
+                self.protocol.resume_downloading()
+            else:
+                self.protocol.pause_downloading()
             
             # send libtorrent extension handshake if supported
             if ReservedExtensions.LibtorrentExtensionProtocol in extensions:
@@ -257,40 +280,32 @@ class MPeer:
                 print('supports DHT')
                 self.transport.write(bld_port())
         except Exception as e:
-            print(e)
-        finally:
-            self.succ_conn.set()
+            print('EEE', e)
+            #logging.exception('EEE')
+            
     
-    async def resume(self):
-        await self.succ_conn.wait()
-        if self.transport and self.protocol:
+    def resume(self):
+        if self.transport == None or self.transport.is_closing():
+            self.conn_task = asyncio.create_task(self.init_conn())
+        if self.conn_task.done() and self.transport:
             self.protocol.resume_downloading()
+        self._resume = True
     
-    async def pause(self):
-        await self.succ_conn.wait()
-        if self.transport and self.protocol:
+    def pause(self):
+        if self.conn_task.done() and self.transport:
             self.protocol.pause_downloading()
+        self._resume = False
         
     def stop(self):
-        if self.start_task != None:
-            self.start_task.cancel()
+        if self.conn_task != None:
+            self.conn_task.cancel()
         if self.transport != None:    
             self.transport.close()
       
     async def request_metadata(self, metadata_manager: MetadataManager):
+        if self.conn_task.done() and self.transport:
+            asyncio.create_task(self.protocol.download_meta(metadata_manager))
         self.metadata_manager = metadata_manager
-        await self.succ_conn.wait()
-        if self.transport and self.protocol:
-            self.protocol.metadata_manager = metadata_manager
-            await self.protocol.succ_ext_handshake.wait()
-            
-            # send first chunk of metadata requests
-            for block in metadata_manager.request_blocks():
-                mid = self.extension.extensions['ut_metadata']
-                msg = bld_metadata_request(mid, block)
-                self.transport.write(msg)
-                
-            await metadata_manager.finished.wait()
       
     def set_torrent(self, piece_manager, file_handler):
         self.piece_manager = piece_manager

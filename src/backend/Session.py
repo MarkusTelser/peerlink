@@ -18,88 +18,8 @@ class Session(threading.Thread):
         self.server = TCPServer()
         self.dht = DHT()
 
-        
         self.start()
     
-    def run(self):
-        print('started')
-        
-        print('created event loop')
-        asyncio.set_event_loop(self.loop)
-        
-
-        self.loop.run_until_complete(self._run())
-        #self.loop.call_soon(self._run())
-        #self.loop.run_forever()
-        #asyncio.run(self._run(), debug=True)
-    
-    async def _run(self):
-        #print(asyncio.get_running_loop())
-        #self.loop = asyncio.get_running_loop()
-        
-        # start DHT up
-        await self.server.start()
-        asyncio.create_task(self.dht.start())
-        
-        while True:
-            func, args, kargs = await self.queue.get()
-            print(func, args, kargs)
-            asyncio.create_task(func(*args, **kargs))
-    
-    def resume(self, *args, **kargs):
-        f = self.queue.put((self._resume, args, kargs))
-        asyncio.run_coroutine_threadsafe(f, self.loop)
-    
-    def stop(self, *args, **kargs):
-        f = self.queue.put((self._stop, args, kargs))
-        asyncio.run_coroutine_threadsafe(f, self.loop)
-    
-    def download_meta(self, *args, **kargs):
-        f = self.queue.put((self._download_meta, args, kargs))
-        asyncio.run_coroutine_threadsafe(f, self.loop)
-    
-    def resume_all(self, *args, **kargs):
-        self.queue.put_nowait((self._resume_all, args, kargs))
-    
-    def stop_all(self, *args, **kargs):
-        self.queue.put_nowait((self._stop_all, args, kargs))
-    
-    def add(self, *args, **kargs):
-        self.queue.put_nowait((self._add, args, kargs))
-        print(self.queue.qsize())
-    
-    def add_all(self, *args, **kargs):
-        self.queue.put_nowait((self._add_all, args, kargs))
-    
-    async def _resume(self, index: int):
-        if len(self.swarm_list) > index:
-            self.swarm_list[index].start()
-    
-    async def _stop(self, index: int):
-        if len(self.swarm_list) > index:
-            print('paused', index)
-            await self.swarm_list[index].pause()
-    
-    async def _download_meta(self, index: int, magnet):
-        if len(self.swarm_list) > index:
-            await self.swarm_list[index].download_metadata(magnet)
-            
-    async def _resume_all(self):
-        for torrent in self.swarm_list:
-            torrent.start()
-    
-    async def _stop_all(self):
-        for torrent in self.swarm_list:
-            torrent.stop()
-    
-    async def _add(self, swarm: Swarm):
-        swarm.LISTEN_PORT = self.server.port
-        self.swarm_list.append(swarm)
-        
-    async def _add_all(self, swarms: List[Swarm]):
-        for swarm in swarms:
-            self.swarm_list.append(swarm)
-
     @property
     def upload_speed(self):
         pass
@@ -115,3 +35,80 @@ class Session(threading.Thread):
     @property
     def nodes(self):
         pass
+
+    def resume(self, *args, **kargs):
+        f = self.queue.put((self._resume, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+    
+    def pause(self, *args, **kargs):
+        f = self.queue.put((self._pause, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+
+    def stop(self, *args, **kargs):
+        f = self.queue.put((self._stop, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+    
+    def download_meta(self, *args, **kargs):
+        f = self.queue.put((self._download_meta, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+    
+    def resume_all(self, *args, **kargs):
+        f = self.queue.put((self._resume_all, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+    
+    def pause_all(self, *args, **kargs):
+        f = self.queue.put((self._pause_all, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+
+    def stop_all(self, *args, **kargs):
+        f = self.queue.put((self._stop_all, args, kargs))
+        asyncio.run_coroutine_threadsafe(f, self.loop)
+    
+    def add(self, swarm):
+        swarm.LISTEN_PORT = self.server.port
+        self.swarm_list.append(swarm)
+    
+    def run(self):
+        print('created event loop')
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_until_complete(self._run())
+    
+    async def _run(self):
+        # start DHT up
+        await self.server.start()
+        asyncio.create_task(self.dht.start())
+        
+        while True:
+            func, args, kargs = await self.queue.get()
+            print(func, args, kargs)
+            asyncio.create_task(func(*args, **kargs))
+
+    async def _resume(self, index: int):
+        if len(self.swarm_list) > index:
+            self.swarm_list[index].start()
+    
+    async def _pause(self, index: int):
+        print('PAUSE' * 100)
+        if len(self.swarm_list) > index:
+            await self.swarm_list[index].pause()
+
+    async def _stop(self, index: int):
+        print('STOP' * 100)
+        if len(self.swarm_list) > index:
+            await self.swarm_list[index].stop()
+    
+    async def _download_meta(self, index: int, magnet):
+        if len(self.swarm_list) > index:
+            await self.swarm_list[index].download_metadata(magnet)
+            
+    async def _resume_all(self):
+        for swarm in self.swarm_list:
+            swarm.start()
+    
+    async def _pause_all(self):
+        tasks = [swarm.pause() for swarm in self.swarm_list]
+        await asyncio.gather(*[task for task in tasks])
+
+    async def _stop_all(self):
+        tasks = [swarm.stop() for swarm in self.swarm_list]
+        await asyncio.gather(*[task for task in tasks])

@@ -184,6 +184,12 @@ class PreviewWindow(QMainWindow):
         button_box.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
         self.main_layout.addWidget(button_box, 1, 1)
         
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        self.progress_bar.setFixedSize(250, 25)
+        self.progress_bar.setRange(0, 100)
+        self.main_layout.addWidget(self.progress_bar, 1, 0)
+
         # create tree view of file struct
         self.model = TorrentTreeModel()
         self.tree_view = TorrentTreeView(self.model)
@@ -207,6 +213,7 @@ class PreviewWindow(QMainWindow):
         super().show()
     
     def _show_torrent(self, torrent_data):
+        print('SHOW Torrent')
         self.torrent_data = torrent_data
         free_space = lambda: convert_bits(disk_usage('/').free)
         torrent_size = lambda: convert_bits(torrent_data.files.length)
@@ -220,15 +227,11 @@ class PreviewWindow(QMainWindow):
         self.model.update(torrent_data.files)
 
     def _show_magnet(self, magnet_link):
+        print('SHOW MAGNET', magnet_link)
         self.session = Session()
         self.session.add(Swarm())
         self.session.download_meta(0, magnet_link)
-
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setValue(0)
-        self.progress_bar.setFixedSize(250, 25)
-        self.progress_bar.setRange(0, 100)
-        self.main_layout.addWidget(self.progress_bar, 1, 0)
+        
     
     """ the following methods are all slots """
     def pressedPathSelect(self):

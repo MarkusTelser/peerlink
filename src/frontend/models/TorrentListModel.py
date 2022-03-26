@@ -2,13 +2,13 @@ from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtCore import Qt
 from datetime import datetime
 
-from src.frontend.utils.utils import convert_bits
+from src.frontend.utils.utils import convert_bits, convert_seconds
 
 
 class TorrentListModel(QStandardItemModel):
     def __init__(self):
         super().__init__()
-        self.setHorizontalHeaderLabels(["name", "size", "download speed", "downloaded", "progress", "health", "availability", "share ratio", "creation date", "start date", "finish date"])
+        self.setHorizontalHeaderLabels(["name", "size", "download speed", "eta", "downloaded", "progress", "health", "availability", "share ratio", "creation date", "start date", "finish date"])
     
     def remove(self, index):
         self.removeRow(index)
@@ -40,6 +40,10 @@ class TorrentListModel(QStandardItemModel):
         
         download_speed = str(swarm.speed_measurer.avg_down_speed)
         item = QStandardItem(download_speed)
+        row.append(item)
+
+        eta = chr(0x221E) if swarm.speed_measurer.eta == -1 else convert_seconds(swarm.speed_measurer.eta)
+        item = QStandardItem(eta)
         row.append(item)
 
         downloaded = convert_bits(swarm.piece_manager.downloaded_bytes)
