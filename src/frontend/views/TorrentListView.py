@@ -40,7 +40,7 @@ class TorrentListView(QTableView):
         
         # create context menu
         self.menu = QMenu(self)
-        self.menu.setContentsMargins(10, 0, 0, 0)
+        self.menu.setContentsMargins(0, 0, 0, 0)
         self.menu_resume = QAction('Resume')
         self.menu_resume.setIcon(QIcon('resources/resume.svg'))
         self.menu_pause = QAction('Pause')
