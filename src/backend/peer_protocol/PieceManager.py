@@ -86,7 +86,14 @@ class PieceManager:
                 r = randint(0, len(inuse_pieces) - 1)
                 return inuse_pieces[r].index
             return None    
-            
+    
+    def get_entirety(self, peer_id):
+        count = 0
+        for piece in self.pieces:
+            if peer_id in piece.have_peers:
+                count += 1
+        return round(count / self.piece_count * 100, 2)
+
     def add_bitfield(self, peer_id, bitfield):
         # check if size is correct, account for extra bits at the end
         print(len(bitfield), ceil(self.piece_count / 8))

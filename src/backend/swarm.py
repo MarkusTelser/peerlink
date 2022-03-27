@@ -7,12 +7,11 @@ from asyncio import BoundedSemaphore
 from datetime import datetime
 
 from src.backend.utils.SpeedMeasurer import SpeedMeasurer
-
 from .peer_protocol.PeerIDs import PeerIDs
 from .peer_protocol.PieceManager import PieceManager
 from .FileHandler import FileHandler
 from .trackers.Tracker import give_object
-from .peer_protocol.Peer import MPeer
+from .peer_protocol.Peer import MPeer, PeerSources
 import asyncio
 
 import time
@@ -176,7 +175,7 @@ class Swarm:
                 
                 info_hash = self.magnet_link.info_hash if self.magnet_link else self.data.info_hash
                 
-                m = MPeer(address, info_hash, self.peer_id)
+                m = MPeer(PeerSources.TRACKER, address, info_hash, self.peer_id)
                 if self.magnet_link:
                     asyncio.create_task(m.request_metadata(self.metadata_manager))
                 else:
@@ -197,6 +196,10 @@ class Swarm:
         
         diff_dt = (datetime.now() - self._last_date).seconds
         return self._time_active + diff_dt
+
+    @property
+    def active_peers(self):
+        return [peer for peer in self.peer_list if peer.active]
 
     @property
     def peers(self):

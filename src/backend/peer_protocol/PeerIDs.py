@@ -29,8 +29,9 @@ def az_no_version(ver: bytes):
 def az_deluge(ver: bytes):
     letters = 'ABCDE'
     if chr(ver[2]).isdigit():
-        return f'{chr(ver[0])}.{chr(ver[1])}.{letters.index(chr(ver[2]))}'
-    return f'{chr(ver[0])}.{chr(ver[1])}.{chr(ver[2])}'
+        return f'{chr(ver[0])}.{chr(ver[1])}.{chr(ver[2])}'
+    return f'{chr(ver[0])}.{chr(ver[1])}.{letters.index(chr(ver[2]))}'
+    
 
 def az_transmission(ver: bytes):
     if chr(ver[0]) == '0' and chr(ver[1]) == '0' and chr(ver[2]) == '0':

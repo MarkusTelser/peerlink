@@ -1,11 +1,11 @@
 import asyncio
+import uvloop
 import threading
 from typing import List
 from src.backend.dht.DHT import DHT
 
 from src.backend.swarm import Swarm
 from src.backend.peer_protocol.TCPServer import TCPServer
-
 
 class Session(threading.Thread):
     def __init__(self):
@@ -70,6 +70,7 @@ class Session(threading.Thread):
     
     def run(self):
         print('created event loop')
+        uvloop.install()
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._run())
     

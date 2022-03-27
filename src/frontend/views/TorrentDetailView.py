@@ -290,6 +290,7 @@ class PeersTab(QWidget):
         self.table_widget.setSortingEnabled(True)
         self.table_widget.verticalHeader().hide()
         self.table_widget.horizontalHeader().setStretchLastSection(True)
+        self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         main_layout.addWidget(self.table_widget)
         
@@ -302,14 +303,13 @@ class PeersTab(QWidget):
         self._clear()
         for peer in peer_list:
             ip = QStandardItem(peer.address[0])
-            port = QStandardItem(peer.address[1])
-            con_type = QStandardItem('')
-            status = QStandardItem('connecting...')
-            ip.setEditable(False)
-            port.setEditable(False)
-            con_type.setEditable(False)
-            status.setEditable(False)
-            self.model.appendRow([ip, port, con_type, status])
+            port = QStandardItem(str(peer.address[1]))
+            client = QStandardItem(peer.client)
+            conn = QStandardItem('default')
+            flags = QStandardItem(peer.flags)
+            sources = QStandardItem(peer.sources)
+            entirety = QStandardItem(f"{peer.entirety}%")
+            self.model.appendRow([ip, port, client, conn, flags, sources, entirety])
 
         if len(indexes) != 0:
             self.table_widget.selectRow(indexes[0].row())
@@ -319,7 +319,7 @@ class PeersTab(QWidget):
     
     def _clear(self):
         self.model.clear()
-        headers = ["ip", "port", "connection type", "status"]
+        headers = ["ip", "port", "client", "connection", "flags", "sources", "entirety"]
         self.model.setHorizontalHeaderLabels(headers)
     
 class FilesTab(QWidget):
@@ -382,7 +382,7 @@ class TorrentDetailView(QTabWidget):
     def _update(self, dt: Swarm):
         self.general_tab._update(dt)
         self.trackers_tab._update(dt.tracker_list)
-        self.peers_tab._update(dt.peer_list)
+        self.peers_tab._update(dt.active_peers)
         self.files_tab._update(dt.data.files)
     
     def _clear(self):

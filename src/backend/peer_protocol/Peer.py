@@ -20,14 +20,21 @@ from src.backend.exceptions import *
 from .PeerIDs import PeerIDs
 from src.backend.peer_protocol.ReservedExtensions import gen_extensions, get_extensions, ReservedExtensions
 from src.backend.peer_protocol.ExtensionProtocol import ExtensionHandshakeMessage, ExtensionProtocol
-
 from src.backend.peer_protocol import PeerMessages
+from enum import Enum
 """
 set timeout new every time
 use sched library
 select should work, especially for client server model (maybe problems with win comptability)
 """
 import asyncio
+
+class PeerSources(Enum):
+    METADATA = 0
+    TRACKER = 1
+    DHT = 2
+    PEX = 3
+    LPD = 4
 
 class PPeer(asyncio.Protocol):
     def __init__(self, peer_id, extension: ExtensionProtocol):
@@ -219,11 +226,13 @@ class PPeer(asyncio.Protocol):
 
 
 class MPeer:
-    def __init__(self, address, info_hash, peer_id):
+    def __init__(self, source, address, info_hash, peer_id):
         super().__init__()
+        self._sources = [source]
         self.address = address
         self.info_hash = info_hash
         self.peer_id = bytes(peer_id, 'utf-8')
+        self.client = "".join([*PeerIDs.get_client(self.peer_id)])
         
         self.extension = ExtensionProtocol()
         self.metadata_manager = None
@@ -281,6 +290,8 @@ class MPeer:
                 self.transport.write(bld_port())
         except Exception as e:
             print('EEE', e)
+            if self.transport:
+                self.transport.close()
             #logging.exception('EEE')
             
     
@@ -312,3 +323,51 @@ class MPeer:
         self.file_handler = file_handler
         if self.transport and self.protocol:
             self.protocol.set_torrent(piece_manager, file_handler)
+
+    def add_source(self, source):
+        if source not in self._sources:
+            self._sources.append(source)
+
+    @property
+    def active(self):
+        if self.transport == None or self.transport.is_closing():
+            return False
+        return self._resume
+
+    @property
+    def entirety(self):
+        return self.piece_manager.get_entirety(self.peer_id)
+
+    @property
+    def flags(self):
+        flags = list()
+        
+        if self.protocol.am_interested and self.protocol.am_choking:
+            flags.append(u'\u2193')
+        elif self.protocol.am_interested and not self.protocol.am_choking:
+            flags.append(u'\u25BC')
+
+        if self.protocol.peer_interested and self.protocol.peer_choking:
+            flags.append(u'\u1403')
+        elif self.protocol.peer_interested and not self.protocol.peer_choking:
+            flags.append(u'\u25B2')
+        
+        return " ".join(flags)
+
+    
+    @property
+    def sources(self):
+        sources = list()
+
+        if PeerSources.METADATA in self._sources:
+            sources.append('M')
+        if PeerSources.TRACKER in self._sources:
+            sources.append('T')
+        if PeerSources.DHT in self._sources:
+            sources.append('D')
+        if PeerSources.PEX in self._sources:
+            sources.append('P')
+        if PeerSources.LPD in self._sources:
+            sources.append('L')
+
+        return " ".join(sources)

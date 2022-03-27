@@ -47,12 +47,9 @@ class TorrentListView(QTableView):
         self.menu_pause.setIcon(QIcon('resources/pause.svg'))
         self.menu_stop = QAction('Stop')
         self.menu_stop.setIcon(QIcon('resources/stop.svg'))
-        self.menu_move = QAction('Move')
-        self.menu_move.setIcon(QIcon('resources/move.svg'))
         self.menu.addAction(self.menu_resume)
         self.menu.addAction(self.menu_pause)
         self.menu.addAction(self.menu_stop)
-        self.menu.addAction(self.menu_move)
         self.menu.addSeparator()
         self.menu_copyname = QAction('Copy name')
         self.menu_copyname.setIcon(QIcon('resources/copy.svg'))
@@ -66,10 +63,14 @@ class TorrentListView(QTableView):
         self.menu.addSeparator()
         self.menu_open = QAction('Open in file explorer')
         self.menu_open.setIcon(QIcon('resources/files.svg'))
+        self.menu_move = QAction('Move')
+        self.menu_move.setIcon(QIcon('resources/move.svg'))
         self.menu_delete = QAction('Delete')
         self.menu_delete.setIcon(QIcon('resources/remove.svg'))
         self.menu.addAction(self.menu_open)
+        self.menu.addAction(self.menu_move)
         self.menu.addAction(self.menu_delete)
+        
         
         # create select column menu
         self.select_menu = QMenu(self)
