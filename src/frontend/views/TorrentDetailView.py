@@ -4,12 +4,15 @@ from PyQt6.QtWidgets import (
     QTableView, 
     QWidget, 
     QVBoxLayout, 
+    QHBoxLayout,
     QProgressBar, 
     QGroupBox,
     QLabel,
     QGridLayout,
     QScrollArea,
-    QAbstractItemView
+    QAbstractItemView,
+    QComboBox,
+    QSizePolicy
 )
 from PyQt6.QtGui import (
     QColor, 
@@ -20,8 +23,8 @@ from PyQt6.QtGui import (
     QBrush,
     QPalette
 )
-from PyQt6.QtCharts import QChart, QChartView, QSplineSeries, QValueAxis
-from PyQt6.QtCore import Qt
+from PyQt6.QtCharts import QChart, QChartView, QSplineSeries, QValueAxis, QDateTimeAxis
+from PyQt6.QtCore import Qt, pyqtSlot, QDateTime,QPointF, QEasingCurve#
 from datetime import datetime
 from psutil import disk_usage
 
@@ -30,8 +33,8 @@ from src.backend.metadata.TorrentData import TorrentFile
 from src.frontend.models.TorrentTreeModel import TorrentTreeModel
 from src.frontend.widgets.PartProgress import PartProgress
 from src.frontend.views.TorrentTreeView import TorrentTreeView
-from src.frontend.utils.utils import convert_bits, convert_seconds
-
+from src.frontend.utils.utils import convert_bits, convert_seconds, to_seconds
+import random
 
 class GeneralTab(QWidget):
     def __init__(self):
@@ -188,38 +191,82 @@ class ChartTab(QWidget):
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         
-        series = QSplineSeries()
-        series.append(10, 1)
-        series.append(5, 3)
-        series.append(8, 4)
-        series.append(9, 6)
-        series.append(2, 9)
+        sub_widget = QWidget()
+        sub_layout = QHBoxLayout()
+        sub_widget.setLayout(sub_layout)
+
+        label = QLabel('Period:')
+        sub_layout.addWidget(label)
+
+        self.combo_box = QComboBox()
+        self.combo_box.addItems(['1 min', '10 min', '30 min', '1 h', '6 h', '12 h', '24 h'])
+        self.combo_box.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.combo_box.currentTextChanged.connect(self.combobox_select)
+        sub_layout.addWidget(self.combo_box, Qt.AlignmentFlag.AlignLeft)
+        sub_layout.addStretch()
+
+        main_layout.addWidget(sub_widget)
+
+        current_m = QDateTime.currentDateTime()
+        m = QDateTime.currentDateTime()
+
+        self.series = QSplineSeries()
+        self.series.append(m.addSecs(-50).toMSecsSinceEpoch() , 1)
+        self.series.append(m.addSecs(-40).toMSecsSinceEpoch(), 20)
+        self.series.append(m.addSecs(-30).toMSecsSinceEpoch(), 1)
         
         chart = QChart()
-        chart.legend().hide()
-        chart.createDefaultAxes()
+        chart.setAnimationEasingCurve(QEasingCurve.Type.Linear)
+        chart.addSeries(self.series)
         chart.layout().setContentsMargins(0, 0, 0, 0)
         chart.setTheme(QChart.ChartTheme.ChartThemeDark)
         chart.setBackgroundRoundness(0)
-        chart.addSeries(series)
+        chart.legend().hide()
         
-        speed_axis = QValueAxis()
-        speed_axis.setRange(0, 10)
-        speed_axis.setTickCount(5)
-        speed_axis.setTitleText("speed axis")
-        chart.addAxis(speed_axis, Qt.AlignmentFlag.AlignLeft)
-        
-        time_axis = QValueAxis()
-        time_axis.setRange(0, 10)
-        time_axis.setTickCount(0)
-        time_axis.setTitleText("time axis")
-        chart.addAxis(time_axis, Qt.AlignmentFlag.AlignBottom)
+        self.time_axis = QDateTimeAxis()
+        self.time_axis.setTickCount(10)
+        self.time_axis.setFormat("hh:mm:ss")
+        self.time_axis.setTitleText("time axis")
+        self.time_axis.setRange(current_m.addSecs(-60), QDateTime.currentDateTime())
+        chart.addAxis(self.time_axis, Qt.AlignmentFlag.AlignBottom)
+        self.series.attachAxis(self.time_axis)
+
+        self.speed_axis = QValueAxis()
+        self.speed_axis.setRange(0, 30)
+        self.speed_axis.setTickCount(5)
+        self.speed_axis.setTitleText("speed axis")
+        chart.addAxis(self.speed_axis, Qt.AlignmentFlag.AlignLeft)
+        self.series.attachAxis(self.speed_axis)
         
         chart_view = QChartView(chart)
         chart_view.chart().setBackgroundBrush(QBrush(QColor("transparent")))
         chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         main_layout.addWidget(chart_view)
+    
+    @pyqtSlot(str)
+    def combobox_select(self, text: str):
+        secs = to_seconds(self.combo_box.currentText())
+        current_date = QDateTime.currentDateTime()
+        self.time_axis.setRange(current_date.addSecs(-secs), current_date)
+
+        if secs > 600:
+            self.time_axis.setFormat("hh:mm")
+        else:
+            self.time_axis.setFormat("hh:mm:ss")
+    
+    def _update(self):
+        # add test data 
+        r = random.randint(0, 100)
+        self.speed_axis.setRange(0, (r * 1.1))
+        self.series.append([QPointF(QDateTime.currentDateTime().toMSecsSinceEpoch(), r)])
+
+        secs = to_seconds(self.combo_box.currentText())
+        current_date = QDateTime.currentDateTime()
+        self.time_axis.setRange(current_date.addSecs(-secs), current_date)
+    
+    def _clear(self):
+        self.series.clear()
  
 class TrackersTab(QWidget):
     def __init__(self):
@@ -383,10 +430,12 @@ class TorrentDetailView(QTabWidget):
         self.general_tab._update(dt)
         self.trackers_tab._update(dt.tracker_list)
         self.peers_tab._update(dt.active_peers)
+        self.chart_tab._update()
         self.files_tab._update(dt.data.files)
     
     def _clear(self):
         self.general_tab._clear()
         self.trackers_tab._clear()
         self.peers_tab._clear()
+        self.chart_tab._clear()
         self.files_tab._clear()

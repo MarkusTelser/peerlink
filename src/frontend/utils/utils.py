@@ -38,6 +38,12 @@ def convert_seconds(seconds: int):
     else:
         return f"{round(seconds / 86400, 1)} d"
 
+def to_seconds(time: str):
+    index = ['s', 'min', 'h', 'd']
+    units = [1, 60, 3600, 86400]
+    count, unit = time.split(' ')
+    return int(count) * units[index.index(unit)]
+
 def showError(error, parent=None):
     error_window = QMessageBox(parent)
     error_window.setIcon(QMessageBox.Icon.Critical)

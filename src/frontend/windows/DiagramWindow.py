@@ -25,11 +25,11 @@ class DiagramWindow(QMainWindow):
         self.move(qtRectangle.topLeft())
         
         series = QSplineSeries()
-        series.append(10, 1)
-        series.append(5, 3)
-        series.append(8, 4)
-        series.append(9, 6)
-        series.append(2, 9)
+        #series.append(10, 1)
+        #series.append(5, 3)
+        #series.append(8, 4)
+        #series.append(9, 6)
+        #series.append(2, 9)
         
         chart = QChart()
         chart.legend().hide()
