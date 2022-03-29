@@ -72,7 +72,7 @@ class ApplicationWindow(QMainWindow):
         self.setAcceptDrops(True)
         self.setWindowTitle("Application Window - PeerLink")
         self.setWindowIcon(QIcon('resources/logo.svg'))
-        self.setObjectName('window')
+        self.setObjectName('ApplicationWindow')
         
         # set screen size
         min_size = QSize(800, 600)

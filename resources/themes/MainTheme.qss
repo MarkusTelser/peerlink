@@ -22,7 +22,7 @@ QLineEdit, QDialog QPushButton, QDialog QPushButton:hover, QMainWindow#LaunchWin
 }
 
 /*BACKGROUND COLORS*/
-#window{
+#ApplicationWindow, #AboutWindow{
 	background-color: #1e1e1e;
 }
 
