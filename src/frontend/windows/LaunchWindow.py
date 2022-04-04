@@ -56,7 +56,7 @@ class LaunchWindow(QMainWindow):
         
         self.addWidgets()
 
-    
+
     def addWidgets(self):
         default_font = QFont('Arial', 18)
         small_font = QFont('Arial', 12)
@@ -161,12 +161,11 @@ class LaunchWindow(QMainWindow):
     def open_mainwindow(self, data, extras, magnet=False):
         if self.main_window == None:
             self.main_window = ApplicationWindow(self.conf, self.session)
-            if not magnet:
-                self.main_window.appendRowEnd(data, extras)
+            self.main_window.appendTorrent(data, extras, from_magnet=magnet)
             self.main_window.show()
             self.close()
         else:
-            self.main_window.appendRowEnd(data, extras)
+            self.main_window.appendTorrent(data, extras, from_magnet=magnet)
     
 
     @pyqtSlot(QKeyEvent)

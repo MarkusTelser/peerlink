@@ -4,7 +4,7 @@ import threading
 from typing import List
 from src.backend.dht.DHT import DHT
 
-from src.backend.swarm import Swarm
+from src.backend.swarm import Swarm, SwarmStatus
 from src.backend.peer_protocol.TCPServer import TCPServer
 
 class Session(threading.Thread):
@@ -14,7 +14,7 @@ class Session(threading.Thread):
         self.loop = asyncio.new_event_loop()
         self.loop.set_debug(True)
         
-        self.swarm_list = list()
+        self._swarm_list = list()
         self.server = TCPServer()
         self.dht = DHT()
 
@@ -35,6 +35,10 @@ class Session(threading.Thread):
     @property
     def nodes(self):
         pass
+
+    @property
+    def swarm_list(self):
+        return [s for s in self._swarm_list if s.status != SwarmStatus.HIDDEN]
 
     def resume(self, *args, **kargs):
         f = self.queue.put((self._resume, args, kargs))
@@ -66,12 +70,12 @@ class Session(threading.Thread):
     
     def add(self, swarm):
         swarm.LISTEN_PORT = self.server.port
-        self.swarm_list.append(swarm)
-        return len(self.swarm_list) - 1 
+        self._swarm_list.append(swarm)
+        return len(self._swarm_list) - 1 
     
     def remove(self, index):
-        if len(self.swarm_list) > index:
-            del self.swarm_list[index]
+        if len(self._swarm_list) > index:
+            del self._swarm_list[index]
 
     def run(self):
         print('created event loop')

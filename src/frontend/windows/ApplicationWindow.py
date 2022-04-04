@@ -215,7 +215,7 @@ class ApplicationWindow(QMainWindow):
     
     def show(self, data=None):
         if data:
-            self.appendRowEnd(data) 
+            self.appendTorrent(data) 
     
     @pyqtSlot(QModelIndex)
     def select_torrent(self, index: QModelIndex):
@@ -277,6 +277,7 @@ class ApplicationWindow(QMainWindow):
         
         if dialog.exec():
             magnet_link = dialog.text_box.text()
+            self._open_magnet(magnet_link)
     
     @pyqtSlot()
     def open_aboutdialog(self):
@@ -475,7 +476,7 @@ class ApplicationWindow(QMainWindow):
         category_name = self.session.swarm_list[index].category #self.table_model.torrent_list[index].category
         self.side_panel.tabs[1][0].remove(category_name)
         
-        del self.session.swarm_list[index] 
+        self.session.remove(index) 
         self.table_model.remove(index)
         self.table_model._update(self.session.swarm_list)
 
@@ -548,8 +549,9 @@ class ApplicationWindow(QMainWindow):
             if torrent.category == category:
                 torrent.category = ''
 
-    def appendRowEnd(self, data, extras={}):
+    def appendTorrent(self, data, extras={}, from_magnet=False):
         # dont't add if info_hash is same as in list
+        print(data.info_hash, [x.data.info_hash for x in self.session.swarm_list])
         if data.info_hash in [x.data.info_hash for x in self.session.swarm_list]: # self.table_model.torrent_list
             showError('Torrent is already in list', self)
             return
@@ -588,15 +590,20 @@ class ApplicationWindow(QMainWindow):
         if 'pad_files' not in extras:
             extras['pad_files'] = self.config_loader.padd_files
         
-        swarm = Swarm()
-        swarm.set_meta_data(data, extras['path'])
+        if not from_magnet:
+            swarm = Swarm()
+            swarm.set_meta_data(data, extras['path'])
+            self.session.add(swarm)
+        else:
+            swarm = self.session._swarm_list[-1]
+            swarm.status = None
+            swarm.set_meta_data(swarm.data, extras['path'])
 
+        
         # add into backup files
         swarm.category = extras['category']
         swarm.backup_name = self.appdata_loader.backup_torrent(data.raw_data)
 
-        self.session.swarm_list.append(swarm)
-        
         print(extras)
 
         # actions if key true
@@ -611,11 +618,6 @@ class ApplicationWindow(QMainWindow):
         
         self.side_panel.tabs[1][0].append(swarm)
         self.table_model.append(swarm)
-    
-    def appendMagnet(self, magnet, extras):
-        s = Swarm()
-        self.session.swarm_list.append(s)
-        self.session.download_meta(len(self.session.swarm_list), magnet)
 
     def load_torrents(self, torrent_list):
         for torrent_data, extras in torrent_list:        
@@ -626,7 +628,7 @@ class ApplicationWindow(QMainWindow):
             swarm.start_date = extras['start_date']
             swarm.finish_date = extras['finish_date']
             
-            self.session.swarm_list.append(swarm) 
+            self.session.add(swarm) 
             
             self.side_panel.tabs[1][0].append(swarm)
             self.table_model.append(swarm)
@@ -658,14 +660,8 @@ class ApplicationWindow(QMainWindow):
     
     def keyPressEvent(self, event):
         if event.matches(QKeySequence.StandardKey.Paste):
-            try:
-                magnet_link = QApplication.clipboard().text()
-                magnet = MagnetParser.parse(magnet_link)
-                window = PreviewWindow(self.config_loader, self)
-                window.add_data.connect(self.appendRowEnd)
-                window.show(magnet)
-            except Exception as e:
-                pass
+            magnet_link = QApplication.clipboard().text()
+            self._open_magnet(magnet_link)
         super(ApplicationWindow, self).keyPressEvent(event)
 
     def closeEvent(self, event: QCloseEvent):
@@ -705,11 +701,20 @@ class ApplicationWindow(QMainWindow):
             data = TorrentParser.parse_filepath(file_path)
             if self.open_preview:
                 window = PreviewWindow(self.config_loader, self)
-                window.add_data.connect(self.appendRowEnd)
-                window.show(data)
+                window.add_data.connect(self.appendTorrent)
+                window.showTorrent(data)
             else:
-                self.appendRowEnd(data)
+                self.appendTorrent(data)
     
+    def _open_magnet(self, magnet_link):
+        try:
+            magnet = MagnetParser.parse(magnet_link)
+            window = PreviewWindow(self.config_loader, self)
+            window.add_data.connect(lambda *args, **kargs: self.appendTorrent(*args, **kargs, from_magnet=True))
+            window.showMagnet(magnet, self.session)
+        except Exception as e:
+            pass
+
     def _update(self):
         # update detail window, if it is open
         if self.vert_splitter.sizes()[1] > 0:

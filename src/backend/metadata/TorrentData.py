@@ -49,7 +49,7 @@ class TorrentData:
         return true_hash == hash
 
     @staticmethod
-    def gen_info_hash(info):
+    def gen_info_hash(info: dict):
         encoded = bencode(info)
         hash = sha1(encoded).digest()   
         return hash

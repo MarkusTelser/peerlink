@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from urllib.parse import unquote_plus
 from ..exceptions import *
+from .Bencoder import bencode, bdecode
 
 @dataclass
 class MagnetLink:
@@ -90,6 +91,19 @@ class MagnetParser:
             raise MissingRequiredField("Hash not in magnet link")
         
         return ret
+    
+    @staticmethod
+    def encode(magnet_link: MagnetLink, info_data: dict):
+        dec = dict()
+        
+        if len(magnet_link.trackers) > 0:
+            dec["announce"] = list(magnet_link.trackers)[0]
+        if len(magnet_link.trackers) > 1:
+            dec["announce-list"] = [list(magnet_link.trackers)]
+        
+        dec["info"] = info_data
+        
+        return bencode(dec)
 
 if __name__ == "__main__":
     link = "magnet:?xt=urn:btih:6EEFF1201E4649AB020B5104E9642D97935823DF&dn=Free+Solo+%282018%29+%2B+Extras+%281080p+BluRay+x265+HEVC+10bit+EAC3+5+1+Bandi%29&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Fipv6.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.demonii.si%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Fdenis.stalker.upeer.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce"

@@ -39,12 +39,12 @@ def run():
         # load console argument torrents
         if len(arg_torrents) != 0:
             for torrent, extras in arg_torrents:
-                window.appendRowEnd(torrent, extras)
+                window.appendTorrent(torrent, extras)
 
         # load console argument magnet links
         if len(arg_magnets) != 0:
             for magnet, extras in arg_magnets:
-                window.appendRowEnd(magnet, extras)
+                window.appendTorrent(magnet, extras)
     
     window.show()
 

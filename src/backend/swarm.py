@@ -1,5 +1,5 @@
 import logging
-from src.backend.metadata import MagnetLink, TorrentData, TorrentParser
+from src.backend.metadata import MagnetLink, TorrentData, TorrentParser, MagnetParser
 from src.backend.peer_protocol.MetadataManager import MetadataManager
 from src.backend.trackers.HTTPTracker import HTTPEvents
 from src.backend.metadata.Bencoder import bdecode
@@ -15,7 +15,15 @@ from .peer_protocol.Peer import MPeer, PeerSources
 import asyncio
 
 import time
+from enum import Enum
 from threading import Thread
+
+class SwarmStatus(Enum):
+    DOWNLOADING = 0
+    SEEDING = 1
+    PAUSED = 2
+    HIDDEN = 3
+
 
 class Swarm:
     MAX_TRACKER = 100
@@ -34,6 +42,7 @@ class Swarm:
         self.finish_date = ""
         self._time_active = 0
         self._last_date = None
+        self.status = SwarmStatus.PAUSED
         
         self.piece_manager = None
         self.file_handler = None
@@ -54,6 +63,7 @@ class Swarm:
         self._create_tracker(self.data.announces, self.data.info_hash)
     
     async def download_metadata(self, magnet_link: MagnetLink):
+        self.status = SwarmStatus.HIDDEN
         self.magnet_link = magnet_link
         self.metadata_manager = MetadataManager(self.magnet_link.info_hash, self.finished_metadata)
         self._create_tracker([list(self.magnet_link.trackers)], self.magnet_link.info_hash)
@@ -66,11 +76,14 @@ class Swarm:
         
         # assign existing info in magnet link to obj
         data = TorrentData()
+        info_dec = bdecode(self.metadata_manager.bdata)
+        data.info_hash = TorrentData.gen_info_hash(info_dec)
+        data.info_hash_hex = TorrentData.gen_info_hash_hex(info_dec)
         data.announces = self.magnet_link.trackers
-
+        data.raw_data = MagnetParser.encode(self.magnet_link, info_dec)
+ 
         # parse info part and append to existing obj
-        dec = bdecode(self.metadata_manager.bdata)
-        TorrentParser._parse_info(dec, data)
+        TorrentParser._parse_info(info_dec, data)
         
         self.data = data
         self.magnet_link = None

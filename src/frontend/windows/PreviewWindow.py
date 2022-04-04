@@ -317,11 +317,11 @@ class PreviewWindow(QMainWindow):
             self.label1.setText(f"Size: {torrent_size()} (of {free_space()} on local disk)")
             return 
 
-        if self.session.swarm_list[self.index].metadata_manager:
-            value = self.session.swarm_list[self.index].metadata_manager.downloaded
+        if self.session._swarm_list[self.index].metadata_manager:
+            value = self.session._swarm_list[self.index].metadata_manager.downloaded
             self.progress_bar.setValue(value)
         else:
-            torrent = self.session.swarm_list[self.index].data
+            torrent = self.session._swarm_list[self.index].data
             self.showTorrent(torrent)
 
 
