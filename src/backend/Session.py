@@ -67,7 +67,12 @@ class Session(threading.Thread):
     def add(self, swarm):
         swarm.LISTEN_PORT = self.server.port
         self.swarm_list.append(swarm)
+        return len(self.swarm_list) - 1 
     
+    def remove(self, index):
+        if len(self.swarm_list) > index:
+            del self.swarm_list[index]
+
     def run(self):
         print('created event loop')
         uvloop.install()
@@ -96,7 +101,7 @@ class Session(threading.Thread):
     async def _stop(self, index: int):
         print('STOP' * 100)
         if len(self.swarm_list) > index:
-            await self.swarm_list[index].stop()
+            self.swarm_list[index].stop()
     
     async def _download_meta(self, index: int, magnet):
         if len(self.swarm_list) > index:

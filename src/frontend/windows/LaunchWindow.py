@@ -17,11 +17,13 @@ from PyQt6.QtGui import (
     QPixmap, 
     QDragEnterEvent,
     QCloseEvent,
-    QKeySequence
+    QKeySequence,
+    QKeyEvent
 )
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, pyqtSlot
 
-from src.backend.metadata import TorrentParser, MagnetParser
+from src.backend.metadata import TorrentParser, MagnetParser, TorrentData
+from src.backend.Session import Session
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
 from src.frontend.windows.PreviewWindow import PreviewWindow
@@ -32,6 +34,7 @@ class LaunchWindow(QMainWindow):
         super().__init__()
         
         self.conf = conf
+        self.session = Session()
         self.main_window = None
         
         self.setAcceptDrops(True)
@@ -53,6 +56,7 @@ class LaunchWindow(QMainWindow):
         
         self.addWidgets()
 
+    
     def addWidgets(self):
         default_font = QFont('Arial', 18)
         small_font = QFont('Arial', 12)
@@ -129,6 +133,7 @@ class LaunchWindow(QMainWindow):
         
         QApplication.clipboard().dataChanged.connect(lambda: print('here'))
 
+
     def open_filedialog(self):
         file_dialog = FileDialog()
         if file_dialog.exec():
@@ -137,20 +142,11 @@ class LaunchWindow(QMainWindow):
                 if self.conf.open_preview:
                     window = PreviewWindow(self.conf, self)
                     window.add_data.connect(self.open_mainwindow)
-                    window.show(data)
+                    window.showTorrent(data)
                 else:
                     self.open_mainwindow(data)
-            
-    def open_mainwindow(self, data, extras):
-        if data:
-            if self.main_window == None:
-                self.main_window = ApplicationWindow(self.conf)
-                self.main_window.appendRowEnd(data, extras)
-                self.main_window.show()
-                self.close()
-            else:
-                self.main_window.appendRowEnd(data, extras)
     
+
     def open_magnetlink(self):
         magnet_dialog = MagnetLinkDialog()
         
@@ -158,31 +154,48 @@ class LaunchWindow(QMainWindow):
             magnet_link = magnet_dialog.text_box.text()
             magnet = MagnetParser.parse(magnet_link)
             window = PreviewWindow(self.conf, self)
-            window.add_data.connect(self.open_mainwindow)
-            window.show(magnet)
+            window.add_data.connect(lambda *args: self.open_mainwindow(*args, magnet=True))
+            window.showMagnet(magnet, self.session)
     
-    def keyPressEvent(self, event):
+
+    def open_mainwindow(self, data, extras, magnet=False):
+        if self.main_window == None:
+            self.main_window = ApplicationWindow(self.conf, self.session)
+            if not magnet:
+                self.main_window.appendRowEnd(data, extras)
+            self.main_window.show()
+            self.close()
+        else:
+            self.main_window.appendRowEnd(data, extras)
+    
+
+    @pyqtSlot(QKeyEvent)
+    def keyPressEvent(self, event: QKeyEvent):
         if event.matches(QKeySequence.StandardKey.Paste):
             try:
                 magnet_link = QApplication.clipboard().text()
                 magnet = MagnetParser.parse(magnet_link)
                 window = PreviewWindow(self.conf, self)
-                window.add_data.connect(self.open_mainwindow)
-                window.show(magnet)
+                window.add_data.connect(lambda *args: self.open_mainwindow(*args, magnet=True))
+                window.showMagnet(magnet, self.session)
             except Exception as e:
                 pass
         super(LaunchWindow, self).keyPressEvent(event)
 
+
+    @pyqtSlot(QDropEvent)
     def dropEvent(self, event: QDropEvent):
         for url in event.mimeData().urls():
             if url.isLocalFile() and url.path().endswith('.torrent'):
                 window = PreviewWindow(self.conf, self)
                 window.add_data.connect(self.open_mainwindow)
                 data = TorrentParser.parse_filepath(url.path())
-                window.show(data)
+                window.showTorrent(data)
 
         self.stacked_layout.setCurrentIndex(0)
     
+
+    @pyqtSlot(QDragEnterEvent)
     def dragEnterEvent(self, event: QDragEnterEvent):
         right_format = False
         for url in event.mimeData().urls():
@@ -195,11 +208,15 @@ class LaunchWindow(QMainWindow):
         
         self.stacked_layout.setCurrentIndex(1)
         event.accept()
-        
+    
+
+    @pyqtSlot(QDragLeaveEvent)
     def dragLeaveEvent(self, event: QDragLeaveEvent):
         self.stacked_layout.setCurrentIndex(0)
         event.accept()
-        
+    
+
+    @pyqtSlot(QCloseEvent)
     def closeEvent(self, event: QCloseEvent):
         self.conf.settings.setValue('show_launch', not self.show_again.isChecked())
         event.accept()

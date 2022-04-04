@@ -80,10 +80,15 @@ class Swarm:
         print(self.tracker_list)
         print(self.peer_list)
         self.set_meta_data(data, '/home/carlos/Desktop')
+        
+        self.stop()
+        
+        """
         for peer in self.peer_list:
             peer.set_torrent(self.piece_manager, self.file_handler)
             peer.resume()
         asyncio.create_task(self._start())
+        """
 
     def finished_torrent(self):
         if len(self.finish_date) == 0:
@@ -127,7 +132,7 @@ class Swarm:
         
         await self.announce_trackers(HTTPEvents.STOPPED)
     
-    async def stop(self):
+    def stop(self):
         for peer in self.peer_list:
             peer.stop()
 

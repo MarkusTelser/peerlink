@@ -16,15 +16,15 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QProgressBar
 )
-from PyQt6.QtGui import QGuiApplication, QIcon
-from PyQt6.QtCore import pyqtSignal, QTimer, QSize, Qt
+from PyQt6.QtGui import QGuiApplication, QIcon, QCloseEvent
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, QTimer, QSize, Qt
 from os.path import expanduser
 from psutil import disk_usage
 from os.path import exists, isdir
 import sys
 
 from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
-from src.backend import Swarm, Session
+from src.backend import Swarm
 from src.backend.metadata.MagnetLink import MagnetLink
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.views.TorrentTreeView import TorrentTreeView
@@ -39,8 +39,11 @@ class PreviewWindow(QMainWindow):
     def __init__(self, conf: ConfigLoader, parent=None):
         super(PreviewWindow, self).__init__(parent=parent)
         
-        self.torrent_data = None
+        
         self.conf = conf
+        self.session = None
+        self.torrent_data = None
+        self._close_state = None
 
         self.setWindowTitle("View Torrent - PeerLink")
         self.setWindowIcon(QIcon('resources/logo.svg'))
@@ -61,9 +64,9 @@ class PreviewWindow(QMainWindow):
 
         self.addWidgets()
 
-        timer = QTimer(self)
-        timer.timeout.connect(self._update)
-        timer.start(self.UPDATE_DELAY)
+        self.update_task = QTimer(self)
+        self.update_task.timeout.connect(self._update)
+        self.update_task.start(self.UPDATE_DELAY)
     
     def addWidgets(self):
         # set layout and create central widget
@@ -163,7 +166,6 @@ class PreviewWindow(QMainWindow):
         info_layout.addWidget(self.label3, 2, 0)
         info_layout.addWidget(self.label4, 3, 0)
         info_layout.setContentsMargins(10, 10, 0, 10)
-        #info_layout.insertStretch(-1, 1)
         
         group_layout.addWidget(info_box)
         
@@ -174,15 +176,13 @@ class PreviewWindow(QMainWindow):
        
         
         # add cancel and ok button
-        button_box = QDialogButtonBox()
-        button_box.addButton(QDialogButtonBox.StandardButton.Cancel)
-        button_box.addButton(QDialogButtonBox.StandardButton.Ok)
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        
-        #button_box.layout().setDirection(QBoxLayout.Direction.LeftToRight)
-        button_box.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.main_layout.addWidget(button_box, 1, 1)
+        self.button_box = QDialogButtonBox()
+        self.button_box.addButton(QDialogButtonBox.StandardButton.Cancel)
+        self.button_box.addButton(QDialogButtonBox.StandardButton.Ok)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.button_box.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.main_layout.addWidget(self.button_box, 1, 1)
         
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
@@ -203,37 +203,37 @@ class PreviewWindow(QMainWindow):
         hor_splitter.setStretchFactor(1, 80)
         hor_splitter.setCollapsible(1, False)
         self.main_layout.addWidget(hor_splitter, 0, 0, 1, 2)
-        super().show()
-
-    def show(self, data: TorrentData | MagnetLink):
-        if type(data) == TorrentData:
-            self._show_torrent(data)
-        elif type(data) == MagnetLink:
-            self._show_magnet(data)
-        super().show()
     
-    def _show_torrent(self, torrent_data):
-        print('SHOW Torrent')
+    def showTorrent(self, torrent_data):
         self.torrent_data = torrent_data
         free_space = lambda: convert_bits(disk_usage('/').free)
         torrent_size = lambda: convert_bits(torrent_data.files.length)
-        self.label1.setText(self.label1.text() + f"{torrent_size()} (of {free_space()} on local disk)")
+        
+        self.label1.setText(f"Size: {torrent_size()} (of {free_space()} on local disk)")
         self.label2.setText(self.label2.text() + torrent_data.creation_date)
         self.label3.setText(self.label3.text() + torrent_data.created_by)
         self.label4.setText(self.label4.text() + torrent_data.comment)
         self.label5.setText(self.label5.text() + torrent_data.info_hash_hex)
         
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
         self.setWindowTitle(torrent_data.files.name)
         self.model.update(torrent_data.files)
+        self.progress_bar.hide()
 
-    def _show_magnet(self, magnet_link):
-        print('SHOW MAGNET', magnet_link)
-        self.session = Session()
-        self.session.add(Swarm())
-        self.session.download_meta(0, magnet_link)
+        super().show()
+
+    def showMagnet(self, magnet_link, session):
+        self.session = session
+        self.index = self.session.add(Swarm())
+        self.session.download_meta(self.index, magnet_link)
+
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setDisabled(True)
+        self.setWindowTitle(magnet_link.name or "View Torrent - PeerLink")
+
+        super().show()
         
     
-    """ the following methods are all slots """
+    @pyqtSlot()
     def pressedPathSelect(self):
         file_dialog = QFileDialog(self, 'Select Directory')
         file_dialog.setFileMode(QFileDialog.FileMode.Directory)
@@ -247,6 +247,8 @@ class PreviewWindow(QMainWindow):
             file_path = file_dialog.selectedFiles()[0]
             self.download_path.setText(file_path)
     
+
+    @pyqtSlot()    
     def accept(self):        
         # check if path is not empty, correct and a directory
         default_path = self.default_path.isChecked()
@@ -289,22 +291,38 @@ class PreviewWindow(QMainWindow):
         }
         
         self.add_data.emit(self.torrent_data, extras)
+        self._close_state = True
         self.close()
     
+
+    @pyqtSlot()
     def reject(self):
+        self._close_state = False
         self.close()
 
-    def _update(self):
-        if not self.torrent_data and self.progress_bar:
-            if self.session.swarm_list[0].metadata_manager:
-                value = self.session.swarm_list[0].metadata_manager.downloaded
-            else:
-                value = 100
+    
+    @pyqtSlot(QCloseEvent)
+    def closeEvent(self, event):
+        if not self._close_state and self.session:
+            self.session.remove(self.index)
+        self.update_task.stop()
+        super().closeEvent(event)
 
-            if value == 100 and not self.torrent_data:
-                torrent = self.session.swarm_list[0].data
-                self._show_torrent(torrent)
+
+    def _update(self):
+        if self.torrent_data:
+            # refresh free space on local disk
+            free_space = lambda: convert_bits(disk_usage('/').free)
+            torrent_size = lambda: convert_bits(self.torrent_data.files.length)
+            self.label1.setText(f"Size: {torrent_size()} (of {free_space()} on local disk)")
+            return 
+
+        if self.session.swarm_list[self.index].metadata_manager:
+            value = self.session.swarm_list[self.index].metadata_manager.downloaded
             self.progress_bar.setValue(value)
+        else:
+            torrent = self.session.swarm_list[self.index].data
+            self.showTorrent(torrent)
 
 
 if __name__ == "__main__":

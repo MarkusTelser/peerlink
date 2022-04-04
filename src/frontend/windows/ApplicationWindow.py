@@ -59,10 +59,10 @@ class ApplicationWindow(QMainWindow):
     BUG_LINK = 'https://github.com/MarkusTelser/peerlink/issues'
     THANKS_LINK = 'https://saythanks.io/to/MarkusTelser'
     
-    def __init__(self, config_loader):
+    def __init__(self, config_loader, session=None):
         super(ApplicationWindow, self).__init__()
         
-        self.session = Session()
+        self.session = session or Session()
         self.config_loader = config_loader
         self.appdata_loader = AppDataLoader()
         self.show_launch = self.config_loader.show_launch
