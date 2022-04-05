@@ -584,7 +584,7 @@ class ApplicationWindow(QMainWindow):
         if 'category' not in extras:
             extras['category'] = self.config_loader.default_category
         if 'startegy' not in extras:
-            pass
+            extras['strategy'] = "RAREST-FIRST"
         if 'check_hash' not in extras:
             extras['check_hash'] = self.config_loader.check_hashes
         if 'pad_files' not in extras:

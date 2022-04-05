@@ -153,12 +153,15 @@ class LaunchWindow(QMainWindow):
         if magnet_dialog.exec():
             magnet_link = magnet_dialog.text_box.text()
             magnet = MagnetParser.parse(magnet_link)
-            window = PreviewWindow(self.conf, self)
-            window.add_data.connect(lambda *args: self.open_mainwindow(*args, magnet=True))
-            window.showMagnet(magnet, self.session)
-    
+           
+            if self.conf.open_preview:
+                window = PreviewWindow(self.conf, self)
+                window.add_data.connect(lambda *args: self.open_mainwindow(*args, magnet=True))
+                window.showMagnet(magnet, self.session)
+            else:
+                pass # TODO implement silent download for magnet links
 
-    def open_mainwindow(self, data, extras, magnet=False):
+    def open_mainwindow(self, data, extras={}, magnet=False):
         if self.main_window == None:
             self.main_window = ApplicationWindow(self.conf, self.session)
             self.main_window.appendTorrent(data, extras, from_magnet=magnet)
@@ -186,11 +189,13 @@ class LaunchWindow(QMainWindow):
     def dropEvent(self, event: QDropEvent):
         for url in event.mimeData().urls():
             if url.isLocalFile() and url.path().endswith('.torrent'):
-                window = PreviewWindow(self.conf, self)
-                window.add_data.connect(self.open_mainwindow)
-                data = TorrentParser.parse_filepath(url.path())
-                window.showTorrent(data)
-
+                if self.conf.open_preview:
+                    window = PreviewWindow(self.conf, self)
+                    window.add_data.connect(self.open_mainwindow)
+                    data = TorrentParser.parse_filepath(url.path())
+                    window.showTorrent(data)
+                else:
+                    self.open_mainwindow(data)
         self.stacked_layout.setCurrentIndex(0)
     
 

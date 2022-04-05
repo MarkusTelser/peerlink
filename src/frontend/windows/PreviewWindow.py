@@ -290,9 +290,9 @@ class PreviewWindow(QMainWindow):
             'not_again' : not_again
         }
         
-        self.add_data.emit(self.torrent_data, extras)
         self._close_state = True
         self.close()
+        self.add_data.emit(self.torrent_data, extras)        
     
 
     @pyqtSlot()
