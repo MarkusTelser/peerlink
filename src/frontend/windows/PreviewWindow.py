@@ -27,8 +27,8 @@ from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
 from src.backend import Swarm
 from src.backend.metadata.MagnetLink import MagnetLink
 from src.frontend.utils.ConfigLoader import ConfigLoader
-from src.frontend.views.TorrentTreeView import TorrentTreeView
-from src.frontend.models.TorrentTreeModel import TorrentTreeModel
+from src.frontend.views.FileTreeView import FileTreeView
+from src.frontend.models.FileTreeModel import FileTreeModel
 from src.frontend.utils.utils import convert_bits, showError
 
 
@@ -39,14 +39,13 @@ class PreviewWindow(QMainWindow):
     def __init__(self, conf: ConfigLoader, parent=None):
         super(PreviewWindow, self).__init__(parent=parent)
         
-        
         self.conf = conf
         self.session = None
         self.torrent_data = None
         self._close_state = None
 
-        self.setWindowTitle("View Torrent - PeerLink")
-        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowTitle(self.tr("View Torrent - PeerLink"))
+        self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         
         # set minimum and standard window size
         min_width, min_height = 300, 300
@@ -83,7 +82,7 @@ class PreviewWindow(QMainWindow):
         group_layout.setSpacing(20)
         group_widget.setLayout(group_layout)
         
-        groupbox = QGroupBox("Path")
+        groupbox = QGroupBox(self.tr("Path"))
         vbox = QGridLayout()
         groupbox.setLayout(vbox)
         group_layout.addWidget(groupbox)
@@ -92,19 +91,19 @@ class PreviewWindow(QMainWindow):
         # add download path input
         self.download_path = QLineEdit()
         self.download_path.setText(self.conf.default_path)
-        self.download_path.setPlaceholderText('Enter download path')
+        self.download_path.setPlaceholderText(self.tr("Enter download path"))
         vbox.addWidget(self.download_path, 0, 0)
 
         # add download path selector
-        self.path_select = QPushButton("select folder")
+        self.path_select = QPushButton(self.tr("select folder"))
         self.path_select.clicked.connect(self.pressedPathSelect)
         vbox.addWidget(self.path_select, 0, 1)
 
-        self.default_path = QCheckBox("set as default path")
+        self.default_path = QCheckBox(self.tr("set as default path"))
         vbox.addWidget(self.default_path, 1, 0, 1, 0)
         
         # add combo box for category
-        category_box = QGroupBox("Category")
+        category_box = QGroupBox(self.tr("Category"))
         category_layout = QVBoxLayout()
         category_box.setLayout(category_layout)
         group_layout.addWidget(category_box)
@@ -113,29 +112,30 @@ class PreviewWindow(QMainWindow):
         self.category.setEditable(True)
         self.category.addItems(self.conf.categorys)
         self.category.setEditText(self.conf.default_category)
-        self.category.lineEdit().setPlaceholderText('Enter new/existing category')
-        self.default_category = QCheckBox('set as default category')
+        self.category.lineEdit().setPlaceholderText(self.tr("Enter new/existing category"))
+        self.default_category = QCheckBox(self.tr("set as default category"))
         
         category_layout.addWidget(self.category)
         category_layout.addWidget(self.default_category)
         
-        option_box = QGroupBox("Options")
+        option_box = QGroupBox(self.tr("Options"))
         option_layout = QGridLayout()
         option_box.setLayout(option_layout)
         group_layout.addWidget(option_box)
         
         # add combo box for download strategys
-        strategy_label = QLabel('Download Strategy:')
+        strategy_label = QLabel(self.tr("Download Strategy:"))
         self.download_strategy = QComboBox()
-        items = ['rarest first (default)', 'sequential', 'random']
-        self.download_strategy.addItems(items)
+        strategys = [self.tr('rarest first (default)'), self.tr('sequential'), self.tr('random')]
+        self.download_strategy.addItems(strategys)
+        self.download_strategy.setCurrentIndex(self.conf.strategy)
         option_layout.addWidget(strategy_label, 3, 0)
         option_layout.addWidget(self.download_strategy, 3, 1)
 
         # add extra checkbox options
-        self.start_box = QCheckBox("start immediately")
-        self.checkhash_box = QCheckBox("check hashes")
-        self.pad_box = QCheckBox("pre pad empty files")
+        self.start_box = QCheckBox(self.tr("start immediately"))
+        self.checkhash_box = QCheckBox(self.tr("check hashes"))
+        self.pad_box = QCheckBox(self.tr("pre pad empty files"))
         self.start_box.setChecked(self.conf.auto_start)
         self.checkhash_box.setChecked(self.conf.check_hashes)
         self.pad_box.setChecked(self.conf.padd_files)
@@ -144,19 +144,19 @@ class PreviewWindow(QMainWindow):
         option_layout.addWidget(self.pad_box, 6, 0, 1, 0)
 
         # add info about torrent
-        info_box = QGroupBox("Torrent Information")
+        info_box = QGroupBox(self.tr("Torrent Information"))
         info_layout = QGridLayout()
         info_box.setLayout(info_layout)
         info_box.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
-        bold = lambda txt: f"<b>{txt}</b>"  
-        self.label1 = QLabel(bold('Size: '))
-        self.label2 = QLabel(bold('Creation date: '))
-        self.label3 = QLabel(bold('Created by: '))
-        self.label4 = QLabel(bold('Comment: '))
-        self.label5 = QLabel(bold('Hash: '))
+        italic = lambda txt: f"<em>{txt}</em>"  
+        self.label1 = QLabel(italic(self.tr("Size:")))
+        self.label2 = QLabel(italic(self.tr("Creation date:")))
+        self.label3 = QLabel(italic(self.tr("Created by:")))
+        self.label4 = QLabel(italic(self.tr("Comment:")))
+        self.label5 = QLabel(italic(self.tr("Hash:")))
         self.label1.setWordWrap(True)
         self.label2.setWordWrap(True)
         self.label3.setWordWrap(True)
@@ -170,7 +170,7 @@ class PreviewWindow(QMainWindow):
         group_layout.addWidget(info_box)
         
         # checkbox don't show again
-        self.not_again = QCheckBox("don't show again")
+        self.not_again = QCheckBox(self.tr("don't show again"))
         group_layout.addStretch()
         group_layout.addWidget(self.not_again)
        
@@ -191,8 +191,8 @@ class PreviewWindow(QMainWindow):
         self.main_layout.addWidget(self.progress_bar, 1, 0)
 
         # create tree view of file struct
-        self.model = TorrentTreeModel()
-        self.tree_view = TorrentTreeView(self.model)
+        self.model = FileTreeModel()
+        self.tree_view = FileTreeView(self.model)
         self.tree_view.setModel(self.model)
         
         # add groups and tree widgets
@@ -206,14 +206,15 @@ class PreviewWindow(QMainWindow):
     
     def showTorrent(self, torrent_data):
         self.torrent_data = torrent_data
-        free_space = lambda: convert_bits(disk_usage('/').free)
+        italic = lambda txt: f"<em>{txt}</em>"  
+        free_space = lambda: convert_bits(disk_usage("/").free)
         torrent_size = lambda: convert_bits(torrent_data.files.length)
         
-        self.label1.setText(f"Size: {torrent_size()} (of {free_space()} on local disk)")
-        self.label2.setText(self.label2.text() + torrent_data.creation_date)
-        self.label3.setText(self.label3.text() + torrent_data.created_by)
-        self.label4.setText(self.label4.text() + torrent_data.comment)
-        self.label5.setText(self.label5.text() + torrent_data.info_hash_hex)
+        self.label1.setText(self._size_text(torrent_size(), free_space()))
+        self.label2.setText(f"{self.label2.text()} {torrent_data.creation_date}")
+        self.label3.setText(f"{self.label3.text()} {torrent_data.created_by}")
+        self.label4.setText(f"{self.label4.text()} {torrent_data.comment}")
+        self.label5.setText(f"{self.label5.text()} {torrent_data.info_hash_hex}")
         
         self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
         self.setWindowTitle(torrent_data.files.name)
@@ -228,20 +229,20 @@ class PreviewWindow(QMainWindow):
         self.session.download_meta(self.index, magnet_link)
 
         self.button_box.button(QDialogButtonBox.StandardButton.Ok).setDisabled(True)
-        self.setWindowTitle(magnet_link.name or "View Torrent - PeerLink")
+        self.setWindowTitle(magnet_link.name or self.tr("View Torrent - PeerLink"))
 
         super().show()
         
     
     @pyqtSlot()
     def pressedPathSelect(self):
-        file_dialog = QFileDialog(self, 'Select Directory')
+        file_dialog = QFileDialog(self, self.tr("Select Directory - PeerLink"))
         file_dialog.setFileMode(QFileDialog.FileMode.Directory)
         file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog)
         file_dialog.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
         file_dialog.setOption(QFileDialog.Option.ShowDirsOnly)
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        file_dialog.setDirectory(expanduser('~'))
+        file_dialog.setDirectory(expanduser("~"))
 
         if file_dialog.exec():
             file_path = file_dialog.selectedFiles()[0]
@@ -254,20 +255,20 @@ class PreviewWindow(QMainWindow):
         default_path = self.default_path.isChecked()
         path = self.download_path.text().strip()
         if not path:
-            showError('Save path is empty!', self)
+            showError(self.tr("Save path is empty!"), self)
             return
         if not exists(path):
-            showError('Save path does not exist!', self)
+            showError(self.tr("Save path does not exist!"), self)
             return
         if not isdir(path):
-            showError('Save path is not a directory!', self)
+            showError(self.tr("Save path is not a directory!"), self)
             return
         
         category = self.category.currentText()
         default_category = self.default_category.isChecked()
         
         # check which options are selected
-        strategy = self.download_strategy.currentText().replace(' (default)', '')
+        strategy = self.download_strategy.currentIndex()
         start = self.start_box.isChecked()
         check_hash = self.checkhash_box.isChecked()
         pad_files = self.pad_box.isChecked()
@@ -308,13 +309,16 @@ class PreviewWindow(QMainWindow):
         self.update_task.stop()
         super().closeEvent(event)
 
+    def _size_text(self, torrent_size, size_disc):
+        return f"<em>{self.tr('Size:')}</em> {torrent_size} ({self.tr('of {} on local disk').format(size_disc)})"
 
     def _update(self):
         if self.torrent_data:
             # refresh free space on local disk
-            free_space = lambda: convert_bits(disk_usage('/').free)
+            italic = lambda txt: f"<em>{txt}</em>"  
+            free_space = lambda: convert_bits(disk_usage("/").free)
             torrent_size = lambda: convert_bits(self.torrent_data.files.length)
-            self.label1.setText(f"Size: {torrent_size()} (of {free_space()} on local disk)")
+            self.label1.setText(self._size_text(torrent_size(), free_space()))
             return 
 
         if self.session._swarm_list[self.index].metadata_manager:

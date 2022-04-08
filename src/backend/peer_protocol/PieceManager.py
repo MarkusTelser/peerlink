@@ -6,9 +6,10 @@ from dataclasses import dataclass
 import time
 
 class DownloadStrategy(Enum):
-    SEQUENTIAL = 0
-    RANDOM = 1
-    RARESTFIRST = 2
+    RARESTFIRST = 0
+    SEQUENTIAL = 1
+    RANDOM = 2
+    
     
 @dataclass
 class Piece:
@@ -99,8 +100,9 @@ class PieceManager:
         print(len(bitfield), ceil(self.piece_count / 8))
         if len(bitfield) != ceil(self.piece_count / 8):
             raise Exception("bitfield wrong size")
-        t = time.time()
+        
         print('before adding  bitfield')
+        t = time.time()
         for i, byte in enumerate(bitfield):
             bits = '{0:08b}'.format(byte)
             for j, bit in enumerate(bits):
@@ -109,7 +111,7 @@ class PieceManager:
                     if index >= self.piece_count:
                         return
                     self.add_piece(peer_id, index)
-        print('after adding  bitfield', time.time() - t)
+        print('after adding  bitfield', time.time() - t, peer_id)
 
     def add_piece(self, peer_id, index):
         if len(self.pieces) != 0:
@@ -144,14 +146,14 @@ class PieceManager:
 
         raise Exception('piece already rejected')
     
-    def set_strategy(self, startegy: DownloadStrategy | str):
-        s = startegy.upper()
-        if s == "RAREST-FIRST":
-            self.download_strategy = DownloadStrategy.RARESTFIRST
-        elif s == "SEQUENTIAL":
-            self.download_strategy = DownloadStrategy.SEQUENTIAL
-        elif s == "RANDOM":
-            self.download_strategy = DownloadStrategy.RANDOM
+    def set_strategy(self, strategy: DownloadStrategy | int):
+        if type(strategy) == DownloadStrategy:
+            self.download_strategy = strategy
+        elif 0 <= strategy < 3:
+            print('---' * 100)
+            
+            self.download_strategy = DownloadStrategy(strategy)
+            print(strategy, self.download_strategy)
         else:
             # TODO LOG warnings invalid strategy
             pass

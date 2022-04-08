@@ -8,7 +8,7 @@ params = [
     '--name', 'peerlink' + __version__,
     '--add-data', '/home/carlos/Code/Python/peerlink/resources:resources/',
     '--add-data', '/home/carlos/Code/Python/peerlink/LICENSE.txt:.',
-    '--icon', '/home/carlos/Code/Python/peerlink/resources/logo.ico',
+    '--icon', '/home/carlos/Code/Python/peerlink/resources/icons/logo.ico',
     'main.py'
 ]
 

@@ -16,7 +16,7 @@ class DiagramWindow(QMainWindow):
         
         self.resize(600, 600)
         self.setWindowTitle("Diagram - PeerLink")
-        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         
         # center in the middle of screen
         qtRectangle = self.frameGeometry()

@@ -9,7 +9,7 @@ class SearchBar(QLineEdit):
         self.setObjectName('SearchBar')
         self.setMinimumWidth(100) 
         self.setPlaceholderText('Search...')
-        self.addAction(QIcon('resources/search.svg'), QLineEdit.ActionPosition.LeadingPosition)
+        self.addAction(QIcon('resources/icons/search.svg'), QLineEdit.ActionPosition.LeadingPosition)
         self.setClearButtonEnabled(True)
-        self.findChild(QAction, "_q_qlineeditclearaction").setIcon(QIcon("resources/cancel.svg"))
+        self.findChild(QAction, "_q_qlineeditclearaction").setIcon(QIcon("resources/icons/cancel.svg"))
         

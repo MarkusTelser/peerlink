@@ -9,13 +9,12 @@ class FileDialog(QFileDialog):
 
         self.setBaseSize(1000, 700)
         self.setMinimumSize(400, 400)
-        self.setWindowIcon(QIcon('resources/logo.svg'))
-        self.setWindowTitle('Open Torrent File - PeerLink')
+        self.setWindowIcon(QIcon("resources/icons/logo.svg"))
+        self.setWindowTitle(self.tr("Open Torrent File - PeerLink"))
         
         self.setFileMode(QFileDialog.FileMode.ExistingFiles)
-        self.setNameFilter("Torrent files (*.torrent)")
+        self.setNameFilter(self.tr("Torrent files (*.torrent)"))
         self.setOption(QFileDialog.Option.DontUseNativeDialog, False)
         self.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
-        self.setMimeTypeFilters(['application/x-bittorrent'])
         self.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        self.setDirectory(expanduser('~'))
+        self.setDirectory(expanduser("~"))

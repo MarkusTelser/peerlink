@@ -10,7 +10,7 @@ class StatusBar(QStatusBar):
         super().__init__()
         
         download_icon = QLabel()
-        download_icon.setPixmap(QIcon('resources/downloading.svg').pixmap(QSize(20, 20)))
+        download_icon.setPixmap(QIcon('resources/icons/downloading.svg').pixmap(QSize(20, 20)))
         self.addPermanentWidget(download_icon)
         
         self.download_speed = QLabel("0 B/s")
@@ -18,7 +18,7 @@ class StatusBar(QStatusBar):
         self.addPermanentWidget(self.download_speed)
         
         upload_icon = QLabel()
-        upload_icon.setPixmap(QIcon('resources/seeding.svg').pixmap(QSize(20, 20)))
+        upload_icon.setPixmap(QIcon('resources/icons/seeding.svg').pixmap(QSize(20, 20)))
         self.addPermanentWidget(upload_icon)
         
         self.upload_speed = QLabel("0 B/s")
@@ -26,7 +26,7 @@ class StatusBar(QStatusBar):
         self.addPermanentWidget(self.upload_speed)
         
         peers_icon = QLabel()
-        peers_icon.setPixmap(QIcon('resources/peer.svg').pixmap(QSize(20, 20)))
+        peers_icon.setPixmap(QIcon('resources/icons/peer.svg').pixmap(QSize(20, 20)))
         self.addPermanentWidget(peers_icon)
         
         self.peers = QLabel("0 Peers")
@@ -34,7 +34,7 @@ class StatusBar(QStatusBar):
         self.addPermanentWidget(self.peers)
         
         nodes_icon = QLabel()
-        nodes_icon.setPixmap(QIcon('resources/node.svg').pixmap(QSize(20, 20)))
+        nodes_icon.setPixmap(QIcon('resources/icons/node.svg').pixmap(QSize(20, 20)))
         self.addPermanentWidget(nodes_icon)
         
         self.nodes = QLabel("0 Nodes")
@@ -42,11 +42,11 @@ class StatusBar(QStatusBar):
         self.addPermanentWidget(self.nodes)
         
         self.speed = QPushButton('')
-        self.speed.setIcon(QIcon('resources/chart.svg'))
+        self.speed.setIcon(QIcon('resources/icons/chart.svg'))
         self.addPermanentWidget(self.speed)
         
         self.statistics = QPushButton('')
-        self.statistics.setIcon(QIcon('resources/stats.svg'))
+        self.statistics.setIcon(QIcon('resources/icons/stats.svg'))
         self.addPermanentWidget(self.statistics)
         
         self.setContentsMargins(2, 2, 2, 2)

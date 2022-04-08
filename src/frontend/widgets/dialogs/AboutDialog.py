@@ -23,7 +23,7 @@ class GeneralTab(QWidget):
         self.setLayout(main_layout)
         
         wrapper_label = QLabel('image')
-        pixmap = QPixmap('resources/logo.svg')
+        pixmap = QPixmap('resources/icons/logo.svg')
         wrapper_label.setPixmap(pixmap)
         main_layout.addWidget(wrapper_label, alignment=Qt.AlignmentFlag.AlignCenter)
         

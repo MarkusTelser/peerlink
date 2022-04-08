@@ -2,7 +2,7 @@ from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import QTreeView
 
 
-class TorrentTreeView(QTreeView):
+class FileTreeView(QTreeView):
     def __init__(self, model):
         super().__init__()
         

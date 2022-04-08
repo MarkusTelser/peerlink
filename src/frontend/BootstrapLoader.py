@@ -1,6 +1,7 @@
 import sys
 from os import chdir
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QTranslator, QLocale, QLibraryInfo
 
 from __version__ import __version__
 from src.frontend.windows.LaunchWindow import LaunchWindow
@@ -19,6 +20,16 @@ def run():
     app.setApplicationName('peerlink')
     app.setApplicationVersion(__version__)
     app.setStyleSheet(open('resources/themes/MainTheme.qss').read())
+
+    # load the system translations provided by qt
+    qtTranslator = QTranslator()
+    qtTranslator.load("qt_de", QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath))
+    app.installTranslator(qtTranslator)
+
+    # load custom translations for this application
+    translator = QTranslator()
+    translator.load(QLocale(), 'resources/languages/qt_de.qm')
+    app.installTranslator(translator)
     
     args = args_parser()
     conf = ConfigLoader()

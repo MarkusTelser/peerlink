@@ -34,11 +34,11 @@ class CategoryList(QListWidget):
         self.menu = QMenu(self)
         self.menu.setContentsMargins(10, 0, 0, 0)
         self.menu_new = QAction('New')
-        self.menu_new.setIcon(QIcon('resources/add.svg'))
+        self.menu_new.setIcon(QIcon('resources/icons/add.svg'))
         self.menu_rename = QAction('Rename')
-        self.menu_rename.setIcon(QIcon('resources/rename.svg'))
+        self.menu_rename.setIcon(QIcon('resources/icons/rename.svg'))
         self.menu_delete = QAction('Delete')
-        self.menu_delete.setIcon(QIcon('resources/remove.svg'))
+        self.menu_delete.setIcon(QIcon('resources/icons/remove.svg'))
         self.menu.addAction(self.menu_new)
         self.menu.addAction(self.menu_rename)
         self.menu.addAction(self.menu_delete)
@@ -81,9 +81,9 @@ class CategoryTab(QWidget):
         self.info_list = QListWidget()
         self.info_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.info_list.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.option1 = QListWidgetItem(QIcon('resources/general.svg'), "All (0)", self.info_list)
-        self.option2 = QListWidgetItem(QIcon('resources/category.svg'), "Categorized (0)", self.info_list)
-        self.option3 = QListWidgetItem(QIcon('resources/inactive.svg'), "Uncategorized (0)", self.info_list)
+        self.option1 = QListWidgetItem(QIcon('resources/icons/general.svg'), "All (0)", self.info_list)
+        self.option2 = QListWidgetItem(QIcon('resources/icons/category.svg'), "Categorized (0)", self.info_list)
+        self.option3 = QListWidgetItem(QIcon('resources/icons/inactive.svg'), "Uncategorized (0)", self.info_list)
         main_layout.addWidget(self.info_list)    
         
         self.cat_box = QGroupBox("Categorys")
@@ -244,7 +244,7 @@ class LogTab(QWidget):
         filter.setStyleSheet('border: 2px solid black;')
         filter.setPlaceholderText('Filter...')
         filter.setClearButtonEnabled(True)
-        filter.findChild(QAction, "_q_qlineeditclearaction").setIcon(QIcon("resources/cancel.svg"))
+        filter.findChild(QAction, "_q_qlineeditclearaction").setIcon(QIcon("resources/icons/cancel.svg"))
         main_layout.addWidget(filter)
         
         filter.textChanged.connect(self.filter)
@@ -326,30 +326,30 @@ class FilterTab(QWidget):
         
         data = {
             'Torrents' : [
-                ('Active', 'resources/active.svg'),
-                ('Inactive', 'resources/inactive.svg'),
-                ('Downloading', 'resources/downloading.svg'),
-                ('Leeching', 'resources/leeching.svg'),
-                ('Seeding', 'resources/seeding.svg'),
-                ('Overseeding', 'resources/overseeding.svg'),
-                ('Stalling', 'resources/stalling.svg'),
-                ('Download Stalling', 'resources/stalling_download.svg'),
-                ('Upload Stalling', 'resources/stalling_upload.svg')
+                ('Active', 'resources/icons/active.svg'),
+                ('Inactive', 'resources/icons/inactive.svg'),
+                ('Downloading', 'resources/icons/downloading.svg'),
+                ('Leeching', 'resources/icons/leeching.svg'),
+                ('Seeding', 'resources/icons/seeding.svg'),
+                ('Overseeding', 'resources/icons/overseeding.svg'),
+                ('Stalling', 'resources/icons/stalling.svg'),
+                ('Download Stalling', 'resources/icons/stalling_download.svg'),
+                ('Upload Stalling', 'resources/icons/stalling_upload.svg')
             ],
             'Trackers': [
-                ('Working', 'resources/working.svg'),
-                ('Unreachable', 'resources/unreachable.svg'),
-                ('Warning', 'resources/warning.svg'),
-                ('Error', 'resources/error.svg')
+                ('Working', 'resources/icons/working.svg'),
+                ('Unreachable', 'resources/icons/unreachable.svg'),
+                ('Warning', 'resources/icons/warning.svg'),
+                ('Error', 'resources/icons/error.svg')
             ],
             'File Mode': [
-                ('Single File', 'resources/file.svg'),
-                ('Multi File', 'resources/multifile.svg')
+                ('Single File', 'resources/icons/file.svg'),
+                ('Multi File', 'resources/icons/multifile.svg')
             ],
             'Peer Discovery': [
-                ('Centralized', 'resources/centralized.svg'),
-                ('Decentralized', 'resources/decentralized.svg'),
-                ('Mixed', 'resources/mixed.svg')
+                ('Centralized', 'resources/icons/centralized.svg'),
+                ('Decentralized', 'resources/icons/decentralized.svg'),
+                ('Mixed', 'resources/icons/mixed.svg')
             ]
         }
         self.filter_tree = FilterTree(data)
@@ -379,9 +379,9 @@ class SidePanel(QTabWidget):
         tab3 = LogTab()
         
         self.tabs = list()
-        self.tabs.append([tab1, QIcon('resources/filter.svg'), "Filters"])
-        self.tabs.append([tab2, QIcon('resources/category.svg'), "Categorys"])
-        self.tabs.append([tab3, QIcon('resources/log.svg'), "Logs"])
+        self.tabs.append([tab1, QIcon('resources/icons/filter.svg'), "Filters"])
+        self.tabs.append([tab2, QIcon('resources/icons/category.svg'), "Categorys"])
+        self.tabs.append([tab3, QIcon('resources/icons/log.svg'), "Logs"])
         self.setUsesScrollButtons(False)
         
         # arrange in right order 

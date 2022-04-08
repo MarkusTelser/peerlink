@@ -71,7 +71,7 @@ class ApplicationWindow(QMainWindow):
         
         self.setAcceptDrops(True)
         self.setWindowTitle("Application Window - PeerLink")
-        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         self.setObjectName('ApplicationWindow')
         
         # set screen size
@@ -573,6 +573,8 @@ class ApplicationWindow(QMainWindow):
             self.config_loader.categorys.append(extras['category'])
         if 'default_category' in extras and extras['default_category']:
             self.config_loader.default_category = extras['category']
+        if 'strategy' in extras:
+            self.config_loader.strategy = extras['strategy']
         if 'not_again' in extras:
             self.open_preview = extras['not_again']
         
@@ -583,8 +585,8 @@ class ApplicationWindow(QMainWindow):
             extras['path'] = self.config_loader.default_path
         if 'category' not in extras:
             extras['category'] = self.config_loader.default_category
-        if 'startegy' not in extras:
-            extras['strategy'] = "RAREST-FIRST"
+        if 'strategy' not in extras:
+            extras['strategy'] = self.config_loader.strategy
         if 'check_hash' not in extras:
             extras['check_hash'] = self.config_loader.check_hashes
         if 'pad_files' not in extras:
@@ -686,6 +688,7 @@ class ApplicationWindow(QMainWindow):
         self.config_loader.settings.setValue('open_preview', self.open_preview)
         self.config_loader.settings.setValue('default_path', self.config_loader.default_path)
         self.config_loader.settings.setValue('categorys', self.config_loader.categorys)
+        self.config_loader.settings.setValue('strategy', self.config_loader.strategy)
         self.config_loader.settings.setValue('default_category', self.config_loader.default_category)
         self.config_loader.settings.setValue('auto_start', self.config_loader.auto_start)
         self.config_loader.settings.setValue('check_hashes', self.config_loader.check_hashes)

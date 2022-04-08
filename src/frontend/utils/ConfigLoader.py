@@ -29,6 +29,7 @@ class ConfigLoader():
         self.default_path = self.settings.value('default_path', join(expanduser('~'), 'Downloads'), str)
         self.categorys = self.settings.value('categorys', [], list)
         self.default_category = self.settings.value('default_category', '', str)
+        self.strategy = self.settings.value('strategy', 0, int)
         self.auto_start = self.settings.value('auto_start', True, bool)
         self.check_hashes = self.settings.value('check_hashes', True, bool)
         self.padd_files = self.settings.value('padd_files', False, bool)

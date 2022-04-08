@@ -5,7 +5,7 @@ from PyQt6.QtCore import QFileInfo, pyqtSignal
 from src.backend.metadata.TorrentData import TorrentFile
 
 
-class TorrentTreeModel(QStandardItemModel):
+class FileTreeModel(QStandardItemModel):
     update_data = pyqtSignal()
     
     def __init__(self, data=None):
@@ -14,7 +14,7 @@ class TorrentTreeModel(QStandardItemModel):
         self.file_data = data
         self.root_node = self.invisibleRootItem()
         
-        headers = ["name", "size"]
+        headers = [self.tr("name"), self.tr("size")]
         self.setHorizontalHeaderLabels(headers)
         
     def update(self, data: TorrentFile):
@@ -36,7 +36,7 @@ class TorrentTreeModel(QStandardItemModel):
             icon = iconProvider.icon(fileInfo)
             name.setIcon(icon)
         else:
-            folder_icon = QIcon('resources/folder.svg')
+            folder_icon = QIcon('resources/icons/folder.svg')
             name.setIcon(folder_icon)
         
         size = self.convert_bits(file_data.length)

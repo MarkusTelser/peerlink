@@ -30,9 +30,9 @@ from psutil import disk_usage
 
 from src.backend.swarm import Swarm
 from src.backend.metadata.TorrentData import TorrentFile
-from src.frontend.models.TorrentTreeModel import TorrentTreeModel
+from src.frontend.models.FileTreeModel import FileTreeModel
 from src.frontend.widgets.PartProgress import PartProgress
-from src.frontend.views.TorrentTreeView import TorrentTreeView
+from src.frontend.views.FileTreeView import FileTreeView
 from src.frontend.utils.utils import convert_bits, convert_seconds, to_seconds
 import random
 
@@ -376,8 +376,8 @@ class FilesTab(QWidget):
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         
-        self.model = TorrentTreeModel()
-        self.tree_view = TorrentTreeView(self.model)
+        self.model = FileTreeModel()
+        self.tree_view = FileTreeView(self.model)
         self.tree_view.setModel(self.model)
         main_layout.addWidget(self.tree_view)
         
@@ -400,11 +400,11 @@ class TorrentDetailView(QTabWidget):
         self.peers_tab = PeersTab()
         self.files_tab = FilesTab()
         
-        self.tabs.append([self.general_tab, QIcon('resources/general.svg'), "General"])
-        self.tabs.append([self.trackers_tab, QIcon('resources/trackers.svg'), "Trackers"])
-        self.tabs.append([self.peers_tab, QIcon('resources/peer.svg'), "Peers"])
-        self.tabs.append([self.chart_tab, QIcon('resources/chart.svg'), "Chart"])
-        self.tabs.append([self.files_tab, QIcon('resources/files.svg'), "Files"])
+        self.tabs.append([self.general_tab, QIcon('resources/icons/general.svg'), "General"])
+        self.tabs.append([self.trackers_tab, QIcon('resources/icons/trackers.svg'), "Trackers"])
+        self.tabs.append([self.peers_tab, QIcon('resources/icons/peer.svg'), "Peers"])
+        self.tabs.append([self.chart_tab, QIcon('resources/icons/chart.svg'), "Chart"])
+        self.tabs.append([self.files_tab, QIcon('resources/icons/files.svg'), "Files"])
         
         self.setMovable(True)
         self.setMinimumHeight(300)

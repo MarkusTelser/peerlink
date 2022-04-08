@@ -22,8 +22,8 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtCore import QSize, Qt, pyqtSlot
 
-from src.backend.metadata import TorrentParser, MagnetParser, TorrentData
 from src.backend.Session import Session
+from src.backend.metadata import TorrentParser, MagnetParser, TorrentData
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.windows.ApplicationWindow import ApplicationWindow
 from src.frontend.windows.PreviewWindow import PreviewWindow
@@ -39,8 +39,8 @@ class LaunchWindow(QMainWindow):
         
         self.setAcceptDrops(True)
         self.setObjectName("LaunchWindow")
-        self.setWindowTitle("Launch Window - PeerLink")
-        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowTitle(self.tr("Launch Window - PeerLink"))
+        self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         
         # set screen size
         width, height = 700, 600
@@ -58,8 +58,8 @@ class LaunchWindow(QMainWindow):
 
 
     def addWidgets(self):
-        default_font = QFont('Arial', 18)
-        small_font = QFont('Arial', 12)
+        default_font = QFont("Arial", 18)
+        small_font = QFont("Arial", 12)
 
         self.stacked_layout = QStackedLayout()
         stacked_widget = QWidget()
@@ -77,33 +77,35 @@ class LaunchWindow(QMainWindow):
         # add image of logo
         wrapper_label = QLabel()
         wrapper_label.setScaledContents(True)
-        pixmap = QPixmap('resources/logo.svg')
+        pixmap = QPixmap("resources/icons/logo.svg")
         wrapper_label.setPixmap(pixmap)
         self.main_layout.addWidget(wrapper_label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.main_layout.addSpacing(25)
         
         # add open torrent file dialog button
-        open_file = QPushButton(" open &torrent file", self)
+        open_file = QPushButton(self.tr(" open &torrent file"), self)
         open_file.clicked.connect(self.open_filedialog)
-        open_file.setFixedSize(260, 40)
-        add_icon = QIcon('resources/file.svg')
+        open_file.setMinimumWidth(250)
+        open_file.setFixedHeight(40)
+        add_icon = QIcon("resources/icons/file.svg")
         open_file.setIcon(add_icon)
         open_file.setIconSize(QSize(26, 26))
         open_file.setFont(default_font)
         self.main_layout.addWidget(open_file, alignment=Qt.AlignmentFlag.AlignCenter)         
 
         # add open magnet link dialog button
-        open_link = QPushButton(" add &magnet link")
+        open_link = QPushButton(self.tr(" add &magnet link"))
         open_link.clicked.connect(self.open_magnetlink)
-        open_link.setFixedSize(270, 40)
-        add_icon = QIcon('resources/link.svg')
+        open_link.setMinimumWidth(270)
+        open_link.setFixedHeight(40)
+        add_icon = QIcon("resources/icons/link.svg")
         open_link.setIcon(add_icon)
         open_link.setIconSize(QSize(26, 26))
         open_link.setFont(default_font)
         self.main_layout.addWidget(open_link, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # other ways of dropping/adding torrent
-        support = QLabel("+ drag and drop support")
+        support = QLabel(self.tr("+ drag and drop support"))
         support.setObjectName("LaunchWindowDark")
         support.setFont(default_font)
         support.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
@@ -112,7 +114,7 @@ class LaunchWindow(QMainWindow):
         self.main_layout.addStretch(1)
         
         # dont show again checkbox
-        self.show_again = QCheckBox("don't show again")
+        self.show_again = QCheckBox(self.tr("don't show again"))
         self.show_again.setObjectName("LaunchWindowDark")
         self.show_again.setFont(small_font)
         self.main_layout.addWidget(self.show_again, 1, Qt.AlignmentFlag.AlignLeft  | Qt.AlignmentFlag.AlignBottom)
@@ -126,12 +128,10 @@ class LaunchWindow(QMainWindow):
         self.drop_label = QLabel(self)
         self.drop_label.setObjectName("DropLabel")
         self.drop_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.drop_label.setText("Drag and Drop\nfiles here")
+        self.drop_label.setText(self.tr("Drag and Drop\nfiles here"))
         self.drop_label.setFont(default_font)
         dragdrop_layout.addWidget(self.drop_label)
         self.stacked_layout.insertWidget(1, dragdrop_widget)
-        
-        QApplication.clipboard().dataChanged.connect(lambda: print('here'))
 
 
     def open_filedialog(self):
@@ -188,7 +188,7 @@ class LaunchWindow(QMainWindow):
     @pyqtSlot(QDropEvent)
     def dropEvent(self, event: QDropEvent):
         for url in event.mimeData().urls():
-            if url.isLocalFile() and url.path().endswith('.torrent'):
+            if url.isLocalFile() and url.path().endswith(".torrent"):
                 if self.conf.open_preview:
                     window = PreviewWindow(self.conf, self)
                     window.add_data.connect(self.open_mainwindow)
@@ -203,13 +203,15 @@ class LaunchWindow(QMainWindow):
     def dragEnterEvent(self, event: QDragEnterEvent):
         right_format = False
         for url in event.mimeData().urls():
-            if url.isLocalFile() and url.path().endswith('.torrent'):
+            if url.isLocalFile() and url.path().endswith(".torrent"):
                 right_format = True
                 break
-
-        if not right_format:
-            self.drop_label.setText('Wrong file format')
         
+        if not right_format:
+            self.drop_label.setText(self.tr("Wrong file format!"))
+        else: 
+            self.drop_label.setText(self.tr("Drag and Drop\nfiles here"))
+
         self.stacked_layout.setCurrentIndex(1)
         event.accept()
     
@@ -222,5 +224,5 @@ class LaunchWindow(QMainWindow):
 
     @pyqtSlot(QCloseEvent)
     def closeEvent(self, event: QCloseEvent):
-        self.conf.settings.setValue('show_launch', not self.show_again.isChecked())
+        self.conf.settings.setValue("show_launch", not self.show_again.isChecked())
         event.accept()

@@ -14,7 +14,7 @@ class SpeedLimitWindow(QMainWindow):
         
         self.resize(600, 600)
         self.setWindowTitle("Speed Limit - PeerLink")
-        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         
         # center in the middle of screen
         qtRectangle = self.frameGeometry()

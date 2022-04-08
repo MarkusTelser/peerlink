@@ -1,1 +1,1 @@
-pyinstaller --noconfirm --onefile --windowed --add-data "/home/carlos/Code/Python/peerlink/resources:resources/" --add-data "/home/carlos/Code/Python/peerlink/LICENSE.txt:." --icon "/home/carlos/Code/Python/peerlink/resources/logo.ico" "main.py"
+pyinstaller --noconfirm --onefile --windowed --add-data "/home/carlos/Code/Python/peerlink/resources:resources/" --add-data "/home/carlos/Code/Python/peerlink/LICENSE.txt:." --icon "/home/carlos/Code/Python/peerlink/resources/icons/logo.ico" "main.py"

@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtCore import QCoreApplication
 
 def convert_bits(bits: int):
     if bits < 1000:
@@ -48,6 +49,6 @@ def showError(error, parent=None):
     error_window = QMessageBox(parent)
     error_window.setIcon(QMessageBox.Icon.Critical)
     error_window.setText(error)
-    error_window.setWindowTitle("Error - PeerLink")
+    error_window.setWindowTitle(QCoreApplication.translate("ErrorDialog", "Error - PeerLink"))
     error_window.show()
     
