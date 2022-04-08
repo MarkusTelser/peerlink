@@ -274,7 +274,7 @@ QSpinBox::down-arrow,
 QDoubleSpinBox::down-arrow,
 QDateTimeEdit::down-arrow
 {
-    image: url(resources/arrow-down.png);
+    image: url(resources/icons/arrow-down.png);
     width: 7px;
 }
 
@@ -283,7 +283,7 @@ QSpinBox::up-arrow,
 QDoubleSpinBox::up-arrow,
 QDateTimeEdit::up-arrow
 {
-    image: url(resources/arrow-up.png);
+    image: url(resources/icons/arrow-up.png);
     width: 7px;
 }
 
@@ -673,7 +673,7 @@ QScrollBar::sub-line:horizontal
 
 QScrollBar::right-arrow:horizontal
 {
-    image: url(resources/arrow-right.png);
+    image: url(resources/icons/arrow-right.png);
     width: 6px;
     height: 6px;
 }
@@ -681,7 +681,7 @@ QScrollBar::right-arrow:horizontal
 
 QScrollBar::left-arrow:horizontal
 {
-    image: url(resources/arrow-left.png);
+    image: url(resources/icons/arrow-left.png);
     width: 6px;
     height: 6px;
 }
@@ -730,7 +730,7 @@ QScrollBar::sub-line:vertical
 
 QScrollBar::up-arrow:vertical
 {
-    image: url(resources/arrow-up.png);
+    image: url(resources/icons/arrow-up.png);
     width: 6px;
     height: 6px;
 }
@@ -738,7 +738,7 @@ QScrollBar::up-arrow:vertical
 
 QScrollBar::down-arrow:vertical
 {
-    image: url(resources/arrow-down.png);
+    image: url(resources/icons/arrow-down.png);
     width: 6px;
     height: 6px;
 }
@@ -788,14 +788,14 @@ QTreeView#filetree{
 QTreeWidget::branch:has-children:!has-siblings:closed,
 QTreeWidget::branch:closed:has-children:has-siblings {
 		border-image: none;
-		image: url(resources/branch-closed.png);
+		image: url(resources/icons/branch-closed.png);
 }
 
 
 QTreeWidget::branch:open:has-children:!has-siblings,
 QTreeWidget::branch:open:has-children:has-siblings  {
 		border-image: none;
-		image: url(resources/branch-open.png);
+		image: url(resources/icons/branch-open.png);
 }
 
 QSizeGrip{
@@ -809,13 +809,13 @@ QSplitter::handle {
 }
 
 QMenu::indicator:non-exclusive:unchecked, QCheckBox::indicator:unchecked{
-    image: url(resources/unchecked.png);
+    image: url(resources/icons/unchecked.png);
 	width: 16px;
 	height: 16px;
 }
 
 QMenu::indicator:non-exclusive:checked, QCheckBox::indicator:checked {
-    image: url(resources/checked.png);
+    image: url(resources/icons/checked.png);
 	width: 16px;
 	height: 16px;
 }
@@ -825,6 +825,7 @@ QPlainTextEdit, QTextEdit{
 }
 
 QLabel#DropLabel{
+	color: black;
 	border: 4px dashed black;
 	border-radius: 20px;
 }
