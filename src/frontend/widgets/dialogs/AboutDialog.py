@@ -82,7 +82,7 @@ class AboutDialog(QDialog):
         
         self.resize(QSize(750, 500))
         self.setWindowTitle('About - PeerLink')
-        self.setWindowIcon(QIcon('resources/logo.svg'))
+        self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         self.setObjectName('AboutWindow')
         
         main_layout = QVBoxLayout()

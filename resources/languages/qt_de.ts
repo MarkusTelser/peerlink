@@ -175,6 +175,57 @@ files here</source>
     </message>
 </context>
 <context>
+    <name>StatisticsWindow</name>
+    <message>
+        <source>Statistics - PeerLink</source>
+        <translation>Statistik - PeerLink</translation>
+    </message>
+    <message>
+        <source>Total Downloaded: {}</source>
+        <translation>Insgesamt heruntergeladen: {}</translation>
+    </message>
+    <message>
+        <source>Total Uploaded: {}</source>
+        <translation>Insgesamt hochgeladen: {}</translation>
+    </message>
+    <message>
+        <source>Session Downloaded: {}</source>
+        <translation>In Sitzung heruntergeladen: {}</translation>
+    </message>
+    <message>
+        <source>Session Uploaded: {}</source>
+        <translation>In Sitzung hochgeladen: {}</translation>
+    </message>
+    <message>
+        <source>Total Share Ratio: {}</source>
+        <translation>Gesamtanteilverhältnis: {}</translation>
+    </message>
+    <message>
+        <source>Session Share Ratio: {}</source>
+        <translation>Sitzungsanteilverhältnis: {}</translation>
+    </message>
+    <message>
+        <source>Total Time Running: {}</source>
+        <translation>Gesamtlaufzeit: {}</translation>
+    </message>
+    <message>
+        <source>Session Time Running: {}</source>
+        <translation>Sitzungslaufzeit: {}</translation>
+    </message>
+    <message>
+        <source>Program Opened: {} times</source>
+        <translation>Programm geöffnet: {} Mal</translation>
+    </message>
+    <message>
+        <source>Running Since: {} ({} days)</source>
+        <translation>Läuft seit: {} ({} Tagen)</translation>
+    </message>
+    <message>
+        <source>size</source>
+        <translation>Größe</translation>
+    </message>
+</context>
+<context>
     <name>ErrorDialog</name>
     <message>
         <source>Error - PeerLink</source>

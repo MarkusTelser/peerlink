@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QSettings, QSize, QPoint, QByteArray
 from PyQt6.QtWidgets import QApplication
 from os.path import join, expanduser
+from datetime import datetime
 
 
 class ConfigLoader():
@@ -33,7 +34,15 @@ class ConfigLoader():
         self.auto_start = self.settings.value('auto_start', True, bool)
         self.check_hashes = self.settings.value('check_hashes', True, bool)
         self.padd_files = self.settings.value('padd_files', False, bool)
-        
+        self.settings.endGroup()
+
+        # Statistics
+        self.settings.beginGroup('Statistics')
+        self.total_downloaded = self.settings.value('total_downloaded', 0, int)
+        self.total_uploaded = self.settings.value('total_uploaded', 0, int)
+        self.total_time_running = self.settings.value('total_time_running', 0, int)
+        self.program_opened = self.settings.value('program_opened', 0, int)
+        self.program_running_since = self.settings.value('program_running_since', datetime.now().isoformat(), str)
         self.settings.endGroup()
     
     def saveSettings(self):

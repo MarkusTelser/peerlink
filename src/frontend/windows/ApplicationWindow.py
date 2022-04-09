@@ -62,7 +62,7 @@ class ApplicationWindow(QMainWindow):
     def __init__(self, config_loader, session=None):
         super(ApplicationWindow, self).__init__()
         
-        self.session = session or Session()
+        self.session = session or Session(config_loader)
         self.config_loader = config_loader
         self.appdata_loader = AppDataLoader()
         self.show_launch = self.config_loader.show_launch
@@ -309,7 +309,8 @@ class ApplicationWindow(QMainWindow):
         
     @pyqtSlot()
     def open_statistics(self):
-        window = StatisticsWindow(self)
+        self.session.stats.update(self.session.swarm_list)
+        window = StatisticsWindow(self.session.stats, self)
         window.show()
     
     @pyqtSlot(bool)
@@ -665,7 +666,6 @@ class ApplicationWindow(QMainWindow):
             magnet_link = QApplication.clipboard().text()
             self._open_magnet(magnet_link)
         super(ApplicationWindow, self).keyPressEvent(event)
-
     def closeEvent(self, event: QCloseEvent):
         # general
         self.config_loader.settings.setValue('win_size', self.size())
@@ -694,7 +694,19 @@ class ApplicationWindow(QMainWindow):
         self.config_loader.settings.setValue('check_hashes', self.config_loader.check_hashes)
         self.config_loader.settings.setValue('padd_files', self.config_loader.padd_files)
         self.config_loader.settings.endGroup()
+
+
+        # Statistics
+        self.session.stats.update(self.session.swarm_list)
+        self.config_loader.settings.beginGroup('Statistics')
+        self.config_loader.settings.setValue('total_downloaded', self.session.stats.total_downloaded)
+        self.config_loader.settings.setValue('total_uploaded', self.session.stats.total_uploaded)
+        self.config_loader.settings.setValue('total_time_running', self.session.stats.total_time_running)
+        self.config_loader.settings.setValue('program_opened', self.session.stats.program_opened)
+        self.config_loader.settings.setValue('program_running_since', self.session.stats.program_running_since)
         
+        self.config_loader.settings.endGroup()
+
         self.save_torrents()
         
         event.accept()

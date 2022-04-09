@@ -34,7 +34,7 @@ class LaunchWindow(QMainWindow):
         super().__init__()
         
         self.conf = conf
-        self.session = Session()
+        self.session = Session(conf)
         self.main_window = None
         
         self.setAcceptDrops(True)

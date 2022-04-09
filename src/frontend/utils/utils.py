@@ -39,6 +39,18 @@ def convert_seconds(seconds: int):
     else:
         return f"{round(seconds / 86400, 1)} d"
 
+def convert_detail_sec(seconds: int):
+    sec_str = ""
+    if seconds >= 86400:
+        sec_str += f"{round(seconds / 86400, 1)} d"
+    if seconds >= 3600:
+        sec_str += f" {round(seconds / 3600, 2)} h"
+    if seconds >= 60:
+        sec_str += f" {int(seconds / 60)} min"
+    sec_str += f"  {seconds % 60} s"
+    return sec_str
+    
+
 def to_seconds(time: str):
     index = ['s', 'min', 'h', 'd']
     units = [1, 60, 3600, 86400]
