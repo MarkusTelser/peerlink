@@ -11,12 +11,12 @@ class MenuBar(QMenuBar):
         
         action_icon = QIcon("resources/icons/file.svg")
         action_name = "Open File"
-        action_shortcut = QKeySequence("Ctrl+O")
+        action_shortcut = QKeySequence("Ctrl+T")
         self.open_file = fileMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         action_icon = QIcon("resources/icons/link.svg")
         action_name = "Open Magnet Link"
-        action_shortcut = QKeySequence("Ctrl+L")
+        action_shortcut = QKeySequence("Ctrl+O")
         self.open_link = fileMenu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         fileMenu.addSeparator()
         
@@ -82,7 +82,7 @@ class MenuBar(QMenuBar):
         
         action_icon = QIcon("resources/icons/remove.svg")
         action_name = "Remove"
-        action_shortcut = QKeySequence("Ctrl+D")
+        action_shortcut = QKeySequence("Ctrl+R")
         self.edit_remove = self.edit_menu.addAction(action_icon, action_name, lambda: None, action_shortcut)
         
         self.addMenu(self.edit_menu)
@@ -132,18 +132,22 @@ class MenuBar(QMenuBar):
         
         self.tools_filter = QAction("Ip Filter")
         self.tools_filter.setIcon(QIcon('resources/icons/filter.svg'))
+        self.tools_filter.setShortcut("Ctrl+F")
         self.tools_menu.addAction(self.tools_filter)
         
         self.tools_limit = QAction("Speed Limit")
+        self.tools_limit.setShortcut("Ctrl+L")
         self.tools_limit.setIcon(QIcon('resources/icons/limit.svg'))
         self.tools_menu.addAction(self.tools_limit)
         
         self.tools_speed = QAction("Diagram")
+        self.tools_speed.setShortcut("Ctrl+D")
         self.tools_speed.setIcon(QIcon('resources/icons/chart.svg'))
         self.tools_menu.addAction(self.tools_speed) 
         
         self.tools_statistics = QAction("Statistics")
         self.tools_statistics.setIcon(QIcon('resources/icons/stats.svg'))
+        self.tools_statistics.setShortcut("Ctrl+I")
         self.tools_menu.addAction(self.tools_statistics)
         
         # help menu
