@@ -5,16 +5,18 @@ from typing import List
 from src.backend.dht.DHT import DHT
 
 from src.backend.swarm import Swarm, SwarmStatus
+from src.backend.utils.Statistics import Statistics
 from src.backend.peer_protocol.TCPServer import TCPServer
 
 class Session(threading.Thread):
-    def __init__(self):
+    def __init__(self, conf):
         super(Session, self).__init__()
         self.queue = asyncio.Queue(maxsize=10)
         self.loop = asyncio.new_event_loop()
         self.loop.set_debug(True)
         
         self._swarm_list = list()
+        self.stats = Statistics(conf)
         self.server = TCPServer()
         self.dht = DHT()
 
@@ -87,6 +89,7 @@ class Session(threading.Thread):
         # start DHT up
         await self.server.start()
         asyncio.create_task(self.dht.start())
+        #asyncio.create_task(self.stats.execute())
         
         while True:
             func, args, kargs = await self.queue.get()

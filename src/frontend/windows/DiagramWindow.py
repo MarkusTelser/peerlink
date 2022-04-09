@@ -3,6 +3,7 @@ from PyQt6.QtGui import QColor, QPainter, QIcon, QGuiApplication
 from PyQt6.QtCharts import QSplineSeries, QChart, QValueAxis, QChartView
 from PyQt6.QtCore import Qt
 
+from src.frontend.widgets.ChartWidget import ChartWidget
 
 class DiagramWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -14,7 +15,7 @@ class DiagramWindow(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
         
-        self.resize(600, 600)
+        self.resize(700, 500)
         self.setWindowTitle("Diagram - PeerLink")
         self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         
@@ -24,6 +25,9 @@ class DiagramWindow(QMainWindow):
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
         
+        chart = ChartWidget()
+        main_layout.addWidget(chart)
+        """
         series = QSplineSeries()
         #series.append(10, 1)
         #series.append(5, 3)
@@ -56,3 +60,5 @@ class DiagramWindow(QMainWindow):
         chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         main_layout.addWidget(chart_view)
+
+        """
