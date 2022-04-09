@@ -6,7 +6,7 @@ from PyQt6.QtCore import Qt
 from src.frontend.widgets.ChartWidget import ChartWidget
 
 class DiagramWindow(QMainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super(DiagramWindow, self).__init__(parent=parent)
         
         main_widget = QWidget()
@@ -21,8 +21,7 @@ class DiagramWindow(QMainWindow):
         
         # center in the middle of screen
         qtRectangle = self.frameGeometry()
-        centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
-        qtRectangle.moveCenter(centerPoint)
+        qtRectangle.moveCenter(parent.frameGeometry().center())
         self.move(qtRectangle.topLeft())
         
         chart = ChartWidget()

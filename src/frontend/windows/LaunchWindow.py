@@ -135,7 +135,7 @@ class LaunchWindow(QMainWindow):
 
 
     def open_filedialog(self):
-        file_dialog = FileDialog()
+        file_dialog = FileDialog(self)
         if file_dialog.exec():
             for file_path in file_dialog.selectedFiles():
                 data = TorrentParser.parse_filepath(file_path)
@@ -148,7 +148,7 @@ class LaunchWindow(QMainWindow):
     
 
     def open_magnetlink(self):
-        magnet_dialog = MagnetLinkDialog()
+        magnet_dialog = MagnetLinkDialog(self)
         
         if magnet_dialog.exec():
             magnet_link = magnet_dialog.text_box.text()

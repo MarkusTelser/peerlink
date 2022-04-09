@@ -77,14 +77,19 @@ class LicenseTab(QWidget):
         
 
 class AboutDialog(QDialog):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent):
+        super(AboutDialog, self).__init__(parent=parent)
         
         self.resize(QSize(750, 500))
         self.setWindowTitle('About - PeerLink')
         self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         self.setObjectName('AboutWindow')
         
+        # center in the middle of screen
+        qtRectangle = self.frameGeometry()
+        qtRectangle.moveCenter(parent.frameGeometry().center())
+        self.move(qtRectangle.topLeft())
+
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         

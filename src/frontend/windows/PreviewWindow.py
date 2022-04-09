@@ -36,7 +36,7 @@ class PreviewWindow(QMainWindow):
     add_data = pyqtSignal(TorrentData, dict)
     UPDATE_DELAY = 500
     
-    def __init__(self, conf: ConfigLoader, parent=None):
+    def __init__(self, conf: ConfigLoader, parent):
         super(PreviewWindow, self).__init__(parent=parent)
         
         self.conf = conf
@@ -57,8 +57,7 @@ class PreviewWindow(QMainWindow):
             self.move(self.conf.preview_location)
         else:
             qtRectangle = self.frameGeometry()
-            centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
-            qtRectangle.moveCenter(centerPoint)
+            qtRectangle.moveCenter(parent.frameGeometry().center())
             self.move(qtRectangle.topLeft())
 
         self.addWidgets()
@@ -327,17 +326,3 @@ class PreviewWindow(QMainWindow):
         else:
             torrent = self.session._swarm_list[self.index].data
             self.showTorrent(torrent)
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-
-    path = "data/all/test.torrent"
-    data = TorrentParser.parse_filepath(path)
-    
-    conf = ConfigLoader()
-    
-    window = PreviewWindow(conf)
-    window.show(data)
-
-    app.exec()

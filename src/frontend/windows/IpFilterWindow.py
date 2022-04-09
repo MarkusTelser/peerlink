@@ -3,7 +3,7 @@ from PyQt6.QtGui import QGuiApplication, QIcon
 
 
 class IpFilterWindow(QMainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super(IpFilterWindow, self).__init__(parent=parent)
         
         main_widget = QWidget()
@@ -18,6 +18,5 @@ class IpFilterWindow(QMainWindow):
         
         # center in the middle of screen
         qtRectangle = self.frameGeometry()
-        centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
-        qtRectangle.moveCenter(centerPoint)
+        qtRectangle.moveCenter(parent.frameGeometry().center())
         self.move(qtRectangle.topLeft())

@@ -57,8 +57,9 @@ def to_seconds(time: str):
     count, unit = time.split(' ')
     return int(count) * units[index.index(unit)]
 
-def showError(error, parent=None):
+def showError(error, parent):
     error_window = QMessageBox(parent)
+    error_window.geometry().moveCenter(parent.geometry().center())
     error_window.setIcon(QMessageBox.Icon.Critical)
     error_window.setText(error)
     error_window.setWindowTitle(QCoreApplication.translate("ErrorDialog", "Error - PeerLink"))

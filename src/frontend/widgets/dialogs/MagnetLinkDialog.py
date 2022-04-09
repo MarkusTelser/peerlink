@@ -15,8 +15,8 @@ from src.frontend.utils.utils import showError
 
 
 class MagnetLinkDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent):
+        super(MagnetLinkDialog, self).__init__(parent=parent)
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -24,6 +24,11 @@ class MagnetLinkDialog(QDialog):
         self.setFixedSize(600, 120)
         self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         self.setWindowTitle(self.tr("Add Magnet Link - PeerLink"))
+
+        # center in the middle of screen
+        qtRectangle = self.frameGeometry()
+        qtRectangle.moveCenter(parent.frameGeometry().center())
+        self.move(qtRectangle.topLeft())
         
         message = QLabel(self.tr("Enter magnet link:"))
         main_layout.addWidget(message)

@@ -7,7 +7,7 @@ from src.frontend.utils.utils import convert_detail_sec, convert_bits
 
 
 class StatisticsWindow(QMainWindow):
-    def __init__(self, stats, parent=None):
+    def __init__(self, stats, parent):
         super(StatisticsWindow, self).__init__(parent=parent)
         
         main_widget = QWidget()
@@ -20,6 +20,11 @@ class StatisticsWindow(QMainWindow):
         self.setWindowTitle(self.tr("Statistics - PeerLink"))
         self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         
+        # center in the middle of screen
+        qtRectangle = self.frameGeometry()
+        qtRectangle.moveCenter(parent.frameGeometry().center())
+        self.move(qtRectangle.topLeft())
+
         group_box = QGroupBox()
         group_layout = QVBoxLayout()
         group_layout.setContentsMargins(50, 50, 50, 50)
@@ -56,9 +61,3 @@ class StatisticsWindow(QMainWindow):
         label2 = QLabel(self.tr("Running Since: {} ({} days)").format(frm_date, days_since))
         group_layout.addWidget(label1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(label2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        # center in the middle of screen
-        qtRectangle = self.frameGeometry()
-        centerPoint = QGuiApplication.primaryScreen().availableGeometry().center()
-        qtRectangle.moveCenter(centerPoint)
-        self.move(qtRectangle.topLeft())

@@ -273,7 +273,7 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot()
     def open_magnetlink(self):
-        dialog = MagnetLinkDialog()
+        dialog = MagnetLinkDialog(self)
         
         if dialog.exec():
             magnet_link = dialog.text_box.text()
@@ -281,7 +281,7 @@ class ApplicationWindow(QMainWindow):
     
     @pyqtSlot()
     def open_aboutdialog(self):
-        dialog = AboutDialog()
+        dialog = AboutDialog(self)
         dialog.exec()
     
     @pyqtSlot()
@@ -552,7 +552,6 @@ class ApplicationWindow(QMainWindow):
 
     def appendTorrent(self, data, extras={}, from_magnet=False):
         # dont't add if info_hash is same as in list
-        print(data.info_hash, [x.data.info_hash for x in self.session.swarm_list])
         if data.info_hash in [x.data.info_hash for x in self.session.swarm_list]: # self.table_model.torrent_list
             showError('Torrent is already in list', self)
             return
