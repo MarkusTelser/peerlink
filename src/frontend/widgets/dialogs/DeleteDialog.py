@@ -8,24 +8,24 @@ class DeleteDialog(QDialog):
         super().__init__()
         
         self.setBaseSize(300, 300)
-        self.setWindowTitle('Delete Torrent - PeerLink')
-        self.setWindowIcon(QIcon('resources/icons/logo.svg'))
+        self.setWindowTitle(self.tr("Delete Torrent - PeerLink"))
+        self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         if not all_torrents:
-            affirm_txt = QLabel('Are you sure you want to delete this torrent?')
-            self.checkbox = QCheckBox('delete files too')
+            affirm_txt = QLabel(self.tr("Are you sure you want to delete this torrent?"))
+            self.checkbox = QCheckBox(self.tr("delete files too"))
         else:
-            affirm_txt = QLabel('Are you sure you want to delete all torrents?')
-            self.checkbox = QCheckBox('delete all files too')
+            affirm_txt = QLabel(self.tr("Are you sure you want to delete all torrents?"))
+            self.checkbox = QCheckBox(self.tr("delete all files too"))
         self.checkbox.setChecked(True)
         main_layout.addWidget(affirm_txt)
         main_layout.addWidget(self.checkbox)
         
         buttonBox = QDialogButtonBox()
         buttonBox.addButton(QDialogButtonBox.StandardButton.Cancel)
-        buttonBox.addButton('Ok', QDialogButtonBox.ButtonRole.AcceptRole)
+        buttonBox.addButton(QDialogButtonBox.StandardButton.Ok)
         buttonBox.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
         buttonBox.rejected.connect(self.button_reject)
         buttonBox.accepted.connect(self.button_accept)

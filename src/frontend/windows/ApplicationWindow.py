@@ -156,6 +156,7 @@ class ApplicationWindow(QMainWindow):
         self.menu_bar.exit.triggered.connect(self.close)
         self.menu_bar.edit_resume.triggered.connect(self.start_torrent)
         self.menu_bar.edit_pause.triggered.connect(self.pause_torrent)
+        self.menu_bar.edit_stop.triggered.connect(self.stop_torrent)
         self.menu_bar.edit_move.triggered.connect(self.move_torrent)
         self.menu_bar.edit_copy_name.triggered.connect(self.copy_name)
         self.menu_bar.edit_copy_hash.triggered.connect(self.copy_hash)
@@ -335,6 +336,7 @@ class ApplicationWindow(QMainWindow):
         if len(self.table_view.selectedIndexes()) == 0:
             self.menu_bar.edit_resume.setDisabled(True)
             self.menu_bar.edit_pause.setDisabled(True)
+            self.menu_bar.edit_stop.setDisabled(True)
             self.menu_bar.edit_move.setDisabled(True)
             self.menu_bar.edit_copy_name.setDisabled(True)
             self.menu_bar.edit_copy_hash.setDisabled(True)
@@ -343,6 +345,7 @@ class ApplicationWindow(QMainWindow):
         else:
             self.menu_bar.edit_resume.setEnabled(True)
             self.menu_bar.edit_pause.setEnabled(True)
+            self.menu_bar.edit_stop.setEnabled(True)
             self.menu_bar.edit_move.setEnabled(True)
             self.menu_bar.edit_copy_name.setEnabled(True)
             self.menu_bar.edit_copy_hash.setEnabled(True)

@@ -1,10 +1,16 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGroupBox, QLabel
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGroupBox, QLabel, QFrame
 from PyQt6.QtGui import QGuiApplication, QIcon
 from PyQt6.QtCore import Qt
 from datetime import datetime
 
 from src.frontend.utils.utils import convert_detail_sec, convert_bits
 
+class QHLine(QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setObjectName("QHLine")
+        self.setFrameShape(QFrame.Shape.HLine)
+        self.setFrameShadow(QFrame.Shadow.Sunken)
 
 class StatisticsWindow(QMainWindow):
     def __init__(self, stats, parent):
@@ -17,6 +23,7 @@ class StatisticsWindow(QMainWindow):
         self.setCentralWidget(main_widget)
         
         self.resize(400, 650)
+        self.setObjectName("StatisticsWindow")
         self.setWindowTitle(self.tr("Statistics - PeerLink"))
         self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         
@@ -35,25 +42,25 @@ class StatisticsWindow(QMainWindow):
         label2 = QLabel(self.tr("Total Uploaded: {}").format(convert_bits(stats.total_uploaded)))
         group_layout.addWidget(label1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(label2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        group_layout.addStretch(1)
+        group_layout.addWidget(QHLine(), 1)
 
         label1 = QLabel(self.tr("Session Downloaded: {}").format(convert_bits(stats.session_downloaded)))
         label2 = QLabel(self.tr("Session Uploaded: {}").format(convert_bits(stats.session_uploaded)))
         group_layout.addWidget(label1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(label2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        group_layout.addStretch(1)
+        group_layout.addWidget(QHLine(), 1)
 
         label1 = QLabel(self.tr("Total Share Ratio: {}").format(stats.total_ratio))
         label2 = QLabel(self.tr("Session Share Ratio: {}").format(stats.session_ratio))
         group_layout.addWidget(label1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(label2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        group_layout.addStretch(1)
+        group_layout.addWidget(QHLine(), 1)
         
         label1 = QLabel(self.tr("Total Time Running: {}").format(convert_detail_sec(stats.total_time_running)))
         label2 = QLabel(self.tr("Session Time Running: {}").format(convert_detail_sec(stats.session_time_running)))
         group_layout.addWidget(label1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
         group_layout.addWidget(label2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        group_layout.addStretch(1)
+        group_layout.addWidget(QHLine(), 1)
 
         frm_date = datetime.fromisoformat(stats.program_running_since).strftime("%Y-%m-%d")
         days_since = (datetime.now() - datetime.fromisoformat(stats.program_running_since)).days

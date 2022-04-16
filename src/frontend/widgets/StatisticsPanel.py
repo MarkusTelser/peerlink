@@ -3,7 +3,6 @@ from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtCharts import QSplineSeries, QChart, QValueAxis, QChartView
 from PyQt6.QtCore import Qt
 
-
 class StatisticsPanel(QWidget):
     def __init__(self):
         super().__init__()

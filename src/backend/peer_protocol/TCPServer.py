@@ -2,7 +2,7 @@ import asyncio
 from asyncio import StreamReader, StreamWriter
 
 class TCPServer:
-    PORT_RANGE = range(6881, 6889 + 1)
+    PORT_RANGE = range(6880, 6889 + 1)
 
     def __init__(self):
         self._server = None

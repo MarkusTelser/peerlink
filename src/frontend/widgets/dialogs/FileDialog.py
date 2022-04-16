@@ -23,3 +23,25 @@ class FileDialog(QFileDialog):
         self.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
         self.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         self.setDirectory(expanduser("~"))
+
+
+class FolderDialog(QFileDialog):
+    def __init__(self, parent):
+        super(FolderDialog, self).__init__(parent=parent)
+
+        self.setBaseSize(1000, 700)
+        self.setMinimumSize(400, 400)
+        self.setWindowIcon(QIcon("resources/icons/logo.svg"))
+        self.setWindowTitle(self.tr("Select Directory - PeerLink"))
+        
+        # center in the middle of screen
+        qtRectangle = self.frameGeometry()
+        qtRectangle.moveCenter(parent.frameGeometry().center())
+        self.move(qtRectangle.topLeft())
+        
+        self.setFileMode(QFileDialog.FileMode.Directory)
+        self.setOption(QFileDialog.Option.DontUseNativeDialog)
+        self.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
+        self.setOption(QFileDialog.Option.ShowDirsOnly)
+        self.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+        self.setDirectory(expanduser("~"))

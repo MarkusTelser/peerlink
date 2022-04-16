@@ -21,6 +21,11 @@ QLineEdit, QDialog QPushButton, QDialog QPushButton:hover, QMainWindow#LaunchWin
 	color: black;
 }
 
+#QHLine
+{
+	border-top: 2px solid #211f20;
+}
+
 /*BACKGROUND COLORS*/
 #ApplicationWindow, #AboutWindow{
 	background-color: #1e1e1e;
@@ -37,7 +42,7 @@ QStatusBar{
 	background-color: #334B49;
 }
 
-QLineEdit, QGroupBox, QComboBox{
+QLineEdit, QGroupBox, QComboBox, QSpinBox{
 	background-color: #4b4b4a;
 }
 
@@ -69,12 +74,6 @@ QWidget{
 QTabWidget QWidget{
 	background-color: #333333;
 }
-
-QToolBar{
-	background-color: #353535; /*#37363c; #736762;*/
-	color: #e6e6e7;
-}
-
 
 
 /*-----QTabWidget-----*/
@@ -182,93 +181,44 @@ QToolTip
 	border-color: #051a39;
 }
 
-
-
-/*-----QSpinBox & QDoubleSpinBox & QDateTimeEdit-----*/
-QSpinBox, 
-QDoubleSpinBox,
-QDateTimeEdit
-{
-	background-color: #f6f6f6;
-	color: #000;
-	border: 1px solid #a9a9aa;
-	padding : 2px;
-
+QSpinBox{
+	border: 1px solid #24272c;
 }
 
-
-QSpinBox::disabled, 
-QDoubleSpinBox::disabled,
-QDateTimeEdit::disabled
-{
-	background-color: #404040;
-	color: #656565;
-	border-color: #051a39;
-
+#PartProgressToolTip, #PartProgressToolTip > QWidget{
+	background: rgb(24,27,32);
 }
 
-
-QSpinBox:hover, 
-QDoubleSpinBox::hover,
-QDateTimeEdit::hover
-{
-    background-color: #a9a9aa;
-    border: 1px solid #a9a9aa;
-    color:  #000;
-    padding: 2px
-
+#LogSearchBar, #LogOutputPanel{
+	border: 2px solid black;
 }
 
-
-QSpinBox::up-button, QSpinBox::down-button,
-QDoubleSpinBox::up-button, QDoubleSpinBox::down-button,
-QDateTimeEdit::up-button, QDateTimeEdit::down-button
-{
-    background-color: qlineargradient(spread:repeat, x1:1, y1:0, x2:1, y2:1, stop:0.100962 rgba(34, 166, 178, 255),stop:0.543269 rgba(132, 213, 51, 255),stop:1 rgba(208, 255, 163, 255));
-
+#StatusBar QPushButton{
+	background-color: transparent; 
+	border: 1px solid transparent;
+	border-radius: 3px;
+	padding: 3px;
 }
 
-
-QSpinBox::disabled, 
-QDoubleSpinBox::disabled,
-QDateTimeEdit::disabled
-{
-	background-color: #404040;
-	color: #656565;
-	border-color: #051a39;
-
+#ToolBar{
+	background-color: #353535;
+	color: #e6e6e7;
 }
 
-
-QSpinBox::up-button:hover, QSpinBox::down-button:hover,
-QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover,
-QDateTimeEdit::up-button:hover, QDateTimeEdit::down-button:hover
-{
-    background-color: #92dd48;
-    border: 1px solid #92dd48;
-
+#ToolBar QPushButton{
+	background-color: transparent; 
+	border: 1px solid transparent;
+	border-radius: 3px;
+	padding: 3px;
 }
 
-
-QSpinBox::up-button:disabled, QSpinBox::down-button:disabled,
-QDoubleSpinBox::up-button:disabled, QDoubleSpinBox::down-button:disabled,
-QDateTimeEdit::up-button:disabled, QDateTimeEdit::down-button:disabled
-{
-	background-color: #404040;
-	color: #656565;
-	border-color: #051a39;
-
+#ToolBar QPushButton:hover{
+	background-color: rgb(64, 64, 64);
 }
 
-
-QSpinBox::up-button:pressed, QSpinBox::down-button:pressed,
-QDoubleSpinBox::up-button:pressed, QDoubleSpinBox::down-button::pressed,
-QDateTimeEdit::up-button:pressed, QDateTimeEdit::down-button::pressed
-{
-    background-color: #57a951;
-    border: 1px solid #57a951;
+#StatusBar QPushButton:hover{
+	background-color: palette(button);
 }
-
 
 QSpinBox::down-arrow,
 QDoubleSpinBox::down-arrow,
@@ -277,7 +227,6 @@ QDateTimeEdit::down-arrow
     image: url(resources/icons/arrow-down.png);
     width: 7px;
 }
-
 
 QSpinBox::up-arrow,
 QDoubleSpinBox::up-arrow,

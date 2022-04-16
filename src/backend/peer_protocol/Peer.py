@@ -22,6 +22,9 @@ from src.backend.peer_protocol.ReservedExtensions import gen_extensions, get_ext
 from src.backend.peer_protocol.ExtensionProtocol import ExtensionHandshakeMessage, ExtensionProtocol
 from src.backend.peer_protocol import PeerMessages
 from enum import Enum
+import smokesignal
+
+
 """
 set timeout new every time
 use sched library
@@ -58,6 +61,10 @@ class PPeer(asyncio.Protocol):
         
         self.resume_download = asyncio.Event()
         self.succ_ext_handshake = asyncio.Event()
+
+
+        smokesignal.on('finished_full_piece', self._send_have)
+        smokesignal.on('reject_piece', self._send_reject)
         
     def connection_made(self, transport: asyncio.transports.BaseTransport) -> None:
         self.transport = transport
@@ -126,7 +133,6 @@ class PPeer(asyncio.Protocol):
             # TODO implement with seeding
             pass
         elif isinstance(recv, PeerMessageStructures.Piece):
-            print('RECEIVED BLOCK ', recv.index, 'AT', recv.begin, self.block_manager.outstanding)
             is_last_block = self.block_manager.add_block(recv.index, recv.begin, recv.block)
             if is_last_block:
                 data = self.block_manager.get_piece_data(recv.index)
@@ -175,14 +181,13 @@ class PPeer(asyncio.Protocol):
         print('received data', type(recv))
         self.first_message = False
     
+
     def _send_requests(self):
-        print('REQUESTING NEW BLOCKS')
         # don't request if paused by client or other peer
         if not self.resume_download.is_set() or self.am_choking:
             return
         
         requests = self.block_manager.fill_request()
-        print('GOT REQUEST NEW BLOCKS')
         for request in requests:
             msg = bld_request(request.piece_id, request.startbit, request.length)
             self.transport.write(msg)
@@ -215,6 +220,15 @@ class PPeer(asyncio.Protocol):
             self.am_interested = False
             self.transport.write(bld_uninterested())
     
+    def _send_have(self, piece_index):
+        print('send finished full piece')
+        if self.transport and not self.transport.is_closing():
+            msg = bld_have(piece_index)
+            self.transport.write(msg)
+
+    def _send_reject(self, piece_index):
+        pass
+
     def eof_received(self):
         print('connection closed: eof')
         self.transport.close()
@@ -264,7 +278,7 @@ class MPeer:
             extensions = get_extensions(handshake.reserved)
             
             # create transport and start asnychrono communication
-            protocol_factory = lambda: PPeer(self.peer_id, self.extension)
+            protocol_factory = lambda: PPeer(handshake.peer_id, self.extension)
             self.transport, self.protocol = await loop.create_connection(protocol_factory, sock=sock)
             
             if self.piece_manager and self.file_handler:

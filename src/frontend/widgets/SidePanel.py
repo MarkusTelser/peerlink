@@ -16,41 +16,50 @@ from PyQt6.QtWidgets import (
     QLabel,
     QGroupBox,
     QMenu,
-    QInputDialog
+    QInputDialog,
+    QAbstractScrollArea
 )
 from PyQt6.QtGui import QIcon, QMouseEvent, QAction, QFont
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 
-from src.frontend.utils.utils import showError
+from src.frontend.utils.utils import showError, showInput
+
+class CategoryMenu(QMenu):
+    def __init__(self, parent):
+        super(CategoryMenu, self).__init__(parent)
+        
+        self.menu_new = QAction(self.tr("New"))
+        self.menu_new.setIcon(QIcon('resources/icons/add.svg'))
+        self.menu_rename = QAction(self.tr("Rename"))
+        self.menu_rename.setIcon(QIcon('resources/icons/rename.svg'))
+        self.menu_delete = QAction(self.tr("Delete"))
+        self.menu_delete.setIcon(QIcon('resources/icons/remove.svg'))
+        self.addAction(self.menu_new)
+        self.addAction(self.menu_rename)
+        self.addAction(self.menu_delete)
+
 
 class CategoryList(QListWidget):
     def __init__(self) -> None:
         super().__init__()
         
         self.setSortingEnabled(True)
+        
+        self.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Ignored)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         
         # create context menu
-        self.menu = QMenu(self)
-        self.menu.setContentsMargins(10, 0, 0, 0)
-        self.menu_new = QAction('New')
-        self.menu_new.setIcon(QIcon('resources/icons/add.svg'))
-        self.menu_rename = QAction('Rename')
-        self.menu_rename.setIcon(QIcon('resources/icons/rename.svg'))
-        self.menu_delete = QAction('Delete')
-        self.menu_delete.setIcon(QIcon('resources/icons/remove.svg'))
-        self.menu.addAction(self.menu_new)
-        self.menu.addAction(self.menu_rename)
-        self.menu.addAction(self.menu_delete)
+        self.menu = CategoryMenu(self)
         
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.RightButton:
             if self.itemAt(event.pos()) == None or len(self.selectedIndexes()) == 0:
-                self.menu_rename.setDisabled(True)
-                self.menu_delete.setDisabled(True)
+                self.menu.menu_rename.setDisabled(True)
+                self.menu.menu_delete.setDisabled(True)
             else:
-                self.menu_rename.setEnabled(True)
-                self.menu_delete.setEnabled(True)
+                self.menu.menu_rename.setEnabled(True)
+                self.menu.menu_delete.setEnabled(True)
                 
             self.menu.popup(self.viewport().mapToGlobal(event.pos()))
             self.menu.exec()
@@ -79,14 +88,14 @@ class CategoryTab(QWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         
         self.info_list = QListWidget()
-        self.info_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.info_list.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.option1 = QListWidgetItem(QIcon('resources/icons/general.svg'), "All (0)", self.info_list)
-        self.option2 = QListWidgetItem(QIcon('resources/icons/category.svg'), "Categorized (0)", self.info_list)
-        self.option3 = QListWidgetItem(QIcon('resources/icons/inactive.svg'), "Uncategorized (0)", self.info_list)
+        self.option1 = QListWidgetItem(QIcon('resources/icons/general.svg'), self.tr("All ({})").format(0), self.info_list)
+        self.option2 = QListWidgetItem(QIcon('resources/icons/category.svg'), self.tr("Categorized ({})").format(0), self.info_list)
+        self.option3 = QListWidgetItem(QIcon('resources/icons/inactive.svg'), self.tr("Uncategorized ({})").format(0), self.info_list)
+        print(self.info_list.sizeHint())
         main_layout.addWidget(self.info_list)    
         
-        self.cat_box = QGroupBox("Categorys")
+        self.cat_box = QGroupBox(self.tr("Categorys ({})").format(len(self._cats)))
+        self.cat_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.cat_layout = QVBoxLayout()
         self.cat_box.setLayout(self.cat_layout)
         self.cat_list = CategoryList()
@@ -95,9 +104,9 @@ class CategoryTab(QWidget):
         
         self.info_list.itemClicked.connect(self._info_selected)
         self.cat_list.itemClicked.connect(self._cat_selected)
-        self.cat_list.menu_new.triggered.connect(self._new)
-        self.cat_list.menu_rename.triggered.connect(self._rename)
-        self.cat_list.menu_delete.triggered.connect(self._delete)
+        self.cat_list.menu.menu_new.triggered.connect(self._new)
+        self.cat_list.menu.menu_rename.triggered.connect(self._rename)
+        self.cat_list.menu.menu_delete.triggered.connect(self._delete)
     
     def setCategorys(self, categorys, show_error=False):
         for category in categorys:
@@ -105,18 +114,18 @@ class CategoryTab(QWidget):
                 self.cat_list.addItem(QListWidgetItem(f"{category} (0)"))
                 self._cats[category] = 0
             elif show_error:
-                showError('Category name exists already!', self)
+                showError(self.tr("Category name exists already!"), self)
         
-        self.cat_box.setTitle(f"Categorys ({len(self._cats)})")
+        self.cat_box.setTitle(self.tr("Categorys ({})").format(len(self._cats)))
     
     def append(self, torrent):
         self._all += 1
         self._cat += 1 if len(torrent.category) > 0 else 0
         self._uncat += 1 if len(torrent.category) == 0 else 0
         
-        self.option1.setText(f"All ({self._all})")
-        self.option2.setText(f"Categorized ({self._cat})")
-        self.option3.setText(f"Uncategorized ({self._uncat})")
+        self.option1.setText(self.tr("All ({})").format(self._all))
+        self.option2.setText(self.tr("Categorized ({})").format(self._cat))
+        self.option3.setText(self.tr("Uncategorized ({})").format(self._uncat))
         
         if torrent.category != "":
             # add category if not already existing
@@ -135,9 +144,9 @@ class CategoryTab(QWidget):
         self._cat -= 1 if len(category) > 0 else 0
         self._uncat -= 1 if len(category) == 0 else 0
         
-        self.option1.setText(f"All ({self._all})")
-        self.option2.setText(f"Categorized ({self._cat})")
-        self.option3.setText(f"Uncategorized ({self._uncat})")
+        self.option1.setText(self.tr("All ({})").format(self._all))
+        self.option2.setText(self.tr("Categorized ({})").format(self._cat))
+        self.option3.setText(self.tr("Uncategorized ({})").format(self._uncat))
         
         if len(category) != 0:
             find_name = f"{category} ({self._cats[category]})"
@@ -148,8 +157,8 @@ class CategoryTab(QWidget):
         
     @pyqtSlot()
     def _new(self):
-        dialog = QInputDialog()
-        dialog.setLabelText("Enter new category name:")
+        dialog = showInput(self.tr("Enter new category name:"), self)
+        
         if dialog.exec():
             name = dialog.textValue()
             self.setCategorys([name], show_error=True)
@@ -158,16 +167,15 @@ class CategoryTab(QWidget):
     @pyqtSlot()
     def _rename(self):  
         indexes = self.cat_list.selectedItems()
-        cat_name = self._extract(indexes[0].data(0))
-        
-        dialog = QInputDialog()
-        dialog.setLabelText(f'Rename category "{cat_name}" to:')
+        cat_name = self._extract(indexes[0].data(0))        
+        dialog = showInput(self.tr('Rename category "{}" to:').format(cat_name), self)
+
         if dialog.exec():
             new_name = dialog.textValue()
             
             # show error if new name exists already
             if new_name in self._cats:
-                showError('Category name exists already!', self)
+                showError(self.tr("Category name exists already!"), self)
                 return
             
             # rename gui item, change internal struct
@@ -187,13 +195,13 @@ class CategoryTab(QWidget):
         # update info texts
         self._cat -= self._cats[cat_name]
         self._uncat += self._cats[cat_name]
-        self.option1.setText(f"All ({self._all})")
-        self.option2.setText(f"Categorized ({self._cat})")
-        self.option3.setText(f"Uncategorized ({self._uncat})")
+        self.option1.setText(self.tr("All ({})").format(self._all))
+        self.option2.setText(self.tr("Categorized ({})").format(self._cat))
+        self.option3.setText(self.tr("Uncategorized ({})").format(self._uncat))
         
         # update category group title
         del self._cats[cat_name]
-        self.cat_box.setTitle(f"Categorys ({len(self._cats)})")
+        self.cat_box.setTitle(self.tr("Categorys ({})").format(len(self._cats)))
         
         self.deleteCategory.emit(cat_name)
             
@@ -234,14 +242,13 @@ class LogTab(QWidget):
         
         self.log_text = ""
         self.log_view = QPlainTextEdit(self.log_text)
+        self.log_view.setObjectName("LogOutputPanel")
         self.log_view.setReadOnly(True)
-        #self.log_view.setDocument()
         self.log_view.setFont(QFont('Arial', 10))
-        self.log_view.setStyleSheet('border: 2px solid black;')
         main_layout.addWidget(self.log_view)
         
         filter = QLineEdit()
-        filter.setStyleSheet('border: 2px solid black;')
+        filter.setObjectName("LogSearchBar")
         filter.setPlaceholderText('Filter...')
         filter.setClearButtonEnabled(True)
         filter.findChild(QAction, "_q_qlineeditclearaction").setIcon(QIcon("resources/icons/cancel.svg"))
@@ -368,10 +375,9 @@ class SidePanel(QTabWidget):
     def __init__(self, tabs_pos):
         super().__init__()
         
-        # generic settings
         self.setMovable(True)
         self.setUpdatesEnabled(True)
-        self.setObjectName('sidepanel')
+        self.setObjectName('SidePanel')
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
         tab1 = FilterTab()
@@ -379,9 +385,9 @@ class SidePanel(QTabWidget):
         tab3 = LogTab()
         
         self.tabs = list()
-        self.tabs.append([tab1, QIcon('resources/icons/filter.svg'), "Filters"])
-        self.tabs.append([tab2, QIcon('resources/icons/category.svg'), "Categorys"])
-        self.tabs.append([tab3, QIcon('resources/icons/log.svg'), "Logs"])
+        self.tabs.append([tab1, QIcon('resources/icons/filter.svg'), self.tr("Filters")])
+        self.tabs.append([tab2, QIcon('resources/icons/category.svg'), self.tr("Categorys")])
+        self.tabs.append([tab3, QIcon('resources/icons/log.svg'), self.tr("Logs")])
         self.setUsesScrollButtons(False)
         
         # arrange in right order 

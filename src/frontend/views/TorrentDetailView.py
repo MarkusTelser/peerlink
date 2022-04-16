@@ -59,24 +59,24 @@ class GeneralTab(QWidget):
         main_layout.addWidget(self.health_bar)
         
         information_box = QGroupBox()
-        information_box.setTitle('Information')
+        information_box.setTitle(self.tr("Information"))
         information_layout = QGridLayout()
         information_box.setLayout(information_layout)
         
-        self.leechers = QLabel("Leecher: ")
-        self.seeders = QLabel("Seeder: ")
-        self.downloaded = QLabel("Downloaded: ")
-        self.uploaded = QLabel("Uploaded: ")
-        self.share_ratio = QLabel("Share ratio: ")
-        self.progress = QLabel("Progress: ")
-        self.download_speed = QLabel("Download speed: ")
-        self.upload_speed = QLabel("Upload speed: ")
-        self.pieces = QLabel("Pieces: ")
-        self.eta = QLabel("ETA: ")
-        self.health = QLabel("Health: ")
-        self.availability = QLabel("Availability: ")
-        self.time_active = QLabel("Time active: ")
-        self.reannounce_in = QLabel("Reaannounce in: ")
+        self.leechers = QLabel(self.tr("Leecher: {}").format(""))
+        self.seeders = QLabel(self.tr("Seeder: {}").format(""))
+        self.downloaded = QLabel(self.tr("Downloaded: {}").format(""))
+        self.uploaded = QLabel(self.tr("Uploaded: {}").format(""))
+        self.share_ratio = QLabel(self.tr("Share ratio: {}").format(""))
+        self.progress = QLabel(self.tr("Progress: {}").format(""))
+        self.download_speed = QLabel(self.tr("Download speed: {}").format(""))
+        self.upload_speed = QLabel(self.tr("Upload speed: {}").format(""))
+        self.pieces = QLabel(self.tr("Pieces: {}").format(""))
+        self.eta = QLabel(self.tr("ETA: {}").format(""))
+        self.health = QLabel(self.tr("Health: {}").format(""))
+        self.availability = QLabel(self.tr("Availability: {}").format(""))
+        self.time_active = QLabel(self.tr("Time active: {}").format(""))
+        self.reannounce_in = QLabel(self.tr("Reannounce in: {}").format(""))
         
         information_layout.addWidget(self.leechers, 0, 0)
         information_layout.addWidget(self.seeders, 0, 1)
@@ -95,18 +95,18 @@ class GeneralTab(QWidget):
         main_layout.addWidget(information_box)
 
         torrent_box = QGroupBox()
-        torrent_box.setTitle('Torrent')
+        torrent_box.setTitle(self.tr("Torrent"))
         torrent_layout = QGridLayout()
         torrent_box.setLayout(torrent_layout)
         
-        self.info_hash = QLabel("Info Hash: ")
-        self.save_path = QLabel("Save Path: ")
-        self.size = QLabel("Size: ")
-        self.created_by = QLabel("Created by: ")
-        self.creation_date = QLabel("Creation date: ")
-        self.start_date = QLabel("Start date: ")
-        self.comment = QLabel("Comment: ")
-        self.finish_date = QLabel("Finish date: ")
+        self.info_hash = QLabel(self.tr("Info Hash: {}").format(""))
+        self.save_path = QLabel(self.tr("Save Path: {}").format(""))
+        self.size = QLabel(self.tr("Size: {}").format(""))
+        self.created_by = QLabel(self.tr("Created by: {}").format(""))
+        self.creation_date = QLabel(self.tr("Creation date: {}").format(""))
+        self.start_date = QLabel(self.tr("Start date: {}").format(""))
+        self.comment = QLabel(self.tr("Comment: {}").format(""))
+        self.finish_date = QLabel(self.tr("Finish date: {}").format(""))
         self.comment.setWordWrap(True)
         
         torrent_layout.addWidget(self.info_hash, 0, 0)
@@ -132,57 +132,57 @@ class GeneralTab(QWidget):
         finish_date = datetime.fromisoformat(swarm.finish_date).strftime("%Y-%m-%d %H:%M:%S") if  len(swarm.finish_date) else "not yet" 
         
         # update General Information fields
-        self.leechers.setText(f"Leechers: {swarm.leechers}")
-        self.seeders.setText(f"Seeders: {swarm.seeders}")
-        self.downloaded.setText(f"Downloaded: {convert_bits(swarm.piece_manager.downloaded_bytes)}")
+        self.leechers.setText(self.tr("Leechers: {}").format(swarm.leechers))
+        self.seeders.setText(self.tr("Seeders: {}").format(swarm.seeders))
+        self.downloaded.setText(self.tr("Downloaded: {}").format(convert_bits(swarm.piece_manager.downloaded_bytes)))
         #self.uploaded = QLabel("Uploaded: ")
         #self.share_ratio = QLabel("Share ratio: ")
-        self.progress.setText(f"Progress: {swarm.piece_manager.downloaded_percent}%")
-        self.download_speed.setText(f"Download speed: {swarm.speed_measurer.avg_down_speed}")
+        self.progress.setText(self.tr("Progress: {}").format(str(swarm.piece_manager.downloaded_percent) + "%"))
+        self.download_speed.setText(self.tr("Download speed: {}").format(swarm.speed_measurer.avg_down_speed))
         #self.upload_speed = QLabel("Upload speed: ")
-        self.pieces.setText(f"Pieces: {swarm.data.pieces_count} x {piece_size} (have {swarm.piece_manager.finished_pieces})")
-        self.eta.setText(f"ETA: {chr(0x221E) if swarm.speed_measurer.eta == -1 else convert_seconds(swarm.speed_measurer.eta)}")
-        self.health.setText(f"Health: {swarm.piece_manager.health}%")
-        self.availability.setText(f"Availability: {swarm.piece_manager.availability}")
-        self.time_active.setText(f"Time active: {convert_seconds(swarm.time_active)}")
+        self.pieces.setText(self.tr("Pieces: {} x {} (have {})").format(swarm.data.pieces_count, piece_size, swarm.piece_manager.finished_pieces))
+        self.eta.setText(self.tr("ETA: {}").format(chr(0x221E) if swarm.speed_measurer.eta == -1 else convert_seconds(swarm.speed_measurer.eta)))
+        self.health.setText(self.tr("Health: {}").format(str(swarm.piece_manager.health) + "%"))
+        self.availability.setText(self.tr("Availability: {}").format(swarm.piece_manager.availability))
+        self.time_active.setText(self.tr("Time active: {}").format(convert_seconds(swarm.time_active)))
         #self.reannounce_in = QLabel("Reaannounce in: ")
         
         # update Torrent Information fields
-        self.info_hash.setText(f"Info hash: {swarm.data.info_hash_hex}")
-        self.save_path.setText(f"Save Path: {swarm.path}")
-        self.size.setText(f"Size: {torrent_size} (of {free_space} on local disk)")
-        self.created_by.setText(f"Created by: {swarm.data.created_by}")
-        self.creation_date.setText(f"Creation date: {swarm.data.creation_date}")
-        self.start_date.setText(f"Start date: {start_date}")
-        self.comment.setText(f"Comment: {swarm.data.comment}")
-        self.finish_date.setText(f"Finish date: {finish_date}")
+        self.info_hash.setText(self.tr("Info hash: {}").format(swarm.data.info_hash_hex))
+        self.save_path.setText(self.tr("Save Path: {}").format(swarm.path))
+        self.size.setText(self.tr("Size: {} (of {} on local disk)").format(torrent_size, free_space))
+        self.created_by.setText(self.tr("Created by: {}").format(swarm.data.created_by))
+        self.creation_date.setText(self.tr("Creation date: {}").format(swarm.data.creation_date))
+        self.start_date.setText(self.tr("Start date: {}").format(start_date))
+        self.comment.setText(self.tr("Comment: {}").format(swarm.data.comment))
+        self.finish_date.setText(self.tr("Finish date: {}").format(finish_date))
     
     def _clear(self):
         self.progress_bar.setValues(0, [])
         self.health_bar.setValues(0, [])
 
-        self.leechers.setText("Leecher: ")
-        self.seeders.setText("Seeder: ")
-        self.downloaded.setText("Downloaded: ")
-        self.uploaded.setText("Uploaded: ")
-        self.share_ratio.setText("Share ratio: ")
-        self.progress.setText("Progress: ")
-        self.download_speed.setText("Download speed: ")
-        self.upload_speed.setText("Upload speed: ")
-        self.pieces.setText("Pieces: ")
-        self.eta.setText("ETA: ")
-        self.health.setText("Health: ")
-        self.availability.setText("Availability: ")
-        self.time_active.setText("Time active: ")
-        self.reannounce_in.setText("Reaannounce in: ")
-        self.info_hash.setText("Info hash: ")
-        self.save_path.setText("Save Path: ")
-        self.size.setText("Size: ")
-        self.created_by.setText("Created by: ")
-        self.creation_date.setText("Creation date: ")
-        self.start_date.setText("Start date: ")
-        self.comment.setText("Comment: ")
-        self.finish_date.setText("Finish date: ")
+        self.leechers = QLabel(self.tr("Leecher: {}").format(""))
+        self.seeders = QLabel(self.tr("Seeder: {}").format(""))
+        self.downloaded = QLabel(self.tr("Downloaded: {}").format(""))
+        self.uploaded = QLabel(self.tr("Uploaded: {}").format(""))
+        self.share_ratio = QLabel(self.tr("Share ratio: {}").format(""))
+        self.progress = QLabel(self.tr("Progress: {}").format(""))
+        self.download_speed = QLabel(self.tr("Download speed: {}").format(""))
+        self.upload_speed = QLabel(self.tr("Upload speed: {}").format(""))
+        self.pieces = QLabel(self.tr("Pieces: {}").format(""))
+        self.eta = QLabel(self.tr("ETA: {}").format(""))
+        self.health = QLabel(self.tr("Health: {}").format(""))
+        self.availability = QLabel(self.tr("Availability: {}").format(""))
+        self.time_active = QLabel(self.tr("Time active: {}").format(""))
+        self.reannounce_in = QLabel(self.tr("Reannounce in: {}").format(""))
+        self.info_hash = QLabel(self.tr("Info Hash: {}").format(""))
+        self.save_path = QLabel(self.tr("Save Path: {}").format(""))
+        self.size = QLabel(self.tr("Size: {}").format(""))
+        self.created_by = QLabel(self.tr("Created by: {}").format(""))
+        self.creation_date = QLabel(self.tr("Creation date: {}").format(""))
+        self.start_date = QLabel(self.tr("Start date: {}").format(""))
+        self.comment = QLabel(self.tr("Comment: {}").format(""))
+        self.finish_date = QLabel(self.tr("Finish date: {}").format(""))
  
 class ChartTab(ChartWidget):
     def __init__(self, parent=None):
@@ -232,6 +232,7 @@ class TrackersTab(QWidget):
                 a = tracker.address if type(tracker.address) == str else f'{tracker.address[0]}:{tracker.address[1]}'
                 addr = QStandardItem(a)
                 states = ['not contacted', 'connecting...', 'finished', 'stopped with error']
+                states = [self.tr(item) for item in states]
                 colors = [None, QColor('yellow'), QColor('green'), QColor('red')]
                 status = QStandardItem(states[tracker.status.value])
                 if tracker.status.value != 0:
@@ -254,6 +255,7 @@ class TrackersTab(QWidget):
     def _clear(self):
         self.model.clear()
         headers = ["address", "status", "peers", "leechers", "seeders", "interval", "error"]
+        headers = [self.tr(item) for item in headers]
         self.model.setHorizontalHeaderLabels(headers)
     
 class PeersTab(QWidget):
@@ -300,6 +302,7 @@ class PeersTab(QWidget):
     def _clear(self):
         self.model.clear()
         headers = ["ip", "port", "client", "connection", "flags", "sources", "entirety"]
+        headers = [self.tr(item) for item in headers]
         self.model.setHorizontalHeaderLabels(headers)
     
 class FilesTab(QWidget):
@@ -333,11 +336,11 @@ class TorrentDetailView(QTabWidget):
         self.peers_tab = PeersTab()
         self.files_tab = FilesTab()
         
-        self.tabs.append([self.general_tab, QIcon('resources/icons/general.svg'), "General"])
-        self.tabs.append([self.trackers_tab, QIcon('resources/icons/trackers.svg'), "Trackers"])
-        self.tabs.append([self.peers_tab, QIcon('resources/icons/peer.svg'), "Peers"])
-        self.tabs.append([self.chart_tab, QIcon('resources/icons/chart.svg'), "Chart"])
-        self.tabs.append([self.files_tab, QIcon('resources/icons/files.svg'), "Files"])
+        self.tabs.append([self.general_tab, QIcon('resources/icons/general.svg'), self.tr("General")])
+        self.tabs.append([self.trackers_tab, QIcon('resources/icons/trackers.svg'), self.tr("Trackers")])
+        self.tabs.append([self.peers_tab, QIcon('resources/icons/peer.svg'), self.tr("Peers")])
+        self.tabs.append([self.chart_tab, QIcon('resources/icons/chart.svg'), self.tr("Chart")])
+        self.tabs.append([self.files_tab, QIcon('resources/icons/files.svg'), self.tr("Files")])
         
         self.setMovable(True)
         self.setMinimumHeight(300)

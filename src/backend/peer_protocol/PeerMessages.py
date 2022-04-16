@@ -163,7 +163,7 @@ def bld_have(piece_index):
     id = PeerMessageIDs.HAVE
 
     msg = pack("!IB", length, id)
-    msg += pack("!20s", piece_index)
+    msg += pack("!I", piece_index)
     return msg
 
 def val_have(recv):

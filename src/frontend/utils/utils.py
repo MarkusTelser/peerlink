@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox, QInputDialog
 from PyQt6.QtCore import QCoreApplication
 
 def convert_bits(bits: int):
@@ -65,3 +65,9 @@ def showError(error, parent):
     error_window.setWindowTitle(QCoreApplication.translate("ErrorDialog", "Error - PeerLink"))
     error_window.show()
     
+def showInput(text, parent):
+    input_dialog = QInputDialog()
+    input_dialog.geometry().moveCenter(parent.geometry().center())
+    input_dialog.setWindowTitle(QCoreApplication.translate("InputDialog", "Input - Peerlink"))
+    input_dialog.setLabelText(text)
+    return input_dialog

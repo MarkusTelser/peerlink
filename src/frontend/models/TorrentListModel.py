@@ -8,7 +8,9 @@ from src.frontend.utils.utils import convert_bits, convert_seconds
 class TorrentListModel(QStandardItemModel):
     def __init__(self):
         super().__init__()
-        self.setHorizontalHeaderLabels(["name", "size", "download speed", "eta", "downloaded", "progress", "health", "availability", "share ratio", "creation date", "start date", "finish date"])
+        labels = ["name", "size", "download speed", "eta", "downloaded", "progress", "health", "availability", "share ratio", "creation date", "start date", "finish date"]
+        labels = [self.tr(label) for label in labels]
+        self.setHorizontalHeaderLabels(labels)
     
     def remove(self, index):
         self.removeRow(index)
@@ -74,7 +76,7 @@ class TorrentListModel(QStandardItemModel):
             start_date = datetime.fromisoformat(swarm.start_date)
             local_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
         else:
-            local_date = "not yet"
+            local_date = self.tr("not yet")
         item = QStandardItem(local_date)
         row.append(item)
 
@@ -82,7 +84,7 @@ class TorrentListModel(QStandardItemModel):
             finish_date = datetime.fromisoformat(swarm.finish_date)
             local_date = finish_date.strftime("%Y-%m-%d %H:%M:%S")
         else:
-            local_date = "not yet"
+            local_date = self.tr("not yet")
         item = QStandardItem(local_date)
         row.append(item)        
 

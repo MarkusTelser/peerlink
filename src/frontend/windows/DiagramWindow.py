@@ -16,6 +16,7 @@ class DiagramWindow(QMainWindow):
         self.setCentralWidget(main_widget)
         
         self.resize(700, 500)
+        self.setObjectName("DiagramWindow")
         self.setWindowTitle("Diagram - PeerLink")
         self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         

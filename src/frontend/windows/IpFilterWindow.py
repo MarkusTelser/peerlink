@@ -13,6 +13,7 @@ class IpFilterWindow(QMainWindow):
         self.setCentralWidget(main_widget)
         
         self.resize(600, 600)
+        self.setObjectName("IpFilterWindow")
         self.setWindowTitle("IP Filter - PeerLink")
         self.setWindowIcon(QIcon('resources/icons/logo.svg'))
         

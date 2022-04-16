@@ -10,8 +10,7 @@ from src.backend.peer_protocol.PieceManager import Piece
 class ToolTip(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-
-        self.setStyleSheet("background: rgb(24,27,32);")
+        self.setObjectName("PartProgressToolTip")
         self.setWindowFlag(Qt.WindowType.ToolTip)
 
         layout = QVBoxLayout()
@@ -133,6 +132,7 @@ class PartProgress(QWidget):
         super().__init__(parent=parent)
 
         self.setToolTip('')
+        self.setObjectName("PartProgress")
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumHeight(30)
         

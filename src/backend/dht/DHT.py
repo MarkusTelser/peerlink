@@ -5,10 +5,11 @@ from src.backend.metadata.Bencoder import bencode
 class DHTServer:
     def connection_made(self, transport):
         self.transport = transport
+        print('running on ', transport.get_extra_info('sockname'))
 
     def datagram_received(self, data, addr):
         print('-------'* 100)
-        print('dht recv', data, 'from', addr)
+        print('dht recv' * 100, data, 'from', addr)
 
 
 class EchoClientProtocol(asyncio.DatagramProtocol):
@@ -33,7 +34,7 @@ class DHT:
     async def start(self):
         loop = asyncio.get_running_loop()
         protocol_factory = lambda: DHTServer()
-        transport, protocol  = await loop.create_datagram_endpoint(protocol_factory, local_addr=('127.0.0.1', self.PORT))
+        transport, protocol  = await loop.create_datagram_endpoint(protocol_factory, local_addr=('0.0.0.0', self.PORT))
         print(transport, protocol)
         await asyncio.sleep(3600)
     

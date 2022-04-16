@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialogButtonBox,
-    QFileDialog,
     QGridLayout,
     QGroupBox,
     QLabel, 
@@ -18,7 +17,6 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QGuiApplication, QIcon, QCloseEvent
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, QTimer, QSize, Qt
-from os.path import expanduser
 from psutil import disk_usage
 from os.path import exists, isdir
 import sys
@@ -26,6 +24,7 @@ import sys
 from src.backend.metadata.TorrentParser import TorrentData, TorrentParser
 from src.backend import Swarm
 from src.backend.metadata.MagnetLink import MagnetLink
+from src.frontend.widgets.dialogs.FileDialog import FolderDialog
 from src.frontend.utils.ConfigLoader import ConfigLoader
 from src.frontend.views.FileTreeView import FileTreeView
 from src.frontend.models.FileTreeModel import FileTreeModel
@@ -44,6 +43,7 @@ class PreviewWindow(QMainWindow):
         self.torrent_data = None
         self._close_state = None
 
+        self.setObjectName("PreviewWindow")
         self.setWindowTitle(self.tr("View Torrent - PeerLink"))
         self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         
@@ -235,13 +235,7 @@ class PreviewWindow(QMainWindow):
     
     @pyqtSlot()
     def pressedPathSelect(self):
-        file_dialog = QFileDialog(self, self.tr("Select Directory - PeerLink"))
-        file_dialog.setFileMode(QFileDialog.FileMode.Directory)
-        file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog)
-        file_dialog.setOption(QFileDialog.Option.DontUseCustomDirectoryIcons)
-        file_dialog.setOption(QFileDialog.Option.ShowDirsOnly)
-        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        file_dialog.setDirectory(expanduser("~"))
+        file_dialog = FolderDialog(self)
 
         if file_dialog.exec():
             file_path = file_dialog.selectedFiles()[0]

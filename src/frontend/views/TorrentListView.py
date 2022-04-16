@@ -8,8 +8,10 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
 )
 from PyQt6.QtGui import QAction, QMouseEvent, QIcon
-from PyQt6.QtCore import QPoint, Qt, pyqtSlot
+from PyQt6.QtCore import QPoint, Qt, pyqtSlot, QCoreApplication
 
+def tr(source_text):
+    return QCoreApplication.translate('MenuBar', source_text)    
 
 class TorrentListView(QTableView):
     def __init__(self, model, column_state):
@@ -41,31 +43,31 @@ class TorrentListView(QTableView):
         # create context menu
         self.menu = QMenu(self)
         self.menu.setContentsMargins(0, 0, 0, 0)
-        self.menu_resume = QAction('Resume')
+        self.menu_resume = QAction(tr('Resume'))
         self.menu_resume.setIcon(QIcon('resources/icons/resume.svg'))
-        self.menu_pause = QAction('Pause')
+        self.menu_pause = QAction(tr('Pause'))
         self.menu_pause.setIcon(QIcon('resources/icons/pause.svg'))
-        self.menu_stop = QAction('Stop')
+        self.menu_stop = QAction(tr('Stop'))
         self.menu_stop.setIcon(QIcon('resources/icons/stop.svg'))
         self.menu.addAction(self.menu_resume)
         self.menu.addAction(self.menu_pause)
         self.menu.addAction(self.menu_stop)
         self.menu.addSeparator()
-        self.menu_copyname = QAction('Copy name')
+        self.menu_copyname = QAction(tr('Copy name'))
         self.menu_copyname.setIcon(QIcon('resources/icons/copy.svg'))
-        self.menu_copyhash = QAction('Copy hash')
+        self.menu_copyhash = QAction(tr('Copy hash'))
         self.menu_copyhash.setIcon(QIcon('resources/icons/copy.svg'))
-        self.menu_copypath = QAction('Copy path')
+        self.menu_copypath = QAction(tr('Copy path'))
         self.menu_copypath.setIcon(QIcon('resources/icons/copy.svg'))
         self.menu.addAction(self.menu_copyname)
         self.menu.addAction(self.menu_copyhash)
         self.menu.addAction(self.menu_copypath)
         self.menu.addSeparator()
-        self.menu_open = QAction('Open in file explorer')
+        self.menu_open = QAction(tr('Open in file explorer'))
         self.menu_open.setIcon(QIcon('resources/icons/files.svg'))
-        self.menu_move = QAction('Move')
+        self.menu_move = QAction(tr('Move'))
         self.menu_move.setIcon(QIcon('resources/icons/move.svg'))
-        self.menu_delete = QAction('Delete')
+        self.menu_delete = QAction(tr('Delete'))
         self.menu_delete.setIcon(QIcon('resources/icons/remove.svg'))
         self.menu.addAction(self.menu_open)
         self.menu.addAction(self.menu_move)

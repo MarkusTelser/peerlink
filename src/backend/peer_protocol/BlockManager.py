@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from math import ceil
+import smokesignal
 
 @dataclass
 class Request:
@@ -64,6 +65,10 @@ class BlockManager:
                 if block_id in piece.missing_pieces:
                     piece.missing_pieces.remove(block_id)
                     piece.piece_data[block_id] = data
+        
+        if finished_piece:
+            smokesignal.emit('finished_full_piece', piece_id)
+
         return finished_piece
     
     def get_piece_data(self, index):
