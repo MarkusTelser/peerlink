@@ -7,6 +7,7 @@ from asyncio import BoundedSemaphore
 from datetime import datetime
 
 from src.backend.utils.SpeedMeasurer import SpeedMeasurer
+from src.backend.utils.DownloadChart import DownloadChart
 from .peer_protocol.PeerIDs import PeerIDs
 from .peer_protocol.PieceManager import PieceManager
 from .FileHandler import FileHandler
@@ -60,6 +61,7 @@ class Swarm:
         self.piece_manager = PieceManager(data.pieces_count, data.piece_length, self.finished_torrent)
         self.file_handler = FileHandler(data, path)
         self.speed_measurer = SpeedMeasurer(self.piece_manager)
+        self.chart = DownloadChart(self.speed_measurer.raw_down_speed)
         self._create_tracker(self.data.announces, self.data.info_hash)
     
     async def download_metadata(self, magnet_link: MagnetLink):
@@ -113,6 +115,7 @@ class Swarm:
     def start(self):
         self.start_task = asyncio.create_task(self._start())
         self.speed_task = asyncio.create_task(self.speed_measurer.execute())
+        self.chart_task = asyncio.create_task(self.chart.execute())
 
     async def _start(self):
         self._last_date = datetime.now()

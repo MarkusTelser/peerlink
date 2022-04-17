@@ -187,19 +187,6 @@ class GeneralTab(QWidget):
 class ChartTab(ChartWidget):
     def __init__(self, parent=None):
         super(ChartTab, self).__init__()
-
-    def _update(self):
-        # add test data 
-        r = random.randint(0, 100)
-        self.speed_axis.setRange(0, (r * 1.1))
-        self.series.append([QPointF(QDateTime.currentDateTime().toMSecsSinceEpoch(), r)])
-
-        secs = to_seconds(self.combo_box.currentText())
-        current_date = QDateTime.currentDateTime()
-        self.time_axis.setRange(current_date.addSecs(-secs), current_date)
-    
-    def _clear(self):
-        self.series.clear()
  
 class TrackersTab(QWidget):
     def __init__(self):
@@ -366,7 +353,7 @@ class TorrentDetailView(QTabWidget):
         self.general_tab._update(dt)
         self.trackers_tab._update(dt.tracker_list)
         self.peers_tab._update(dt.active_peers)
-        self.chart_tab._update()
+        self.chart_tab._update(dt.chart)
         self.files_tab._update(dt.data.files)
     
     def _clear(self):

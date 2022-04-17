@@ -221,7 +221,7 @@ class PPeer(asyncio.Protocol):
             self.transport.write(bld_uninterested())
     
     def _send_have(self, piece_index):
-        print('send finished full piece')
+        #print('send finished full piece')
         if self.transport and not self.transport.is_closing():
             msg = bld_have(piece_index)
             self.transport.write(msg)

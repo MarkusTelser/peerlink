@@ -28,7 +28,7 @@ class Session(threading.Thread):
 
     @property
     def download_speed(self):
-        return sum([s.speed_measurer.raw_down_speed for s in self.swarm_list]) / (len(self.swarm_list) or 1)
+        return sum([s.speed_measurer.raw_down_speed() for s in self.swarm_list]) / (len(self.swarm_list) or 1)
 
     @property
     def peers(self):

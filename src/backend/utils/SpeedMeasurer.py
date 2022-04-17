@@ -35,9 +35,8 @@ class SpeedMeasurer:
     
     @property
     def avg_down_speed(self):
-        return self._convert_mibps(self.raw_down_speed)
+        return self._convert_mibps(self.raw_down_speed())
     
-    @property
     def raw_down_speed(self):
         try:
             if len(self.down_measurements) > 1:
@@ -51,9 +50,9 @@ class SpeedMeasurer:
 
     @property
     def eta(self):
-        if self.raw_down_speed == 0:
+        if self.raw_down_speed() == 0:
             return -1
-        return ceil(self.piece_manager.left_bytes / self.raw_down_speed)
+        return ceil(self.piece_manager.left_bytes / self.raw_down_speed())
     
     def _convert_mibps(self, bits: int):
         if bits < 1000:
