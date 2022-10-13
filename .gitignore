@@ -1,8 +1,17 @@
-sources.txt
-*.pyc
-__pycache__
-data/
-.vscode
-.venv
-.idea
+# environment config's
+.vscode/
+.idea/
+.venv/
+
+# build files/folders
+__pycache__/
 *.egg-info
+*.spec
+*.pyc
+build/
+dist/
+
+# specific project files/folders
+data/
+sources.txt
+todo.txt
