@@ -121,6 +121,7 @@ class GeneralTab(QWidget):
         main_layout.addStretch()
     
     def _update(self, swarm):
+        print('update detail')
         self.progress_bar.setRange(0, swarm.data.pieces_count)
         self.progress_bar.setValues(int(swarm.piece_manager.downloaded_percent), [x for x in swarm.piece_manager.pieces])
         self.health_bar.setValues(int(swarm.piece_manager.health), [x.index for x in swarm.piece_manager.pieces if x.count_peers != 0])

@@ -8,7 +8,6 @@ class TCPServer:
         self._server = None
         self.port = None
 
-
     async def start(self):
         for port in TCPServer.PORT_RANGE:
             try:
@@ -18,7 +17,7 @@ class TCPServer:
                 print(e)
             else:
                 self.port = port
-                print('WORKING ON PORT', port)
+                print('SERVER WORKING ON PORT', port)
                 break
 
     async def stop(self):
@@ -36,5 +35,6 @@ if __name__ == '__main__':
     async def run():
         server = TCPServer()
         await server.start()
+        await asyncio.sleep(1000)
     
     asyncio.run(run())

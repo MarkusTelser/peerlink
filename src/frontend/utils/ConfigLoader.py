@@ -38,7 +38,7 @@ class ConfigLoader():
 
         # Statistics
         self.settings.beginGroup('Statistics')
-        self.total_downloaded = self.settings.value('total_downloaded', 0, int)
+        self.total_downloaded = self.settings.value('total_downloaded', 1, int)
         self.total_uploaded = self.settings.value('total_uploaded', 0, int)
         self.total_time_running = self.settings.value('total_time_running', 0, int)
         self.program_opened = self.settings.value('program_opened', 0, int)

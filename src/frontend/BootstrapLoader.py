@@ -24,12 +24,12 @@ def run():
     # load the system translations provided by qt
     qtTranslator = QTranslator()
     qtTranslator.load("qt_de", QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath))
-    app.installTranslator(qtTranslator)
+    #app.installTranslator(qtTranslator)
 
     # load custom translations for this application
     translator = QTranslator()
     translator.load(QLocale(), 'resources/languages/qt_de.qm')
-    app.installTranslator(translator)
+    #app.installTranslator(translator)
     
     args = args_parser()
     conf = ConfigLoader()
