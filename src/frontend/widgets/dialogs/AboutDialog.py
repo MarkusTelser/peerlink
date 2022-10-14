@@ -34,7 +34,7 @@ class GeneralTab(QWidget):
         temp_layout.addRow(QLabel(self._cst_bld(self.tr("Author:"))), QLabel("Markus Telser"))
         temp_layout.addRow(QLabel(self._cst_bld(self.tr("License:"))), QLabel("GPL v3.0"))
         temp_layout.addRow(QLabel(self._cst_bld(self.tr("Repository:"))), self._cst_url("https://www.github.com/markustelser/peerlink"))
-        temp_layout.addRow(QLabel(self._cst_bld(self.tr("Donate To:"))), self._cst_url("https://www.paypal.com"))
+        temp_layout.addRow(QLabel(self._cst_bld(self.tr("Donate To:"))), self._cst_url("https://www.paypal.me/markustelser"))
         temp_layout.addRow(QLabel(self._cst_bld(self.tr("Email To:"))), self._cst_url("markus.telser99@gmail.com", True))
 
         main_layout.addWidget(temp_widget, alignment=Qt.AlignmentFlag.AlignCenter)    

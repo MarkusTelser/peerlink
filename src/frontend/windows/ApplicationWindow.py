@@ -55,7 +55,7 @@ from src.frontend.windows.StatisticsWindow import StatisticsWindow
 
 class ApplicationWindow(QMainWindow):
     UPDATE_DELAY = 1500
-    DONATE_LINK = 'www.google.com'
+    DONATE_LINK = 'https://www.paypal.com/paypalme/markustelser'
     BUG_LINK = 'https://github.com/MarkusTelser/peerlink/issues'
     THANKS_LINK = 'https://saythanks.io/to/MarkusTelser'
     

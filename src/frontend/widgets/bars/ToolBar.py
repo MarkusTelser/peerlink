@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QPushButton, QToolBar
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QPushButton, QToolBar, QFrame
+from PyQt6.QtGui import QIcon, QPalette, QColor
 
 from src.frontend.widgets.SearchBox import SearchBar
 
@@ -20,6 +20,7 @@ class ToolBar(QToolBar):
         self.open_link.setText(self.tr("open magnet link"))
         self.open_link.setIcon(QIcon('resources/icons/link.svg'))
         self.addWidget(self.open_link)
+
         
         self.addSeparator()
         
@@ -60,3 +61,12 @@ class ToolBar(QToolBar):
         
         self.search_bar = SearchBar()
         self.addWidget(self.search_bar)
+
+    # OVERWRITE existing separator with custom QFrame 
+    def addSeparator(self):
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setFrameShadow(QFrame.Shadow.Plain)
+        separator.setObjectName("ToolBarSeparator")
+        separator.setFixedHeight(22)
+        self.addWidget(separator)

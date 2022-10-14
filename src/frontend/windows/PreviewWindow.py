@@ -43,6 +43,7 @@ class PreviewWindow(QMainWindow):
         self.torrent_data = None
         self._close_state = None
 
+        self.setAutoFillBackground(True)
         self.setObjectName("PreviewWindow")
         self.setWindowTitle(self.tr("View Torrent - PeerLink"))
         self.setWindowIcon(QIcon("resources/icons/logo.svg"))
@@ -109,6 +110,7 @@ class PreviewWindow(QMainWindow):
         
         self.category = QComboBox()
         self.category.setEditable(True)
+        self.category.setAutoFillBackground(True)
         self.category.addItems(self.conf.categorys)
         self.category.setEditText(self.conf.default_category)
         self.category.lineEdit().setPlaceholderText(self.tr("Enter new/existing category"))
@@ -125,6 +127,7 @@ class PreviewWindow(QMainWindow):
         # add combo box for download strategys
         strategy_label = QLabel(self.tr("Download Strategy:"))
         self.download_strategy = QComboBox()
+        self.download_strategy.setAutoFillBackground(True)
         strategys = [self.tr('rarest first (default)'), self.tr('sequential'), self.tr('random')]
         self.download_strategy.addItems(strategys)
         self.download_strategy.setCurrentIndex(self.conf.strategy)

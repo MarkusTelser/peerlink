@@ -22,6 +22,7 @@ class MagnetLinkDialog(QDialog):
         self.setLayout(main_layout)
         
         self.setFixedSize(600, 120)
+        self.setObjectName("MagnetLinkDialog")
         self.setWindowIcon(QIcon("resources/icons/logo.svg"))
         self.setWindowTitle(self.tr("Add Magnet Link - PeerLink"))
 

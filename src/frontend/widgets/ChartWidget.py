@@ -8,7 +8,7 @@ from src.frontend.utils.utils import to_seconds
 class ChartWidget(QWidget):
     def __init__(self):
         super().__init__()
-        
+       
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         
