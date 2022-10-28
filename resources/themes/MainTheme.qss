@@ -17,13 +17,7 @@ QDialog QPushButton, QDialog QPushButton:hover{
 	color: #2a2a2a;
 }
 
-QLineEdit, QComboBox,
-#PreviewWindow QMenu{
-	color: #1e1e1e;	
-	background-color: #4b4b4a;
-}
-
-#MagnetLinkDialog QPushButton, #PreviewWindow QPushButton, #AboutWindow QPushButton{
+#MagnetLinkDialog QPushButton, #PreviewWindow QPushButton, #AboutWindow QPushButton, QDialog QPushButton{
 	color: #2a2a2a;
 	background-color: #4b4b4a;
 }
@@ -38,7 +32,7 @@ QLineEdit, QComboBox,
 /* BACKGROUND COLORS */
 #ApplicationWindow, #MagnetLinkDialog, #PreviewWindow, #AboutWindow, 
 #IpFilterWindow, #StatisticsWindow, #DiagramWindow, #SpeedLimitWindow, 
-QDialog
+QDialog, QMessageBox
 {
 	background-color: #1e1e1e;
 }
@@ -53,6 +47,20 @@ QSpinBox, QMainWindow#LaunchWindow QPushButton {
 	background-color: #4b4b4a;
 }
 
+QLineEdit, QListView,
+#PreviewWindow QComboBox,
+#PreviewWindow QComboBox QAbstractItemView,
+#ApplicationWindow QTabWidget QComboBox,
+#ApplicationWindow QTabWidget QComboBox QAbstractItemView,
+#DiagramWindow QComboBox{
+	color: #1e1e1e;	
+	background-color: #4b4b4a;
+}
+
+QListView{
+outline: none;
+}
+
 QMainWindow#LaunchWindow QPushButton{
 	color: #1e1e1e;
 }
@@ -63,6 +71,36 @@ QFrame#ToolBarSeparator{
 
 #LaunchWindowDark{
 	color: black;
+}
+
+/* Dark Unchecked QCheckBox */
+#LaunchWindow QMenu::indicator:non-exclusive:unchecked, #LaunchWindow QCheckBox::indicator:unchecked{
+		image: url(resources/icons/unchecked_dark.png);
+		width: 16px;
+		height: 16px;
+}
+
+/* Dark Checked QCheckBox */
+#LaunchWindow QMenu::indicator:non-exclusive:checked, #LaunchWindow QCheckBox::indicator:checked {
+    image: url(resources/icons/checked_dark.png);
+		width: 16px;
+		height: 16px;
+}
+
+/* Light Unchecked QCheckBox */
+QMenu::indicator:non-exclusive:unchecked, QCheckBox::indicator:unchecked,
+#PreviewWindow QMenu::indicator:non-exclusive:unchecked, #PreviewWindow QCheckBox::indicator:unchecked {
+		image: url(resources/icons/unchecked_light.png);
+		width: 16px;
+		height: 16px;
+}
+
+/* Light Checked QCheckBox */
+QMenu::indicator:non-exclusive:checked, QCheckBox::indicator:checked,
+#PreviewWindow QMenu::indicator:non-exclusive:checked, #PreviewWindow QCheckBox::indicator:checked {
+    image: url(resources/icons/checked_light.png);
+		width: 16px;
+		height: 16px;
 }
 
 QGroupBox::title{
@@ -268,7 +306,7 @@ QDateTimeEdit::up-arrow
 /*-----QLineEdit-----*/
 QLineEdit, QComboBox
 {
-	border-width: 1px;
+	border-width: 0px;
 	border-radius: 0px;
 	border-color: #051a39;
 	padding: 2px;
@@ -782,30 +820,6 @@ QSizeGrip{
 
 QSplitter::handle {
     image: url();
-}
-
-#LaunchWindow > QMenu::indicator:non-exclusive:unchecked, #LaunchWindow > QCheckBox::indicator:unchecked{
-		image: url(resources/icons/unchecked_dark.png);
-		width: 16px;
-		height: 16px;
-}
-
-#LaunchWindow > QMenu::indicator:non-exclusive:checked, #LaunchWindow > QCheckBox::indicator:checked {
-    image: url(resources/icons/checked_dark.png);
-		width: 16px;
-		height: 16px;
-}
-
-QMenu::indicator:non-exclusive:unchecked, QCheckBox::indicator:unchecked{
-		image: url(resources/icons/unchecked_light.png);
-		width: 16px;
-		height: 16px;
-}
-
-QMenu::indicator:non-exclusive:checked, QCheckBox::indicator:checked {
-    image: url(resources/icons/checked_light.png);
-		width: 16px;
-		height: 16px;
 }
 
 QPlainTextEdit, QTextEdit{

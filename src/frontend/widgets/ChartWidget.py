@@ -34,7 +34,6 @@ class ChartWidget(QWidget):
         main_layout.addWidget(sub_widget)
 
         current_m = QDateTime.currentDateTime()
-        m = QDateTime.currentDateTime()
 
         self.series = QSplineSeries()
         self.series.setName("Download")
