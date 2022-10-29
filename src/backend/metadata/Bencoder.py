@@ -137,6 +137,7 @@ class Bencoder:
             ret += b'e'
             return ret
         elif typ == dict or typ == OrderedDict:
+            data = dict(sorted(data.items()))
             ret = b'd'
             if typ == OrderedDict:
                 for key, value in data.items():
