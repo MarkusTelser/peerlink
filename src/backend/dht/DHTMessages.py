@@ -2,6 +2,7 @@ from struct import pack, unpack
 from socket import inet_ntoa, inet_aton
 from dataclasses import dataclass
 from src.backend.metadata.Bencoder import bencode,bdecode
+from src.backend.peer_protocol.PeerIDs import PeerIDs
 
 
 @dataclass
@@ -72,6 +73,13 @@ def parse(msg):
         if len(dec["e"]) != 2:
             raise Exception("Invalid length of Error Field")
 
+        """
+        Possible error codes:
+        201	Generic Error
+        202	Server Error
+        203	Protocol Error (such as a malformed packet, invalid arguments, or bad token)
+        204	Method Unknown
+        """
         try:
             ret.error_code = int(dec["e"][0])
             ret.error_msg = str(dec["e"][1])
@@ -185,8 +193,9 @@ def parse(msg):
         ret.tid = dec["t"]
         ret.type = {"q": "query", "r": "response", "e": "error"}[dec["y"]]
 
+        # TODO understand how the FUCK client-version is encoded
         if "v" in dec:
-            ret.version = dec["v"]
+            ret.version = PeerIDs.get_dht_client(dec["v"])
     except:
         raise Exception("Invalid id, type, version in msg")
 

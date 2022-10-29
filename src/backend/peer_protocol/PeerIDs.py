@@ -352,3 +352,22 @@ class PeerIDs:
                 return client, version
         
         return client, version
+
+    @staticmethod
+    def get_dht_client(string: str):
+        client = "unknown"
+        version = -1
+
+        cid = string[0:2]
+        if cid in azureus_style:
+            # use default encoding 
+            if type(azureus_style[cid]) == str:
+                client = azureus_style[cid]
+                version = str(ord(string[2])) +"."+ str(ord(string[3]))
+            # use custom defined encoding func
+            elif type(azureus_style[cid]) == tuple:
+                client, func = azureus_style[cid]
+                version = str(ord(string[2])) +"."+ str(ord(string[3]))
+            return client, version
+
+        return client, version
